@@ -68,7 +68,7 @@ class DebianPackage(BinaryPackage):
 
         debug_suffix = "-dbg" if debug_pkg else ""
         pkg_filename = "_".join([self.name + debug_suffix,
-            version + "-" + release, self.architecture]) + ".deb"
+            version + "-" + release, self.architecture]) + ".bolt"
         pkg_abspath  = self.output_dir + os.sep + pkg_filename
         meta_data    = self.meta_data(debug_pkg=debug_pkg)
 
