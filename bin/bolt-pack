@@ -28,19 +28,19 @@ import os
 import sys
 import getopt
 
-# make xpack relocatable
+# make bolt-pack relocatable
 INSTALL_DIR = os.path.normpath(os.path.dirname(
     os.path.realpath(sys.argv[0])) + os.sep + ".." )
 sys.path.insert(1, INSTALL_DIR + os.sep + 'lib')
 
-from com.nonterra.xpack.appconfig import AppConfig
-from com.nonterra.xpack.packagecontrol import PackageControl
-from com.nonterra.xpack.error import XPackError, InvocationError
-from com.nonterra.xpack.util import switch
+from com.nonterra.bolt.appconfig import AppConfig
+from com.nonterra.bolt.packagecontrol import PackageControl
+from com.nonterra.bolt.error import XPackError, InvocationError
+from com.nonterra.bolt.util import switch
 
-XPACK_VERSION = "1.0.0"
-XPACK_ERR_INVOCATION = 1
-XPACK_ERR_RUNTIME    = 2
+BOLT_VERSION = "1.0.0"
+BOLT_ERR_INVOCATION = 1
+BOLT_ERR_RUNTIME    = 2
 
 def print_usage():
     print(
@@ -49,7 +49,7 @@ def print_usage():
         "                                                                               \n"
         "USAGE:                                                                         \n"
         "                                                                               \n"
-        "   xpack [OPTIONS] <specfile>                                                  \n"
+        "   bolt-pack [OPTIONS] <specfile>                                              \n"
         "                                                                               \n"
         "PACKAGE BUILD OPTIONS:                                                         \n"
         "                                                                               \n"
@@ -76,13 +76,13 @@ def print_usage():
         "                                                                               \n"
         "                       Each of the above is made available to the package      \n"
         "                       scripts as environment variables                        \n"
-        "                       XPACK_{BUILD,HOST,TARGET}_TYPE, respectively.           \n"
+        "                       BOLT_{BUILD,HOST,TARGET}_TYPE, respectively.           \n"
         "                                                                               \n"
         "MISCELLANEOUS OPTIONS:                                                         \n"
         "                                                                               \n"
         "  -h --help            Print this help message.                                \n"
         "  --list-deps          List all build dependencies.                            \n"
-        % XPACK_VERSION
+        % BOLT_VERSION
     )
 #end function
 
@@ -174,13 +174,13 @@ if __name__ == "__main__":
     try:
         options, args = parse_cmd_line()
     except InvocationError as e:
-        sys.stderr.write("xpack: %s\n" % str(e))
-        sys.exit(XPACK_ERR_INVOCATION)
+        sys.stderr.write("bolt-pack: %s\n" % str(e))
+        sys.exit(BOLT_ERR_INVOCATION)
     #end try
 
     if len(args) != 1:
         print_usage()
-        sys.exit(XPACK_ERR_INVOCATION)
+        sys.exit(BOLT_ERR_INVOCATION)
     #end if
 
     # RUN ACTION
@@ -190,7 +190,7 @@ if __name__ == "__main__":
         pkg_ctrl = PackageControl(args[0], config)
         pkg_ctrl(config["action"])
     except XPackError as e:
-        sys.stderr.write("xpack: %s\n" % str(e))
-        sys.exit(XPACK_ERR_RUNTIME)
+        sys.stderr.write("bolt-pack: %s\n" % str(e))
+        sys.exit(BOLT_ERR_RUNTIME)
     #end try
 #end __main__

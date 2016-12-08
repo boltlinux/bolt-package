@@ -26,15 +26,15 @@
 import os
 import shutil
 from lxml import etree
-from com.nonterra.xpack.sourcepackage import SourcePackage
-from com.nonterra.xpack.debianpackage import DebianPackage
-from com.nonterra.xpack.shlibcache import ShlibCache
-from com.nonterra.xpack.specfile import Specfile
-from com.nonterra.xpack.changelog import Changelog
-from com.nonterra.xpack.sourcecache import SourceCache
-from com.nonterra.xpack.platform import Platform
-from com.nonterra.xpack.appconfig import AppConfig
-from com.nonterra.xpack.error import MissingDependencies
+from com.nonterra.bolt.sourcepackage import SourcePackage
+from com.nonterra.bolt.debianpackage import DebianPackage
+from com.nonterra.bolt.shlibcache import ShlibCache
+from com.nonterra.bolt.specfile import Specfile
+from com.nonterra.bolt.changelog import Changelog
+from com.nonterra.bolt.sourcecache import SourceCache
+from com.nonterra.bolt.platform import Platform
+from com.nonterra.bolt.appconfig import AppConfig
+from com.nonterra.bolt.error import MissingDependencies
 
 class PackageControl:
 
@@ -80,50 +80,50 @@ class PackageControl:
         xml_doc.xpath("/control/changelog")[0].attrib["source"] = source_name
 
         self.defines = {
-            "XPACK_SOURCE_DIR":  "sources",
-            "XPACK_INSTALL_DIR": "install"
+            "BOLT_SOURCE_DIR":  "sources",
+            "BOLT_INSTALL_DIR": "install"
         }
 
-        self.defines["XPACK_BUILD_TYPE"]  = self.parms.get("build_type")  or\
+        self.defines["BOLT_BUILD_TYPE"]  = self.parms.get("build_type")  or\
                 Platform.config_guess()
-        self.defines["XPACK_HOST_TYPE"]   = self.parms.get("host_type")   or\
-                self.defines["XPACK_BUILD_TYPE"]
-        self.defines["XPACK_TARGET_TYPE"] = self.parms.get("target_type") or\
-                self.defines["XPACK_HOST_TYPE"]
-        self.defines["XPACK_WORK_DIR"]    = os.getcwd()
+        self.defines["BOLT_HOST_TYPE"]   = self.parms.get("host_type")   or\
+                self.defines["BOLT_BUILD_TYPE"]
+        self.defines["BOLT_TARGET_TYPE"] = self.parms.get("target_type") or\
+                self.defines["BOLT_HOST_TYPE"]
+        self.defines["BOLT_WORK_DIR"]    = os.getcwd()
 
         for node in xml_doc.xpath("/control/defines/def"):
             self.defines[node.get("name")] = node.get("value", "")
 
-        self.defines.setdefault("XPACK_BUILD_DIR",
-                self.defines["XPACK_SOURCE_DIR"])
+        self.defines.setdefault("BOLT_BUILD_DIR",
+                self.defines["BOLT_SOURCE_DIR"])
 
         # these *must* be absolute paths
         for s in ["SOURCE", "BUILD", "INSTALL"]:
-            if os.path.isabs(self.defines["XPACK_%s_DIR" % s]):
-                self.defines["XPACK_%s_DIR" % s] = os.path.realpath(
-                        self.defines["XPACK_%s_DIR" % s])
+            if os.path.isabs(self.defines["BOLT_%s_DIR" % s]):
+                self.defines["BOLT_%s_DIR" % s] = os.path.realpath(
+                        self.defines["BOLT_%s_DIR" % s])
             else:
-                self.defines["XPACK_%s_DIR" % s] = os.path.realpath(
-                    os.sep.join([self.defines["XPACK_WORK_DIR"],
-                        self.defines["XPACK_%s_DIR" % s]])
+                self.defines["BOLT_%s_DIR" % s] = os.path.realpath(
+                    os.sep.join([self.defines["BOLT_WORK_DIR"],
+                        self.defines["BOLT_%s_DIR" % s]])
                 )
             #end if
         #end for
 
         self.src_pkg = SourcePackage(xml_doc.xpath("/control/source")[0])
-        self.src_pkg.basedir = self.defines["XPACK_WORK_DIR"]
+        self.src_pkg.basedir = self.defines["BOLT_WORK_DIR"]
 
         self.bin_pkgs = []
         for node in xml_doc.xpath("/control/package"):
             pkg = DebianPackage(node, debug_pkgs=self.parms["debug_pkgs"])
-            pkg.basedir    = self.defines["XPACK_INSTALL_DIR"]
+            pkg.basedir    = self.defines["BOLT_INSTALL_DIR"]
             if self.parms.get("outdir"):
                 pkg.output_dir = os.path.realpath(self.parms["outdir"])
             else:
                 pkg_output_dir = None
             #end if
-            pkg.host_arch = self.defines["XPACK_HOST_TYPE"]
+            pkg.host_arch = self.defines["BOLT_HOST_TYPE"]
             self.bin_pkgs.append(pkg)
         #end for
 
@@ -148,7 +148,7 @@ class PackageControl:
         print(self.src_pkg.build_dependencies())
 
     def unpack(self):
-        directory = self.defines["XPACK_WORK_DIR"]
+        directory = self.defines["BOLT_WORK_DIR"]
         if not os.path.exists(directory):
             os.makedirs(directory)
 
@@ -162,23 +162,23 @@ class PackageControl:
     #end function
 
     def prepare(self):
-        directory = self.defines["XPACK_BUILD_DIR"]
+        directory = self.defines["BOLT_BUILD_DIR"]
         if not os.path.exists(directory):
             os.makedirs(directory)
         self.src_pkg.run_action("prepare", self.defines)
     #end function
 
     def build(self):
-        directory = self.defines["XPACK_BUILD_DIR"]
+        directory = self.defines["BOLT_BUILD_DIR"]
         if not os.path.exists(directory):
             os.makedirs(directory)
         self.src_pkg.run_action("build", self.defines)
     #end function
 
     def install(self):
-        source_dir  = self.defines["XPACK_SOURCE_DIR"]
-        build_dir   = self.defines["XPACK_BUILD_DIR"]
-        install_dir = self.defines["XPACK_INSTALL_DIR"]
+        source_dir  = self.defines["BOLT_SOURCE_DIR"]
+        build_dir   = self.defines["BOLT_BUILD_DIR"]
+        install_dir = self.defines["BOLT_INSTALL_DIR"]
 
         if os.path.exists(install_dir):
             shutil.rmtree(install_dir)

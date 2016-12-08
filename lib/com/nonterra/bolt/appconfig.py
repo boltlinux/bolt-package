@@ -41,7 +41,7 @@ class AppConfig:
 
     @classmethod
     def get_config_folder(klass):
-        return os.path.join(os.path.expanduser("~"), ".xpack")
+        return os.path.join(os.path.expanduser("~"), ".bolt")
     #end function
 
     @classmethod

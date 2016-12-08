@@ -48,8 +48,8 @@ class PackageDescription:
     BLOCK_ELEMENTS_STYLE = """\
 <?xml version="1.0"?>
 <xsl:stylesheet version="1.0" xmlns:xsl="http://www.w3.org/1999/XSL/Transform"
-  xmlns:xpack="http://www.nonterra.com/2011/XSL/XPack"
-  extension-element-prefixes="xpack">
+  xmlns:bolt="http://www.nonterra.com/2011/XSL/XPack"
+  extension-element-prefixes="bolt">
 
   <xsl:output method="text" omit-xml-declaration="yes" encoding="UTF-8"/>
 
@@ -58,7 +58,7 @@ class PackageDescription:
   </xsl:template>
 
   <xsl:template match="p">
-    <xsl:value-of select="xpack:block_format(.)"/>
+    <xsl:value-of select="bolt:block_format(.)"/>
     <xsl:if test="following-sibling::*">
       <xsl:text>&#x0a; .&#x0a;</xsl:text>
     </xsl:if>
@@ -72,7 +72,7 @@ class PackageDescription:
   </xsl:template>
 
   <xsl:template match="li">
-    <xsl:value-of select="xpack:block_format(.)"/>
+    <xsl:value-of select="bolt:block_format(.)"/>
     <xsl:if test="following-sibling::*">
       <xsl:text>&#x0a;</xsl:text>
     </xsl:if>
@@ -104,7 +104,7 @@ class PackageDescription:
     def full_description(self):
         ns_uri = "http://www.nonterra.com/2011/XSL/XPack"
         ns = etree.FunctionNamespace(ns_uri)
-        ns.prefix = "xpack"
+        ns.prefix = "bolt"
         ns["block_format"] = PackageDescription.CustomXPath.block_format
 
         inline_elements_transform = etree.XSLT(

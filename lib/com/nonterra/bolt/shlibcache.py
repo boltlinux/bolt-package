@@ -27,10 +27,10 @@ import os
 import re
 import locale
 import subprocess
-from com.nonterra.xpack.platform import Platform
-from com.nonterra.xpack.filestats import FileStats
-from com.nonterra.xpack.packagemanager import PackageManager
-from com.nonterra.xpack.error import ShlibCacheError
+from com.nonterra.bolt.platform import Platform
+from com.nonterra.bolt.filestats import FileStats
+from com.nonterra.bolt.packagemanager import PackageManager
+from com.nonterra.bolt.error import ShlibCacheError
 
 class ShlibCache:
 

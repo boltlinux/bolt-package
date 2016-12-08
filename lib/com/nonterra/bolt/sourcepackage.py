@@ -28,13 +28,13 @@ import sys
 import re
 import subprocess
 from lxml import etree
-import com.nonterra.xpack.libarchive as libarchive
-from com.nonterra.xpack.libarchive import ArchiveEntry, ArchiveFileReader
-from com.nonterra.xpack.packagedesc import PackageDescription
-from com.nonterra.xpack.basepackage import BasePackage
-from com.nonterra.xpack.platform import Platform
-from com.nonterra.xpack.progressbar import ProgressBar
-from com.nonterra.xpack.error import SourcePackageError
+import com.nonterra.bolt.libarchive as libarchive
+from com.nonterra.bolt.libarchive import ArchiveEntry, ArchiveFileReader
+from com.nonterra.bolt.packagedesc import PackageDescription
+from com.nonterra.bolt.basepackage import BasePackage
+from com.nonterra.bolt.platform import Platform
+from com.nonterra.bolt.progressbar import ProgressBar
+from com.nonterra.bolt.error import SourcePackageError
 
 class SourcePackage(BasePackage):
 

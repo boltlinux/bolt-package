@@ -29,11 +29,11 @@ import stat
 import time
 from tempfile import TemporaryDirectory
 from collections import OrderedDict
-import com.nonterra.xpack.libarchive as libarchive
-from com.nonterra.xpack.libarchive import ArchiveEntry, ArchiveFileWriter
-from com.nonterra.xpack.filestats import FileStats
-from com.nonterra.xpack.binarypackage import BinaryPackage
-from com.nonterra.xpack.util import switch
+import com.nonterra.bolt.libarchive as libarchive
+from com.nonterra.bolt.libarchive import ArchiveEntry, ArchiveFileWriter
+from com.nonterra.bolt.filestats import FileStats
+from com.nonterra.bolt.binarypackage import BinaryPackage
+from com.nonterra.bolt.util import switch
 
 class DebianPackage(BinaryPackage):
 
@@ -118,7 +118,7 @@ class DebianPackage(BinaryPackage):
     #end function
 
     def assemble_parts(self, meta_data, pkg_contents, pkg_filename):
-        with TemporaryDirectory(prefix="xpack-") as tmpdir:
+        with TemporaryDirectory(prefix="bolt-") as tmpdir:
             self.write_control_part(meta_data, pkg_contents,
                     os.path.join(tmpdir, "control.tar.gz"))
             self.write_data_part(pkg_contents,
