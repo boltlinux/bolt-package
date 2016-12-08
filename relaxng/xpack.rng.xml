@@ -1,0 +1,378 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+ 
+ The MIT License (MIT)
+
+ Copyright (c) 2016 Nonterra Software Solutions
+
+ Permission is hereby granted, free of charge, to any person obtaining a copy
+ of this software and associated documentation files (the "Software"), to deal
+ in the Software without restriction, including without limitation the rights
+ to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ copies of the Software, and to permit persons to whom the Software is
+ furnished to do so, subject to the following conditions:
+
+ The above copyright notice and this permission notice shall be included in
+ all copies or substantial portions of the Software.
+
+ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+ THE SOFTWARE.
+
+-->
+<grammar xmlns="http://relaxng.org/ns/structure/1.0">
+
+    <start>
+        <element name="control">
+            <optional>
+                <ref name="defines"/>
+            </optional>
+
+            <ref name="source"/>
+
+            <oneOrMore>
+                <ref name="package"/>
+            </oneOrMore>
+
+            <ref name="changelog"/>
+        </element>
+    </start>
+
+    <!-- DEFINES -->
+    <define name="defines">
+        <element name="defines">
+            <zeroOrMore>
+                <element name="def">
+                    <attribute name="name"/>
+                    <attribute name="value"/>
+                </element>
+            </zeroOrMore>
+        </element>
+    </define>
+
+    <!-- SOURCE -->
+    <define name="source">
+        <element name="source">
+            <optional>
+                <attribute name="name"/>
+            </optional>
+            <optional>
+                <attribute name="architecture-independent">
+                    <choice>
+                        <value>true</value>
+                        <value>false</value>
+                    </choice>
+                </attribute>
+            </optional>
+
+            <!-- DESCRIPTION -->
+            <ref name="description"/>
+
+            <interleave>
+                <!-- REQUIRES -->
+                <optional>
+                    <element name="requires">
+                        <interleave>
+                            <zeroOrMore>
+                                <ref name="dependency"/>
+                            </zeroOrMore>
+                            <zeroOrMore>
+                                <element name="choice">
+                                    <oneOrMore>
+                                        <ref name="dependency"/>
+                                    </oneOrMore>
+                                </element>
+                            </zeroOrMore>
+                        </interleave>
+                    </element>
+                </optional>
+
+                <!-- SOURCES -->
+                <optional>
+                    <element name="sources">
+                        <zeroOrMore>
+                            <element name="file">
+                                <attribute name="src"/>
+                                <optional>
+                                    <attribute name="subdir"/>
+                                </optional>
+                                <optional>
+                                    <attribute name="sha256sum"/>
+                                </optional>
+                            </element>
+                        </zeroOrMore>
+                    </element>
+                </optional>
+
+                <!-- PATCHES -->
+                <optional>
+                    <element name="patches">
+                        <zeroOrMore>
+                            <element name="patchset">
+                                <optional>
+                                    <attribute name="arch"/>
+                                </optional>
+
+                                <optional>
+                                    <attribute name="subdir"/>
+                                </optional>
+
+                                <zeroOrMore>
+                                    <element name="file">
+                                        <attribute name="src"/>
+                                        <optional>
+                                            <attribute name="sha256sum"/>
+                                        </optional>
+                                    </element>
+                                </zeroOrMore>
+                            </element>
+                        </zeroOrMore>
+                    </element>
+                </optional>
+
+                <!-- RULES -->
+                <ref name="rules"/>
+            </interleave>
+        </element>
+    </define>
+
+    <!-- DESCRIPTION -->
+    <define name="description">
+        <element name="description">
+            <element name="summary">
+                <text/>
+            </element>
+            <interleave>
+                <zeroOrMore>
+                    <element name="p">
+                        <ref name="text-inline"/>
+                    </element>
+                </zeroOrMore>
+                <zeroOrMore>
+                    <element name="ul">
+                        <oneOrMore>
+                            <element name="li">
+                                <ref name="text-inline"/>
+                            </element>
+                        </oneOrMore>
+                    </element>
+                </zeroOrMore>
+            </interleave>
+        </element>
+    </define>
+
+    <!-- DEPENDENCY -->
+    <define name="dependency">
+        <element name="package">
+            <attribute name="name"/>
+            <optional>
+                <attribute name="version"/>
+            </optional>
+        </element>
+    </define>
+
+    <!-- RULES -->
+    <define name="rules">
+        <element name="rules">
+            <interleave>
+                <optional>
+                    <element name="prepare">
+                        <text/>
+                    </element>
+                </optional>
+                <optional>
+                    <element name="build">
+                        <text/>
+                    </element>
+                </optional>
+                <optional>
+                    <element name="install">
+                        <text/>
+                    </element>
+                </optional>
+                <optional>
+                    <element name="clean">
+                        <text/>
+                    </element>
+                </optional>
+            </interleave>
+        </element>
+    </define>
+
+    <!-- PACKAGE -->
+    <define name="package">
+        <element name="package">
+            <attribute name="name"/>
+            <optional>
+                <attribute name="section"/>
+            </optional>
+
+            <!-- DESCRIPTION -->
+            <ref name="description"/>
+
+            <interleave>
+                <!-- REQUIRES -->
+                <optional>
+                    <element name="requires">
+                        <interleave>
+                            <zeroOrMore>
+                                <ref name="dependency"/>
+                            </zeroOrMore>
+                            <zeroOrMore>
+                                <element name="choice">
+                                    <oneOrMore>
+                                        <ref name="dependency"/>
+                                    </oneOrMore>
+                                </element>
+                            </zeroOrMore>
+                        </interleave>
+                    </element>
+                </optional>
+
+                <!-- PROVIDES -->
+                <optional>
+                    <element name="provides">
+                        <zeroOrMore>
+                            <ref name="dependency"/>
+                        </zeroOrMore>
+                    </element>
+                </optional>
+
+                <!-- CONFLICTS -->
+                <optional>
+                    <element name="conflicts">
+                        <zeroOrMore>
+                            <ref name="dependency"/>
+                        </zeroOrMore>
+                    </element>
+                </optional>
+
+                <!-- REPLACES -->
+                <optional>
+                    <element name="replaces">
+                        <zeroOrMore>
+                            <ref name="dependency"/>
+                        </zeroOrMore>
+                    </element>
+                </optional>
+
+                <!-- CONTENTS -->
+                <optional>
+                    <element name="contents">
+                        <optional>
+                            <attribute name="subdir"/>
+                        </optional>
+
+                        <interleave>
+                            <zeroOrMore>
+                                <element name="dir">
+                                    <attribute name="src"/>
+                                    <optional>
+                                        <attribute name="owner"/>
+                                    </optional>
+                                    <optional>
+                                        <attribute name="group"/>
+                                    </optional>
+                                    <optional>
+                                        <attribute name="mode"/>
+                                    </optional>
+                                </element>
+                            </zeroOrMore>
+
+                            <zeroOrMore>
+                                <element name="file">
+                                    <attribute name="src"/>
+                                    <optional>
+                                        <attribute name="owner"/>
+                                    </optional>
+                                    <optional>
+                                        <attribute name="group"/>
+                                    </optional>
+                                    <optional>
+                                        <attribute name="mode"/>
+                                    </optional>
+                                    <optional>
+                                        <attribute name="conffile"/>
+                                    </optional>
+                                </element>
+                            </zeroOrMore>
+                        </interleave>
+                    </element>
+                </optional>
+
+                <!-- MAINTAINER SCRIPTS -->
+                <optional>
+                    <element name="maintainer-scripts">
+                        <interleave>
+                            <optional>
+                                <element name="preinst">
+                                    <text/>
+                                </element>
+                            </optional>
+                            <optional>
+                                <element name="postinst">
+                                    <text/>
+                                </element>
+                            </optional>
+                            <optional>
+                                <element name="prerm">
+                                    <text/>
+                                </element>
+                            </optional>
+                            <optional>
+                                <element name="postrm">
+                                    <text/>
+                                </element>
+                            </optional>
+                        </interleave>
+                    </element>
+                </optional>
+
+            </interleave>
+        </element>
+    </define>
+
+    <!-- CHANGELOG -->
+    <define name="changelog">
+        <element name="changelog">
+            <oneOrMore>
+                <element name="release">
+                    <optional>
+                        <attribute name="epoch"/>
+                    </optional>
+                    <attribute name="version"/>
+                    <attribute name="revision"/>
+                    <attribute name="maintainer"/>
+                    <attribute name="email"/>
+                    <attribute name="date"/>
+                    <oneOrMore>
+                        <element name="changeset">
+                            <oneOrMore>
+                                <element name="li">
+                                    <ref name="text-inline"/>
+                                </element>
+                            </oneOrMore>
+                        </element>
+                    </oneOrMore>
+                </element>
+            </oneOrMore>
+        </element>
+    </define>
+
+    <!-- TEXT AND INLINE ELEMENTS -->
+    <define name="text-inline">
+        <interleave>
+            <text/>
+            <optional>
+                <element name="em">
+                    <text/>
+                </element>
+            </optional>
+        </interleave>
+    </define>
+
+</grammar>

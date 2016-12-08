@@ -1,0 +1,196 @@
+#!/usr/bin/env python3
+# -*- encoding: utf-8 -*-
+#
+# The MIT License (MIT)
+#
+# Copyright (c) 2016 Nonterra Software Solutions
+#
+# Permission is hereby granted, free of charge, to any person obtaining a copy
+# of this software and associated documentation files (the "Software"), to deal
+# in the Software without restriction, including without limitation the rights
+# to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+# copies of the Software, and to permit persons to whom the Software is
+# furnished to do so, subject to the following conditions:
+#
+# The above copyright notice and this permission notice shall be included in
+# all copies or substantial portions of the Software.
+#
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+# AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+# OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+# THE SOFTWARE.
+#
+
+import os
+import sys
+import getopt
+
+# make xpack relocatable
+INSTALL_DIR = os.path.normpath(os.path.dirname(
+    os.path.realpath(sys.argv[0])) + os.sep + ".." )
+sys.path.insert(1, INSTALL_DIR + os.sep + 'lib')
+
+from com.nonterra.xpack.appconfig import AppConfig
+from com.nonterra.xpack.packagecontrol import PackageControl
+from com.nonterra.xpack.error import XPackError, InvocationError
+from com.nonterra.xpack.util import switch
+
+XPACK_VERSION = "1.0.0"
+XPACK_ERR_INVOCATION = 1
+XPACK_ERR_RUNTIME    = 2
+
+def print_usage():
+    print(
+        "Bolt OS Package Generator, version %s                                          \n"
+        "Copyright (C) 2016-2017, Tobias Koch <tobias.koch@nonterra.com>                \n"
+        "                                                                               \n"
+        "USAGE:                                                                         \n"
+        "                                                                               \n"
+        "   xpack [OPTIONS] <specfile>                                                  \n"
+        "                                                                               \n"
+        "PACKAGE BUILD OPTIONS:                                                         \n"
+        "                                                                               \n"
+        "  --ignore-deps        Ignore missing build dependencies.                      \n"
+        "  --no-debug-pkgs      Don't generate debug packages.                          \n"
+        "                                                                               \n"
+        "  -o --outdir=<dir>    Place resulting binary packages in this directory.      \n"
+        "                                                                               \n"
+        "  -u --unpack          Unpack and patch the sources.                           \n"
+        "  -p --prepare         Run the prepare target defined in the rules file.       \n"
+        "  -b --build           Run the build target defined in the rules file.         \n"
+        "  -i --install         Run the install target defined in the rules file.       \n"
+        "  -r --repackage       Run the install target and generate binary packages.    \n"
+        "                                                                               \n"
+        "CROSS BUILD SUPPORT:                                                           \n"
+        "                                                                               \n"
+        "                       The following parameters take as an argument a triplet  \n"
+        "                       <cpu>-<manufacturer>-<os_type> as produced by the       \n"
+        "                       config.guess script distributed with the GNU Autotools. \n"
+        "                                                                               \n"
+        "  --build-type=<type>  Build system type (guessed automatically)               \n"
+        "  --host-type=<type>   Host system type (defaults to build type)               \n"
+        "  --target-type=<type> Target system type (only for building cross-compilers)  \n"
+        "                                                                               \n"
+        "                       Each of the above is made available to the package      \n"
+        "                       scripts as environment variables                        \n"
+        "                       XPACK_{BUILD,HOST,TARGET}_TYPE, respectively.           \n"
+        "                                                                               \n"
+        "MISCELLANEOUS OPTIONS:                                                         \n"
+        "                                                                               \n"
+        "  -h --help            Print this help message.                                \n"
+        "  --list-deps          List all build dependencies.                            \n"
+        % XPACK_VERSION
+    )
+#end function
+
+def parse_cmd_line():
+    # define default configuration
+    config = {
+        "action": "default",
+        "outdir": None,
+        "format": "deb",
+        "ignore_deps": False,
+        "debug_pkgs": True,
+        "extra_prefix": "",
+        "build_type": None,
+        "host_type": None,
+        "target_type": None
+    }
+
+    try:
+        opts, args = getopt.getopt(sys.argv[1:], "ho:upbir", [
+            "help",
+            "list-deps",
+            "ignore-deps",
+            "no-debug-pkgs",
+            "outdir=",
+            "unpack",
+            "prepare",
+            "build",
+            "install",
+            "repackage",
+            "build-type=",
+            "host-type=",
+            "target-type="
+        ])
+    except getopt.GetoptError as e:
+        raise InvocationError("Error parsing command line: %s" % str(e))
+
+    for o, v in opts:
+        for case in switch(o):
+            if case("--help", "-h"):
+                print_usage()
+                sys.exit(0)
+                break
+            if case("--list-deps"):
+                config["action"] = "list_deps"
+                break
+            if case("--ignore-deps"):
+                config["ignore_deps"] = True
+                break
+            if case("--no-debug-pkgs"):
+                config["debug_pkgs"] = False
+                break
+            if case("--outdir", "-o"):
+                if not os.path.isdir(v):
+                    raise InvocationError("No such directory '%s'" % v)
+                config["outdir"] = v
+                break
+            if case("--unpack", "-u"):
+                config["action"] = "unpack"
+                break
+            if case("--prepare", "-p"):
+                config["action"] = "prepare"
+                break
+            if case("--build", "-b"):
+                config["action"] = "build"
+                break
+            if case("--install", "-i"):
+                config["action"] = "install"
+                break
+            if case("--repackage", "-r"):
+                config["action"] = "repackage"
+                break
+            if case("--build-type"):
+                config["build_type"] = v.strip()
+                break
+            if case("--host-type"):
+                config["host_type"] = v.strip()
+                break
+            if case("--target-type"):
+                config["target_type"] = v.strip()
+                break
+        #end switch
+    #end for
+
+    return config, args
+#end function
+
+if __name__ == "__main__":
+    # PARSE CMD LINE
+    try:
+        options, args = parse_cmd_line()
+    except InvocationError as e:
+        sys.stderr.write("xpack: %s\n" % str(e))
+        sys.exit(XPACK_ERR_INVOCATION)
+    #end try
+
+    if len(args) != 1:
+        print_usage()
+        sys.exit(XPACK_ERR_INVOCATION)
+    #end if
+
+    # RUN ACTION
+    try:
+        config = AppConfig.load_user_config()
+        config.update(options)
+        pkg_ctrl = PackageControl(args[0], config)
+        pkg_ctrl(config["action"])
+    except XPackError as e:
+        sys.stderr.write("xpack: %s\n" % str(e))
+        sys.exit(XPACK_ERR_RUNTIME)
+    #end try
+#end __main__
