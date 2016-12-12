@@ -49,7 +49,7 @@ def print_usage():
         "                                                                               \n"
         "USAGE:                                                                         \n"
         "                                                                               \n"
-        "   bolt-pack [OPTIONS] <specfile>                                              \n"
+        "  bolt-pack [OPTIONS] <specfile>                                               \n"
         "                                                                               \n"
         "PACKAGE BUILD OPTIONS:                                                         \n"
         "                                                                               \n"
