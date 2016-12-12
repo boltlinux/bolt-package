@@ -76,7 +76,7 @@ def print_usage():
         "                                                                               \n"
         "                       Each of the above is made available to the package      \n"
         "                       scripts as environment variables                        \n"
-        "                       BOLT_{BUILD,HOST,TARGET}_TYPE, respectively.           \n"
+        "                       BOLT_{BUILD,HOST,TARGET}_TYPE, respectively.            \n"
         "                                                                               \n"
         "MISCELLANEOUS OPTIONS:                                                         \n"
         "                                                                               \n"
@@ -94,7 +94,6 @@ def parse_cmd_line():
         "format": "deb",
         "ignore_deps": False,
         "debug_pkgs": True,
-        "extra_prefix": "",
         "build_type": None,
         "host_type": None,
         "target_type": None
