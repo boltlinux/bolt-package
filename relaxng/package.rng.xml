@@ -346,6 +346,7 @@
                     </optional>
                     <attribute name="version"/>
                     <attribute name="revision"/>
+                    <attribute name="upstream-version"/>
                     <attribute name="maintainer"/>
                     <attribute name="email"/>
                     <attribute name="date"/>
