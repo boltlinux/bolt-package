@@ -106,35 +106,39 @@ class FileStats:
     #end function
 
     def __init__(self, magic_obj, stats_obj):
-        self.__magic_obj = magic_obj
-        self.__stats_obj = stats_obj
+        self._magic_obj = magic_obj
+        self._stats_obj = stats_obj
         self.link_target = ""
+    #end function
+
+    def restat(self, filename):
+        self._stats_obj = os.lstat(filename)
     #end function
 
     @property
     def mode(self):
-        return stat.S_IMODE(self.__stats_obj.st_mode)
+        return stat.S_IMODE(self._stats_obj.st_mode)
     #end function
 
     @property
     def device(self):
-        return self.__stats_obj.st_dev
+        return self._stats_obj.st_dev
     #end function
 
     @property
     def inode(self):
-        return self.__stats_obj.st_ino
+        return self._stats_obj.st_ino
     #end function
 
     @property
     def num_links(self):
-        return self.__stats_obj.st_nlink
+        return self._stats_obj.st_nlink
     #end function
 
     @property
     def build_id(self):
         regexp_build_id = r"ELF \d+-bit LSB .*, BuildID\[sha1\]=([0-9a-fA-F]+).*"
-        m = re.match(regexp_build_id, self.__magic_obj.name)
+        m = re.match(regexp_build_id, self._magic_obj.name)
         if m:
             return m.group(1)
         return None
@@ -143,7 +147,7 @@ class FileStats:
     @property
     def is_elf_binary(self):
         regexp = r"ELF \d+-bit LSB .*"
-        if re.match(regexp, self.__magic_obj.name):
+        if re.match(regexp, self._magic_obj.name):
             return True
         return False
     #end function
@@ -151,7 +155,7 @@ class FileStats:
     @property
     def is_stripped(self):
         regexp = r"ELF \d+-bit LSB .*, .* linked.*, .*not stripped"
-        if re.match(regexp, self.__magic_obj.name):
+        if re.match(regexp, self._magic_obj.name):
             return False
         return True
     #end function
@@ -161,7 +165,7 @@ class FileStats:
         regexp_bin = r"ELF \d+-bit LSB executable.*, dynamically linked.*"
         regexp_lib = r"ELF \d+-bit LSB shared object.*, dynamically linked.*"
 
-        magic = self.__magic_obj.name
+        magic = self._magic_obj.name
         if re.match(regexp_bin, magic) or re.match(regexp_lib, magic):
             return True
 
@@ -171,7 +175,7 @@ class FileStats:
     @property
     def arch_word_size(self):
         regexp_elf = r"ELF (\d+)-bit LSB.*"
-        m = re.match(regexp_elf, self.__magic_obj.name)
+        m = re.match(regexp_elf, self._magic_obj.name)
         if m:
             return m.group(1)
         return None
@@ -179,37 +183,37 @@ class FileStats:
 
     @property
     def is_file(self):
-        return stat.S_ISREG(self.__stats_obj.st_mode) != 0
+        return stat.S_ISREG(self._stats_obj.st_mode) != 0
     #end function
 
     @property
     def is_directory(self):
-        return stat.S_ISDIR(self.__stats_obj.st_mode) != 0
+        return stat.S_ISDIR(self._stats_obj.st_mode) != 0
     #end function
 
     @property
     def is_symbolic_link(self):
-        return stat.S_ISLNK(self.__stats_obj.st_mode) != 0
+        return stat.S_ISLNK(self._stats_obj.st_mode) != 0
     #end function
 
     @property
     def is_block_device(self):
-        return stat.S_ISBLK(self.__stats_obj.st_mode) != 0
+        return stat.S_ISBLK(self._stats_obj.st_mode) != 0
     #end function
 
     @property
     def is_char_device(self):
-        return stat.S_ISCHR(self.__stats_obj.st_mode) != 0
+        return stat.S_ISCHR(self._stats_obj.st_mode) != 0
     #end function
 
     @property
     def is_fifo(self):
-        return stat.S_ISFIFO(self.__stats_obj.st_mode) != 0
+        return stat.S_ISFIFO(self._stats_obj.st_mode) != 0
     #end function
 
     @property
     def is_socket(self):
-        return stat.S_ISSOCK(self.__stats_obj.st_mode) != 0
+        return stat.S_ISSOCK(self._stats_obj.st_mode) != 0
     #end function
 
     def __getattr__(self, name):
@@ -227,9 +231,9 @@ class FileStats:
         ]
 
         if name in stat_attributes:
-            return self.__stats_obj.__getattribute__(name)
+            return self._stats_obj.__getattribute__(name)
         else:
-            return self.__magic_obj.__getattribute__(name)
+            return self._magic_obj.__getattribute__(name)
     #end function
 
 #end class
