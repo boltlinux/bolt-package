@@ -1,0 +1,3 @@
+bin/bolt-pack /usr/bin
+lib/          /usr/lib/python3/dist-packages
+relaxng/*     /usr/share/bolt-pack/

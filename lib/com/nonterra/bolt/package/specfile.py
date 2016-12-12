@@ -30,12 +30,15 @@ from com.nonterra.bolt.package.error import SpecfileError
 
 class Specfile:
 
-    RELAXNG_SCHEMA_FILE = os.path.normpath(
-        os.path.join(
-            os.path.dirname(os.path.realpath(__file__)),
-            "..", "..", "..", "..", "..", "relaxng", "package.rng.xml"
-        )
-    )
+    RELAXNG_SCHEMA_SEARCH_PATH = [
+        os.path.normpath(
+            os.path.join(
+                os.path.dirname(os.path.realpath(__file__)),
+                "..", "..", "..", "..", "..", "relaxng", "package.rng.xml"
+            )
+        ),
+        os.path.join(os.sep, "usr", "share", "bolt-pack", "package.rng.xml")
+    ]
 
     def __init__(self, filename):
         if not os.path.exists(filename):
@@ -58,7 +61,10 @@ class Specfile:
     #end function
 
     def validate_structure(self, xml_doc):
-        relaxng = etree.RelaxNG(file=Specfile.RELAXNG_SCHEMA_FILE)
+        for path in Specfile.RELAXNG_SCHEMA_SEARCH_PATH:
+            if os.path.exists(path):
+                relaxng = etree.RelaxNG(file=path)
+        #end for
 
         if not relaxng.validate(xml_doc):
             errors = []

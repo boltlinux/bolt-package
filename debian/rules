@@ -1,8 +1,11 @@
 #!/usr/bin/make -f
 
 export DH_VERBOSE = 1
-export PYBUILD_NAME=python3-bolt-package
 
 %:
 	dh $@ --with python3 --buildsystem=pybuild
 
+override_dh_clean:
+	dh_auto_clean
+	rm -fr lib/bolt_package.egg-info
+	dh_clean

@@ -25,9 +25,5 @@ setup(
     ],
 
     keywords='boltOS packaging development',
-    packages=['com.nonterra.bolt'],
-
-    # Alternatively, if you want to distribute just a my_module.py, uncomment
-    # this:
-    #   py_modules=["my_module"],
+    packages=['com.nonterra.bolt.package'],
 )
