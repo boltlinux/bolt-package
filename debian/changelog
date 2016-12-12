@@ -1,0 +1,5 @@
+bolt-package (1.0.0) unstable; urgency=medium
+
+  * Initial Release.
+
+ -- Tobias Koch <tobias.koch@nonterra.com>  Mon, 12 Dec 2016 10:21:12 +0200

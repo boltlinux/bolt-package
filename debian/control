@@ -1,0 +1,12 @@
+Source: bolt-package
+Section: devel
+Priority: optional
+Maintainer: Tobias Koch <tobias.koch@nonterra.com>
+Build-Depends: debhelper (>= 9), dh-python, python3-all, python3-setuptools
+Standards-Version: 3.9.8
+
+Package: python3-bolt-package
+Architecture: all
+Depends: ${python3:Depends}, ${misc:Depends}
+Description: The Bolt OS package manager library and tools (Python 3)
+
