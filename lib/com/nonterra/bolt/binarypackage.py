@@ -261,6 +261,7 @@ class BinaryPackage(BasePackage):
             dev = attr.stats.device
             ino = attr.stats.inode
 
+            # no need to strip hardlinked content again
             if hardlinks.setdefault(dev, {}).get(ino):
                 continue
 
@@ -283,6 +284,9 @@ class BinaryPackage(BasePackage):
 
             for cmd in cmd_list:
                 subprocess.run(cmd, stderr=subprocess.STDOUT, check=True)
+
+            # file size has changed
+            attr.stats.restat(src_path)
         #end for
     #end function
 
