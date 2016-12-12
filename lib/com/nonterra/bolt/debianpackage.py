@@ -83,19 +83,8 @@ class DebianPackage(BinaryPackage):
                 "conffile": False,
                 "stats":    FileStats.default_dir_stats()
             })
-            default_file_attrs = BinaryPackage.EntryAttributes({
-                "deftype": "file",
-                "mode":    "0644",
-                "owner":   "root",
-                "group":   "root",
-                "conffile": False,
-                "stats":    FileStats.default_file_stats()
-            })
 
-            contents = {
-                "/usr/lib/debug": default_dir_attrs,
-                "/usr/lib/debug/.build-id": default_dir_attrs
-            }
+            contents = {}
 
             for src, attr in self.contents.items():
                 if not (attr.stats.is_file and attr.stats.is_elf_binary):
@@ -105,10 +94,27 @@ class DebianPackage(BinaryPackage):
                 if not pkg_path:
                     continue
 
-                dirname = os.path.dirname(pkg_path)
-                contents.setdefault(dirname,  default_dir_attrs )
-                contents.setdefault(pkg_path, default_file_attrs)
+                dirname    = os.path.dirname(pkg_path)
+                abs_path   = os.path.normpath(self.basedir + os.sep + pkg_path)
+                file_stats = FileStats.detect_from_filename(abs_path) 
+                file_attrs = BinaryPackage.EntryAttributes({
+                    "deftype": "file",
+                    "mode":    "0644",
+                    "owner":   "root",
+                    "group":   "root",
+                    "conffile": False,
+                    "stats":    file_stats
+                })
+
+                contents.setdefault(dirname, default_dir_attrs)
+                contents.setdefault(pkg_path, file_attrs)
             #end for
+
+            if not contents:
+                return
+
+            contents["/usr/lib/debug"]           = default_dir_attrs
+            contents["/usr/lib/debug/.build-id"] = default_dir_attrs
 
             contents = OrderedDict(sorted(set(contents.items()),
                 key=lambda x: x[0]))
