@@ -26,15 +26,15 @@
 import os
 import shutil
 from lxml import etree
-from com.nonterra.bolt.sourcepackage import SourcePackage
-from com.nonterra.bolt.debianpackage import DebianPackage
-from com.nonterra.bolt.shlibcache import ShlibCache
-from com.nonterra.bolt.specfile import Specfile
-from com.nonterra.bolt.changelog import Changelog
-from com.nonterra.bolt.sourcecache import SourceCache
-from com.nonterra.bolt.platform import Platform
-from com.nonterra.bolt.appconfig import AppConfig
-from com.nonterra.bolt.error import MissingDependencies
+from com.nonterra.bolt.package.sourcepackage import SourcePackage
+from com.nonterra.bolt.package.debianpackage import DebianPackage
+from com.nonterra.bolt.package.shlibcache import ShlibCache
+from com.nonterra.bolt.package.specfile import Specfile
+from com.nonterra.bolt.package.changelog import Changelog
+from com.nonterra.bolt.package.sourcecache import SourceCache
+from com.nonterra.bolt.package.platform import Platform
+from com.nonterra.bolt.package.appconfig import AppConfig
+from com.nonterra.bolt.package.error import MissingDependencies
 
 class PackageControl:
 

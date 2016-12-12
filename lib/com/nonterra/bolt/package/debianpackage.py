@@ -29,11 +29,11 @@ import stat
 import time
 from tempfile import TemporaryDirectory
 from collections import OrderedDict
-import com.nonterra.bolt.libarchive as libarchive
-from com.nonterra.bolt.libarchive import ArchiveEntry, ArchiveFileWriter
-from com.nonterra.bolt.filestats import FileStats
-from com.nonterra.bolt.binarypackage import BinaryPackage
-from com.nonterra.bolt.util import switch
+import com.nonterra.bolt.package.libarchive as libarchive
+from com.nonterra.bolt.package.libarchive import ArchiveEntry, ArchiveFileWriter
+from com.nonterra.bolt.package.filestats import FileStats
+from com.nonterra.bolt.package.binarypackage import BinaryPackage
+from com.nonterra.bolt.package.util import switch
 
 class DebianPackage(BinaryPackage):
 

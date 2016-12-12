@@ -24,7 +24,7 @@
 #
 
 from lxml import etree
-from com.nonterra.bolt.packagemanager import PackageManager
+from com.nonterra.bolt.package.packagemanager import PackageManager
 
 class BasePackage:
 

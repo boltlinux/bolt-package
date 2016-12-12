@@ -26,14 +26,14 @@
 import os
 import re
 from lxml import etree
-from com.nonterra.bolt.error import SpecfileError
+from com.nonterra.bolt.package.error import SpecfileError
 
 class Specfile:
 
     RELAXNG_SCHEMA_FILE = os.path.normpath(
         os.path.join(
             os.path.dirname(os.path.realpath(__file__)),
-            "..", "..", "..", "..", "relaxng", "package.rng.xml"
+            "..", "..", "..", "..", "..", "relaxng", "package.rng.xml"
         )
     )
 

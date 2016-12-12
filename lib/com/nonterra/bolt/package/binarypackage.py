@@ -30,12 +30,12 @@ import subprocess
 from pathlib import Path
 from collections import OrderedDict
 from lxml import etree
-from com.nonterra.bolt.braceexpand import braceexpand
-from com.nonterra.bolt.platform import Platform
-from com.nonterra.bolt.basepackage import BasePackage
-from com.nonterra.bolt.packagedesc import PackageDescription
-from com.nonterra.bolt.filestats import FileStats
-from com.nonterra.bolt.util import switch
+from com.nonterra.bolt.package.braceexpand import braceexpand
+from com.nonterra.bolt.package.platform import Platform
+from com.nonterra.bolt.package.basepackage import BasePackage
+from com.nonterra.bolt.package.packagedesc import PackageDescription
+from com.nonterra.bolt.package.filestats import FileStats
+from com.nonterra.bolt.package.util import switch
 
 class BinaryPackage(BasePackage):
 

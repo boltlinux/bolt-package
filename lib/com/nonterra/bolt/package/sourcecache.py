@@ -27,7 +27,7 @@ import os
 import sys
 import hashlib
 import urllib.request
-from com.nonterra.bolt.progressbar import ProgressBar
+from com.nonterra.bolt.package.progressbar import ProgressBar
 
 class SourceCache:
 

@@ -24,8 +24,8 @@
 #
 
 import os
-from com.nonterra.bolt.dpkg import Dpkg
-from com.nonterra.bolt.error import PackageManagerError
+from com.nonterra.bolt.package.dpkg import Dpkg
+from com.nonterra.bolt.package.error import PackageManagerError
 
 class PackageManager:
 
