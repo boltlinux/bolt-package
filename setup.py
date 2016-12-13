@@ -1,3 +1,5 @@
+#!/usr/bin/env python3
+
 """Bolt OS packaging scripts and tools."""
 
 from setuptools import setup, find_packages
