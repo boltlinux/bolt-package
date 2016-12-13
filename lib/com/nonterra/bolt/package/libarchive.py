@@ -27,7 +27,6 @@ import os
 import ctypes
 import stat
 import pwd, grp
-from functools import wraps
 from ctypes.util import find_library
 
 lib = ctypes.cdll.LoadLibrary(find_library("archive"))
