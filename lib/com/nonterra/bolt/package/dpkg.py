@@ -33,6 +33,8 @@ class Dpkg:
     STATUS_FILE = '/var/lib/dpkg/status'
 
     def __init__(self):
+        # PACKAGE LIST
+
         self.packages = {}
         self.preferred_encoding = locale.getpreferredencoding(False)
 
@@ -67,6 +69,21 @@ class Dpkg:
                 #end if
             #end if
         #end for
+
+        # FOR VERSION COMPARISON
+
+        self._char_vals = {
+            "~": 0,
+            " ": 1,
+            "-": 2,
+            "+": 3,
+            ".": 4
+        }
+
+        for ascii_val in range(ord("A"), ord("Z") + 1):
+            self._char_vals[chr(ascii_val)] = ascii_val
+        for ascii_val in range(ord("a"), ord("z") + 1):
+            self._char_vals[chr(ascii_val)] = ascii_val
     #end function
 
     def which_package_provides(self, filename):
@@ -91,6 +108,77 @@ class Dpkg:
         return self.packages.get(package_name, None)
     #end function
 
+    def compare_versions(self, a, b):
+        m = re.match(r"^(?:(\d+):)?([-+:~.a-zA-Z0-9]+?)(?:-([^-]+))?$", a)
+        epoch_a, version_a, rev_a = m.groups(default="") if m else ("", "", "")
+        m = re.match(r"^(?:(\d+):)?([-+:~.a-zA-Z0-9]+?)(?:-([^-]+))?$", b)
+        epoch_b, version_b, rev_b = m.groups(default="") if m else ("", "", "")
+
+        epoch_a = int(epoch_a) if epoch_a else 0
+        epoch_b = int(epoch_b) if epoch_b else 0
+
+        # compare epochs
+        if epoch_a > epoch_b:
+            return +1
+        if epoch_a < epoch_b:
+            return -1
+
+        nondigit  = 0
+        digit     = 1
+
+        mode = nondigit
+        for v_a, v_b in [(version_a, version_b), (rev_a, rev_b)]:
+            while v_a or v_b:
+                if mode == nondigit:
+                    m = re.match(r"^\D+", v_a)
+                    p_a = m.group() if m else ""
+                    m = re.match(r"^\D+", v_b)
+                    p_b = m.group() if m else ""
+
+                    len_a = len(p_a)
+                    len_b = len(p_b)
+                    v_a = v_a[len_a:]
+                    v_b = v_b[len_b:]
+
+                    if len_a != len_b:
+                        if len_a > len_b:
+                            p_b += " " * (len_a - len_b)
+                        else:
+                            p_a += " " * (len_b - len_a)
+                    #end if
+
+                    for c_a, c_b in zip(p_a, p_b):
+                        if self._char_vals[c_a] > self._char_vals[c_b]:
+                            return +1
+                        if self._char_vals[c_a] < self._char_vals[c_b]:
+                            return -1
+                    #end for
+
+                    mode = digit
+                else:
+                    m = re.match(r"^\d+", v_a)
+                    p_a = m.group() if m else "0"
+                    m = re.match(r"^\d+", v_b)
+                    p_b = m.group() if m else "0"
+
+                    v_a = v_a[len(p_a):]
+                    v_b = v_b[len(p_b):]
+                    val_a = int(p_a)
+                    val_b = int(p_b)
+
+                    if val_a > val_b:
+                        return +1
+                    if val_a < val_b:
+                        return -1
+
+                    mode = nondigit
+                #end if
+            #end while
+        #end for
+
+        return 0
+    #end function
+
     def installed_version_meets_condition(self, package_name, condition=None):
         installed_version = self.installed_version_of_package(package_name)
 
@@ -99,7 +187,7 @@ class Dpkg:
         if not condition:
             return True
 
-        m = re.match(r"^(<<|<=|=|>=|>>)\s*(\S+)$", condition)
+        m = re.match(r"^\s*(<<|<=|=|>=|>>)\s*(\S+)\s*$", condition)
 
         if not m:
             msg = "invalid dependency specification '%s'" % condition
@@ -110,26 +198,19 @@ class Dpkg:
         version  = m.group(2)
 
         operator_map = {
-            "<<": "lt-nl",
-            "<=": "le-nl",
-            "=":  "eq",
-            ">=": "ge-nl",
-            ">>": "gt-nl"
+            "<<": [-1],
+            "<=": [-1, 0],
+            "=":  [0],
+            ">=": [+1, 0],
+            ">>": [+1]
         }
 
-        operator = operator_map[operator]
+        expected_result = operator_map[operator]
 
-        cmd = ["dpkg", "--compare-versions",
-                installed_version, operator, version]
+        if self.compare_versions(installed_version, version) in expected_result:
+            return True
 
-        try:
-            subprocess.run(cmd, stdout=subprocess.DEVNULL,
-                stderr=subprocess.DEVNULL, check=True)
-        except subprocess.CalledProcessError:
-            return False
-        #end try
-
-        return True
+        return False
     #end function
 
 #end class
