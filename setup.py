@@ -11,12 +11,13 @@ here = path.abspath(path.dirname(__file__))
 setup(
     name='bolt-package',
     version='1.0.0',
-    description='Bolt OS packaging scripts and tools',
-    url='https://github.com/pypa/sampleproject',
+    url='https://github.com/tobijk/bolt-package',
     author='Tobias Koch',
     author_email='tobias.koch@nonterra.com',
     license='MIT',
     package_dir={'': 'lib'},
+    platforms=['Linux'],
+    packages=['com.nonterra.bolt.package'],
 
     classifiers=[
         'Development Status :: 5 - Production/Stable',
@@ -27,5 +28,6 @@ setup(
     ],
 
     keywords='boltOS packaging development',
-    packages=['com.nonterra.bolt.package'],
+    description='Bolt OS packaging scripts and tools',
+    long_description='Bolt OS packaging scripts and tools',
 )
