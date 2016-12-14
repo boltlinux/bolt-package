@@ -176,6 +176,9 @@ class SourcePackage(BasePackage):
     def patch(self, source_dir="."):
         patch = Platform.find_executable("patch")
 
+        sys.stdout.flush()
+        sys.stderr.flush()
+
         for patch_file, subdir in self.patches:
             if not os.path.isabs(patch_file):
                 patch_file = os.path.normpath(self.basedir + 
@@ -205,6 +208,9 @@ class SourcePackage(BasePackage):
         env    = self.__update_env(env)
         script = self.rules[action].encode("utf-8")
         cmd    = ["/bin/sh", "-e", "-x", "-s"]
+
+        sys.stdout.flush()
+        sys.stderr.flush()
 
         try:
             subprocess.run(cmd, env=env, input=script,
