@@ -34,9 +34,9 @@
 
             <ref name="source"/>
 
-            <oneOrMore>
+            <zeroOrMore>
                 <ref name="package"/>
-            </oneOrMore>
+            </zeroOrMore>
 
             <ref name="changelog"/>
         </element>
