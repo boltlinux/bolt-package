@@ -55,9 +55,14 @@ class SourcePackage(BasePackage):
         self.description = PackageDescription(
                 source_node.xpath("description")[0])
 
+        try:
+            req_node = source_node.xpath("requires")[0]
+        except IndexError:
+            req_node = "<requires></requires>"
+
         self.relations = {}
         self.relations["requires"] = BasePackage.DependencySpecification\
-                .from_xml(source_node.xpath("requires")[0])
+                .from_xml(req_node)
 
         self.patches = []
         for patch_set in source_node.xpath("patches/patchset"):
