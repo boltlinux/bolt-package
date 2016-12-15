@@ -169,27 +169,30 @@ def parse_cmd_line():
 #end function
 
 if __name__ == "__main__":
-    # PARSE CMD LINE
     try:
+        # PARSE CMD LINE
         options, args = parse_cmd_line()
+
+        if len(args) != 1:
+            print_usage()
+            sys.exit(BOLT_ERR_INVOCATION)
+        #end if
+
+        # LOAD USER CONFIG
+        config = AppConfig.load_user_config()
+        config.update(options)
+
+        # RUN ACTION
+        pkg_ctrl = PackageControl(args[0], config)
+        pkg_ctrl(config["action"])
     except InvocationError as e:
         sys.stderr.write("bolt-pack: %s\n" % str(e))
         sys.exit(BOLT_ERR_INVOCATION)
-    #end try
-
-    if len(args) != 1:
-        print_usage()
-        sys.exit(BOLT_ERR_INVOCATION)
-    #end if
-
-    # RUN ACTION
-    try:
-        config = AppConfig.load_user_config()
-        config.update(options)
-        pkg_ctrl = PackageControl(args[0], config)
-        pkg_ctrl(config["action"])
     except XPackError as e:
         sys.stderr.write("bolt-pack: %s\n" % str(e))
         sys.exit(BOLT_ERR_RUNTIME)
+    except KeyboardInterrupt:
+        sys.stderr.write("Caught keyboard interrupt. Exiting.\n")
+        sys.exit(0)
     #end try
 #end __main__
