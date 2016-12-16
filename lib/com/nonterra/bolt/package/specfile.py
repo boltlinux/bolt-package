@@ -84,6 +84,8 @@ class Specfile:
         errors = []
 
         specification = [
+            ["//patchset/@strip", r"^[1-9]\d*$"],
+            ["//patchset/file/@strip", r"^[1-9]\d*$"],
             ["//*[name() = 'source' or name() = 'package']/@name", r"^[a-zA-Z0-9]*(?:(?:\+|-|\.)[a-zA-Z0-9]*)*$" ],
             ["//binary//package/@version", r"(?:^(?:<<|<=|=|>=|>>)\s*(?:(\d+):)?([-.+~a-zA-Z0-9]+?)(?:-([.~+a-zA-Z0-9]+)){0,1}$)|(?:^==$)"],
             ["//source//package/@version", r"(?:^(?:<<|<=|=|>=|>>)\s*(?:(\d+):)?([-.+~a-zA-Z0-9]+?)(?:-([.~+a-zA-Z0-9]+)){0,1}$)"],

@@ -66,10 +66,14 @@ class SourcePackage(BasePackage):
 
         self.patches = []
         for patch_set in source_node.xpath("patches/patchset"):
+            patch_set_subdir = patch_set.get("subdir", "")
+            patch_set_strip  = patch_set.get("strip", "1")
+
             for file_node in patch_set.xpath("file"):
                 self.patches.append([
                     file_node.get("src", ""),
-                    patch_set.get("subdir", "")
+                    file_node.get("subdir", patch_set_subdir),
+                    file_node.get("strip", patch_set_strip)
                 ])
             #end for
         #end for
@@ -184,7 +188,7 @@ class SourcePackage(BasePackage):
         sys.stdout.flush()
         sys.stderr.flush()
 
-        for patch_file, subdir in self.patches:
+        for patch_file, subdir, strip_components in self.patches:
             if not os.path.isabs(patch_file):
                 patch_file = os.path.normpath(self.basedir + 
                         os.sep + patch_file)
@@ -192,8 +196,8 @@ class SourcePackage(BasePackage):
 
             e_source_dir = source_dir if not subdir else source_dir + \
                     os.sep + subdir
-            cmd = [patch, "-f", "-p1", "-d", e_source_dir, "-i", patch_file]
-
+            cmd = [patch, "-f", "-p%s" % strip_components, "-d", e_source_dir,
+                    "-i", patch_file]
             try:
                 subprocess.run(cmd, stderr=subprocess.STDOUT, check=True)
             except subprocess.CalledProcessError:

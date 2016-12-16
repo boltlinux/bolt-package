@@ -114,18 +114,20 @@
                         <zeroOrMore>
                             <element name="patchset">
                                 <optional>
-                                    <attribute name="arch"/>
-                                </optional>
-
-                                <optional>
                                     <attribute name="subdir"/>
+                                </optional>
+                                <optional>
+                                    <attribute name="strip"/>
                                 </optional>
 
                                 <zeroOrMore>
                                     <element name="file">
                                         <attribute name="src"/>
                                         <optional>
-                                            <attribute name="sha256sum"/>
+                                            <attribute name="subdir"/>
+                                        </optional>
+                                        <optional>
+                                            <attribute name="strip"/>
                                         </optional>
                                     </element>
                                 </zeroOrMore>
