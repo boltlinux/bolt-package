@@ -7,6 +7,6 @@ Standards-Version: 3.9.8
 
 Package: python3-bolt-package
 Architecture: all
-Depends: ${python3:Depends}, ${misc:Depends}
+Depends: ${python3:Depends}, python3-dateutil, ${misc:Depends}
 Description: The Bolt OS package generator library and scripts (Python 3)
 
