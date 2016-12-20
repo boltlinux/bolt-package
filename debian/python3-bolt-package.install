@@ -1,2 +1,2 @@
-bin/bolt-pack /usr/bin
-relaxng/*     /usr/share/bolt-pack/
+bin/*     /usr/bin
+relaxng/* /usr/share/bolt-pack/

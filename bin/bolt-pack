@@ -45,7 +45,7 @@ BOLT_ERR_RUNTIME    = 2
 def print_usage():
     print(
         "Bolt OS Package Generator, version %s                                          \n"
-        "Copyright (C) 2016-2017, Tobias Koch <tobias.koch@nonterra.com>                \n"
+        "Copyright (C) 2016-2017 Tobias Koch <tobias.koch@nonterra.com>                 \n"
         "                                                                               \n"
         "USAGE:                                                                         \n"
         "                                                                               \n"

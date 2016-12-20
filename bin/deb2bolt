@@ -1,0 +1,589 @@
+#!/usr/bin/env python3
+# -*- encoding: utf-8 -*-
+#
+# The MIT License (MIT)
+#
+# Copyright (c) 2016 Nonterra Software Solutions
+#
+# Permission is hereby granted, free of charge, to any person obtaining a copy
+# of this software and associated documentation files (the "Software"), to deal
+# in the Software without restriction, including without limitation the rights
+# to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+# copies of the Software, and to permit persons to whom the Software is
+# furnished to do so, subject to the following conditions:
+#
+# The above copyright notice and this permission notice shall be included in
+# all copies or substantial portions of the Software.
+#
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+# AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+# OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+# THE SOFTWARE.
+#
+
+DEB2BOLT_VERSION = "0.1.0"
+
+import os
+import sys
+import re
+from dateutil.parser import parse as parse_datetime
+from xml.sax.saxutils import escape as xml_escape
+
+################################################################################
+################################## TEMPLATES ###################################
+################################################################################
+
+CHANGELOG_XML_TEMPLATE = """\
+<?xml version="1.0" encoding="utf-8"?>
+<changelog>
+%(releases)s\
+</changelog>
+"""
+
+RELEASE_XML_TEMPLATE = """\
+    <release version="%(version)s" revision="1"
+        maintainer="%(maintainer)s" email="%(email)s"
+        date="%(date)s">
+%(changesets)s
+    </release>
+"""
+
+CHANGESET_XML_TEMPLATE_PLAIN = """\
+        <changeset>
+%(changes)s
+        </changeset>"""
+
+CHANGESET_XML_TEMPLATE_CONTRIBUTOR = """\
+        <changeset contributor="%(contributor)s">
+%(changes)s
+        </changeset>"""
+
+PKG_RULES_XML_TEMPLATE = """\
+<?xml version="1.0" encoding="utf-8"?>
+<rules>
+    <prepare>
+    <![CDATA[
+
+cd $BOLT_BUILD_DIR
+$BOLT_SOURCE_DIR/configure \\
+    --prefix=/usr \\
+    --disable-nls
+
+    ]]>
+    </prepare>
+
+    <build>
+    <![CDATA[
+
+cd $BOLT_BUILD_DIR
+make -j$BOLT_PARALLEL_JOBS
+
+    ]]>
+    </build>
+
+    <install>
+    <![CDATA[
+
+cd $BOLT_BUILD_DIR
+make DESTDIR=$BOLT_INSTALL_DIR install
+
+    ]]>
+    </install>
+</rules>
+"""
+
+SOURCE_PKG_XML_TEMPLATE = """\
+<?xml version="1.0" encoding="utf-8"?>
+<control xmlns:xi="http://www.w3.org/2001/XInclude">
+    <defines>
+        <def name="BOLT_BUILD_DIR" value="build"/>
+    </defines>
+
+    <source name="%(source_name)s" architecture-independent="%(arch_indep)s">
+        <description>
+            <summary>%(summary)s</summary>
+            <p>
+%(description)s
+            </p>
+        </description>
+
+        <sources>
+            <file src="%(source_name)s-%(upstream_version)s.tar.gz" subdir="sources"
+                sha256sum=""/>
+            <file src="patches.01.tar.gz" subdir="patches"
+                sha256sum=""/>
+        </sources>
+
+        <requires>
+%(build_deps)s\
+        </requires>
+
+        <xi:include href="rules.xml"/>
+    </source>
+
+%(binary_packages)s
+    <xi:include href="changelog.xml"/>
+</control>
+"""
+
+BINARY_PKG_XML_TEMPLATE = """\
+<?xml version="1.0" encoding="utf-8"?>
+<package name="%(binary_name)s" section="%(section)s">
+    <description>
+        <summary>%(summary)s</summary>
+        <p>
+%(description)s
+        </p>
+    </description>
+
+    <requires>
+%(install_deps)s\
+    </requires>
+
+    <contents>
+%(contents)s\
+    </contents>
+</package>
+"""
+
+################################################################################
+#################################### CODE ######################################
+################################################################################
+
+class Changelog:
+
+    class Release:
+
+        class ChangeSet:
+
+            class Change:
+
+                def __init__(self, desc):
+                    self.desc = xml_escape(desc)
+
+                def as_xml(self, indent=0):
+                    info_set = {"desc": self.desc}
+                    return " " * 12 + " " * indent * 4 + \
+                            """<li>%(desc)s</li>""" % info_set
+                #end function
+
+            #end class
+
+            def __init__(self, content, contributor=None):
+                self.parse_content(content)
+                self.contributor = contributor
+            #end function
+
+            def parse_content(self, content):
+                changes = []
+                lines   = []
+
+                for line in content.splitlines():
+                    if not line.strip():
+                        continue
+
+                    m = re.match(r"^(\s*)(\*|-)(.*)$", line)
+                    if not m:
+                        lines.append(line.strip())
+                        continue
+                    if lines:
+                        changes.append(Changelog.Release.ChangeSet\
+                                .Change(" ".join(lines)))
+                        lines = []
+
+                    lines.append(m.group(3).strip())
+                #end for
+
+                if lines:
+                    changes.append(Changelog.Release.ChangeSet\
+                            .Change(" ".join(lines)))
+
+                self.changes = changes
+            #end function
+
+            def as_xml(self):
+                changes = "\n".join([c.as_xml() for c in self.changes])
+
+                info_set = {
+                    "changes": changes,
+                    "contributor": self.contributor
+                }
+
+                if self.contributor:
+                    return CHANGESET_XML_TEMPLATE_CONTRIBUTOR % info_set
+
+                return CHANGESET_XML_TEMPLATE_PLAIN % info_set
+            #end function
+
+        #end class
+
+        def __init__(self, version, content, maintainer, email, date):
+            if "-" in version:
+                self.version, self.rev = version.rsplit("-", 1)
+            else:
+                self.version  = version
+                self.revision = "0"
+            #end if
+
+            self.parse_content(content)
+
+            self.maintainer = maintainer
+            self.email      = email
+            self.date       = date
+        #end function
+
+        def parse_content(self, content):
+            contributor = None
+            changesets  = []
+            tmp_content = ""
+
+            for line in content.splitlines():
+                if not line.strip():
+                    if tmp_content:
+                        changesets.append(Changelog.Release\
+                                .ChangeSet(tmp_content, contributor))
+                        tmp_content = ""
+                        contributor = None
+                    #end if
+                    continue
+                #end if
+
+                m = re.match(r"^\s*\[(.*?)\]\s*", line)
+                if m:
+                    contributor = m.group(1).strip()
+                    continue
+                #end if
+
+                tmp_content += line + "\n"
+            #end for
+
+            if tmp_content:
+                changesets.append(Changelog.Release\
+                        .ChangeSet(tmp_content, contributor))
+            #end if
+
+            self.changesets = changesets
+        #end function
+
+        def as_xml(self):
+            changesets = "\n".join([cs.as_xml() for cs in self.changesets])
+
+            info_set = {
+                "version":    self.version,
+                "maintainer": self.maintainer,
+                "email":      self.email,
+                "date":       self.date,
+                "changesets": changesets
+            }
+
+            return RELEASE_XML_TEMPLATE % info_set
+        #end function
+
+    #end class
+
+    def __init__(self, filename):
+        self.releases = []
+
+        version = None
+        content = ""
+        email   = ""
+        date    = None
+
+        with open(filename, "r", encoding="utf-8") as f:
+            for line in f:
+                m = re.match(r"^\s*[-.a-z0-9]+\s+\(([^)]+)\)(?:\s+\w+)+;"\
+                        r"\s*urgency=\w+", line)
+                if m:
+                    version = m.group(1)
+                    content = ""
+                    continue
+                #end if
+
+                m = re.match(r"^\s* --\s+([^<]+)\s+<([^>]+)>\s+"\
+                        r"((?:Mon|Tue|Wed|Thu|Fri|Sat|Sun), .*$)", line)
+                if m:
+                    maintainer = m.group(1)
+                    email = m.group(2)
+                    date = parse_datetime(m.group(3))
+                    self.releases.append(Changelog.Release(version,
+                        content.strip(), maintainer, email, date))
+                    continue
+                #end if
+
+                content += line
+            #end for
+        #end with
+    #end function
+
+    def as_xml(self):
+        info_set = {
+            "releases": "".join([e.as_xml() for e in self.releases])
+        }
+        return CHANGELOG_XML_TEMPLATE % info_set
+    #end function
+
+#end class
+
+class Control:
+
+    def __init__(self, filename):
+        with open(filename, "r", encoding="utf-8") as f:
+            content = f.read()
+
+        entries = []
+
+        # split control file into blocks
+        for entry in re.split(r"\n\n", content):
+            entry = entry.strip()
+            entry = re.sub(r"^\s*\n$", r"\n", entry)
+
+            field_name  = None
+            field_value = None
+
+            # parse the block
+            fields = {}
+            for line in entry.splitlines():
+                if not line or line.startswith("#"):
+                    continue
+
+                if re.match(r"^\S+:", line):
+                    field_name, field_value = line.split(":", 1)
+
+                    field_name  = field_name.strip().lower()
+                    field_value = field_value.strip()
+
+                    fields[field_name] = field_value
+
+                    if field_name in ["source", "package"]:
+                        fields["name"] = field_value
+                else:
+                    fields[field_name] += "\n" + line
+                #end if
+            #end for
+
+            # throw out udebs and debug packages
+            if fields.get("section", "") == "debian-installer":
+                continue
+            if re.match(r".*?-(?:udeb|dbg|debug)$", fields.get("package", "")):
+                continue
+            if fields.get("xc-package-type", "") == "udeb":
+                continue
+
+            if fields:
+                entries.append(fields)
+        #end for
+
+        for fields in entries:
+            for dep_type in ["pre-depends", "depends", "build-depends",
+                    "suggests", "provides", "breaks", "conflicts",
+                    "replaces", "build-conflicts"]:
+                if fields.get(dep_type):
+                    val = fields[dep_type]
+                    val = re.sub(r"\s+", "", val)
+                    val = re.sub(r"\[[^\]]+\]", "", val)
+                    val = re.sub(r"(\([<=>]+)", r"\1 ", val)
+                    val = re.sub(r"= \$\{binary:Version\}", "==", val)
+                    val = re.sub(r"", "", val)
+                    val = val.split(",")
+                    val = filter(lambda x: not x.startswith("$"), val)
+                    val = filter(lambda x: x, val)
+                    val = map(lambda x: re.match(r"([^(]+)(?:\(([^)]+)\))?", x)\
+                        .groups(default=""), val)
+                    fields[dep_type] = list(val)
+                else:
+                    fields[dep_type] = []
+                #end if
+            #end for
+
+            if "description" in fields:
+                if "\n" in fields["description"]:
+                    summary, desc = re.split(r"\n", fields["description"], 1)
+                else:
+                    summary, desc = fields["description"], ""
+                #end if
+                summary, desc = summary.strip(), desc.strip()
+                summary, desc = xml_escape(summary), xml_escape(desc)
+                desc = re.sub(r"^(\s+)\.\s*$", r"</p>\n<p>", desc, flags=re.M)
+                desc = re.sub(r" +", r" ", desc)
+                desc = re.sub(r"^\s*", r" " * 8, desc, flags=re.M)
+                fields["summary"], fields["description"] = summary, desc
+            #end if
+
+            if not "source" in fields:
+                fields["files"], fields["dirs"] = self.load_content_spec(
+                        fields["name"], os.path.dirname(filename))
+            #end if
+        #end for
+
+        self.source     = entries.pop(0)
+        self.packages   = entries
+        self.arch_indep = not bool(list(filter(lambda x: x.get(
+            "architecture", "all") != "all", entries)))
+    #end function
+
+    def load_content_spec(self, pkg_name, directory):
+        content = {}
+
+        for filename in ["files", "install", "dirs", pkg_name + ".files",
+                pkg_name + ".install", pkg_name + ".dirs"]:
+            abs_path = os.path.join(directory, filename)
+
+            if not os.path.exists(abs_path):
+                continue
+            if filename in ["files", "install", "dirs"]:
+                content_type = filename
+            else:
+                # file extension
+                content_type = filename.rsplit(".", 1)[1]
+            #end if
+
+            with open(abs_path, "r", encoding="utf-8") as f:
+                lines = []
+                for line in f.readlines():
+                    line = line.strip()
+                    if not line:
+                        continue
+                    m = re.match(r"^(\S+)\s+(\S+)$", line)
+                    if m:
+                        line = m.group(2)
+                    lines.append(line)
+                #end for
+
+                content[content_type] = lines
+            #end with
+        #end for
+
+        files = content.get("files", []) + content.get("install", [])
+        files = sorted(set(files))
+        files = [(os.sep + f).replace(os.sep*2, os.sep) for f in files]
+        dirs  = sorted(set(content.get("dirs", [])))
+        dirs  = [(os.sep + d).replace(os.sep*2, os.sep) for d in dirs ]
+
+        return files, dirs
+    #end function
+
+    def as_xml(self):
+        binary_pkgs = ""
+        for pkg in self.packages:
+            binary_pkgs += "    " + "<xi:include href=\"%s.xml\"/>\n" \
+                    % pkg.get("name")
+
+        build_deps = ""
+        for dep in self.source.get("build-depends"):
+            if dep[1]:
+                build_deps += " " * 12
+                build_deps += "<package name=\"%s\" version=\"%s\"/>\n" \
+                        % (dep[0], dep[1])
+            else:
+                build_deps += " " * 12 + "<package name=\"%s\"/>\n" % dep[0]
+        #end for
+
+        desc = self.packages[0].get("description", "")
+        if desc:
+            desc = re.sub(r"^\s*", r" " * 12, desc, flags=re.M)
+
+        info_set = {
+            "source_name": self.source["name"],
+            "arch_indep": "true" if self.arch_indep else "false",
+            "summary": self.packages[0].get("summary", ""),
+            "description": desc,
+            "upstream_version": self.version,
+            "build_deps": build_deps,
+            "binary_packages": binary_pkgs
+        }
+
+        return SOURCE_PKG_XML_TEMPLATE % info_set
+    #end function
+
+#end class
+
+class PackageInfo:
+
+    def __init__(self, path):
+        if os.path.isdir(path):
+            deb_dir = os.path.realpath(path)
+        elif os.path.isfile(path):
+            deb_dir = os.path.realpath(os.path.dirname(path))
+        else:
+            raise ValueError("no such file or directory: %s" % path)
+
+        self.control   = Control(deb_dir + os.sep + "control")
+        self.changelog = Changelog(deb_dir + os.sep + "changelog")
+
+        self.control.version = self.changelog.releases[0].version
+    #end function
+
+    def convert2bolt(self):
+        with open("changelog.xml", "w+", encoding="utf-8") as f:
+            f.write(self.changelog.as_xml())
+        with open("rules.xml", "w+", encoding="utf-8") as f:
+            f.write(PKG_RULES_XML_TEMPLATE)
+        with open("package.xml", "w+", encoding="utf-8") as f:
+            f.write(self.control.as_xml())
+
+        for pkg in self.control.packages:
+            install_deps = ""
+            for dep in pkg.get("depends", []) + pkg.get("pre-depends", []):
+                if dep[1]:
+                    install_deps += " " * 8
+                    install_deps += "<package name=\"%s\" version=\"%s\"/>\n" \
+                            % (dep[0], dep[1])
+                else:
+                    install_deps += " " * 8 + "<package name=\"%s\"/>\n" % dep[0]
+            #end for
+
+            contents = ""
+            for d in pkg.get("dirs", []):
+                contents += " " * 8 + "<dir src=\"%s\"/>\n" % d
+            for f in pkg.get("files", []):
+                contents += " " * 8 + "<file src=\"%s\"/>\n" % f
+
+            info_set = {
+                "binary_name": pkg["name"],
+                "section": pkg.get("section", "unknown"),
+                "summary": pkg["summary"],
+                "description": pkg.get("description", ""),
+                "install_deps": install_deps,
+                "contents": contents
+            }
+
+            with open(pkg["name"] + ".xml", "w+", encoding="utf-8") as f:
+                f.write(BINARY_PKG_XML_TEMPLATE % info_set)
+    #end function
+
+#end class
+
+################################################################################
+#################################### MAIN ######################################
+################################################################################
+
+def print_usage():
+    print(
+        "Debian Source to Bolt OS Source Package Converter, version %s                  \n"
+        "Copyright (C) 2016-2017 Tobias Koch <tobias.koch@nonterra.com>                 \n"
+        "                                                                               \n"
+        "USAGE:                                                                         \n"
+        "                                                                               \n"
+        "  deb2bolt <debian_control>                                                    \n"
+        % DEB2BOLT_VERSION
+    )
+#end function
+
+if __name__ == "__main__":
+    if not len(sys.argv) == 2:
+        print_usage()
+        sys.exit(1)
+    #end if
+
+    ref_file = sys.argv[1]
+
+    try:
+        pkg_info = PackageInfo(ref_file)
+        pkg_info.convert2bolt()
+    except Exception as e:
+        sys.stderr.write("deb2bolt: %s\n" % str(e))
+        sys.exit(1)
+#end __main__
