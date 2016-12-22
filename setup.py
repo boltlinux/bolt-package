@@ -17,7 +17,7 @@ setup(
     license='MIT',
     package_dir={'': 'lib'},
     platforms=['Linux'],
-    packages=['com.nonterra.bolt.package'],
+    packages=['com.nonterra.bolt.package', 'com.nonterra.bolt.debian'],
 
     classifiers=[
         'Development Status :: 5 - Production/Stable',
