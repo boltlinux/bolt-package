@@ -33,6 +33,7 @@ INSTALL_DIR = os.path.normpath(os.path.dirname(
     os.path.realpath(sys.argv[0])) + os.sep + ".." )
 sys.path.insert(1, INSTALL_DIR + os.sep + 'lib')
 
+from com.nonterra.bolt.package.util import switch
 from com.nonterra.bolt.debian.sourcepackage import SourcePackage
 
 BOLT_VERSION = "1.0.0"
@@ -67,8 +68,8 @@ def parse_cmd_line():
     }
 
     try:
-        opts, args = getopt.getopt(sys.argv[1:], "h", ["help", "gen-patches",
-            "use-orig"])
+        opts, args = getopt.getopt(sys.argv[1:], "ha", ["help",
+            "gen-patches", "use-orig", "do-all"])
     except getopt.GetoptError as e:
         raise InvocationError("Error parsing command line: %s" % str(e))
 
@@ -82,7 +83,11 @@ def parse_cmd_line():
                 config["gen_patches"] = True
                 break
             if case("--use-orig"):
-                config[""] = True
+                config["use_orig"] = True
+                break
+            if case("--do-all", "-a"):
+                config["gen_patches"] = True
+                config["use_orig"] = True
                 break
         #end switch
     #end for
@@ -101,7 +106,7 @@ if __name__ == "__main__":
         #end if
 
         # RUN ACTION
-        SourcePackage(args[0]).to_bolt()
+        SourcePackage(args[0]).to_bolt(**options)
     except Exception as e:
         sys.stderr.write("deb2bolt: %s\n" % str(e))
         sys.exit(1)

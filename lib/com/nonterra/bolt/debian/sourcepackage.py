@@ -25,6 +25,10 @@
 
 import os
 import re
+import hashlib
+import shutil
+import com.nonterra.bolt.package.libarchive as libarchive
+from com.nonterra.bolt.package.libarchive import ArchiveEntry, ArchiveFileWriter
 from com.nonterra.bolt.debian.changelog import Changelog
 from com.nonterra.bolt.debian.patchseries import PatchSeries
 from com.nonterra.bolt.debian.binarypackage import BinaryPackage
@@ -80,10 +84,10 @@ SOURCE_PKG_XML_TEMPLATE = """\
         </description>
 
         <sources>
-            <file src="%(source_name)s-%(upstream_version)s.tar.gz" subdir="sources"
-                sha256sum=""/>
+            <file src="%(tarball)s" subdir="sources"
+                sha256sum="%(source_sha256sum)s"/>
             <file src="patches.01.tar.gz" subdir="patches"
-                sha256sum=""/>
+                sha256sum="%(patches_sha256sum)s"/>
         </sources>
 %(patches)s
         <requires>
@@ -113,7 +117,10 @@ class SourcePackage(BasePackageMixin):
         self.changelog = Changelog(os.path.join(dirname, "changelog"))
         self.patches   = PatchSeries(os.path.join(dirname, "patches", "series"))
         self.version   = self.changelog.releases[0].version
+        self.revision  = self.changelog.releases[0].revision
         self.packages  = []
+        self.directory = dirname
+        self.tarball   = self.find_orig_tarball(dirname)
 
         for entry in blocks:
             bin_pkg = BinaryPackage(entry)
@@ -138,6 +145,23 @@ class SourcePackage(BasePackageMixin):
                 break
             #end if
         #end for
+
+        if self.tarball:
+            h = hashlib.sha256()
+            with open(self.tarball, "rb") as f:
+                while True:
+                    buf = f.read(4096)
+                    if not buf:
+                        break
+                    h.update(buf)
+                #end while
+            #end with
+            self.sha256sum = h.hexdigest()
+        else:
+            self.sha256sum = ""
+        #end if
+
+        self.sha256sum_patches = ""
     #end function
 
     def as_xml(self, indent=0):
@@ -161,27 +185,49 @@ class SourcePackage(BasePackageMixin):
         if desc:
             desc = re.sub(r"^\s*", r" " * 12, desc, flags=re.M)
 
+        if self.tarball:
+            extension = self.tarball.rsplit(".", 1)[-1]
+            tarball   = self.get("name") + "-" + self.version + ".tar." + \
+                    extension
+        else:
+            tarball = self.get("name") + "-" + self.version + ".tar.gz"
+        #end if
+
         info_set = {
             "source_name": self.get("name"),
             "arch_indep": "true" if self.arch_indep else "false",
             "summary": self.packages[0].get("summary", ""),
             "description": desc,
             "upstream_version": self.version,
+            "tarball": tarball,
             "build_deps": build_deps,
             "binary_packages": binary_pkgs,
-            "patches": self.patches.as_xml(indent=2)
+            "patches": self.patches.as_xml(indent=2),
+            "source_sha256sum": self.sha256sum,
+            "patches_sha256sum": self.sha256sum_patches
         }
 
         return SOURCE_PKG_XML_TEMPLATE % info_set
     #end function
 
-    def to_bolt(self):
+    def find_orig_tarball(self, directory):
+        search_dir  = os.path.join(directory, "..", "..")
+        source_name = self.get("name")
+
+        for entry in os.listdir(search_dir):
+            m = re.match("^%s_.*?\\.orig\\.tar\\.\\w+$" % source_name, entry)
+            if m:
+                return os.path.join(search_dir, entry)
+        #end for
+
+        return None
+    #end function
+
+    def to_bolt(self, gen_patches=False, use_orig=False):
         with open("changelog.xml", "w+", encoding="utf-8") as f:
             f.write(self.changelog.as_xml())
         with open("rules.xml", "w+", encoding="utf-8") as f:
             f.write(PKG_RULES_XML_TEMPLATE)
-        with open("package.xml", "w+", encoding="utf-8") as f:
-            f.write(self.as_xml())
 
         source_section = self.get("section", "unknown")
 
@@ -191,6 +237,60 @@ class SourcePackage(BasePackageMixin):
             with open(pkg.get("name") + ".xml", "w+", encoding="utf-8") as f:
                 f.write(pkg.as_xml())
         #end for
+
+        if gen_patches:
+            patch_dir = self.directory + os.sep + "patches"
+            filename  = self.version + os.sep + "patch.%s.tar.gz" \
+                    % self.revision.zfill(2)
+            os.makedirs(self.version, exist_ok=True)
+
+            with ArchiveFileWriter(filename, libarchive.FORMAT_TAR_USTAR,
+                    libarchive.COMPRESSION_GZIP) as archive:
+                with ArchiveEntry() as archive_entry:
+                    for p in self.patches:
+                        abs_path = os.path.join(patch_dir, p)
+
+                        archive_entry.clear()
+                        archive_entry.copy_stat(abs_path)
+                        archive_entry.pathname = "patches" + os.sep + p
+                        archive_entry.uname = "root"
+                        archive_entry.gname = "root"
+                        archive.write_entry(archive_entry)
+
+                        with open(filename, "rb") as f:
+                            while True:
+                                buf = f.read(4096)
+                                if not buf:
+                                    break
+                                archive.write_data(buf)
+                            #end while
+                        #end with
+                    #end for
+                #end with
+            #end with
+
+            with open(filename, "rb") as f:
+                h = hashlib.sha256()
+                while True:
+                    buf = f.read(4096)
+                    if not buf:
+                        break
+                    h.update(buf)
+                #end while
+                self.sha256sum_patches = h.hexdigest()
+            #end with
+        #end if
+
+        if use_orig and self.tarball:
+            extension = self.tarball.rsplit(".", 1)[-1]
+            filename  = self.get("name") + "-" + self.version + ".tar." + \
+                    extension
+            os.makedirs(self.version, exist_ok=True)
+            shutil.copyfile(self.tarball, self.version + os.sep +filename)
+        #end if
+
+        with open("package.xml", "w+", encoding="utf-8") as f:
+            f.write(self.as_xml())
     #end function
 
 #end class

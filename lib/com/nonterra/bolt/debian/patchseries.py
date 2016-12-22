@@ -45,6 +45,11 @@ class PatchSeries:
         #end if
     #end function
 
+    def __iter__(self):
+        for p in self.patches:
+            yield p
+    #end function
+
     def as_xml(self, indent=0):
         if not self.patches:
             return ""
