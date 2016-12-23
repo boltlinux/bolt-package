@@ -93,7 +93,7 @@ class Specfile:
             ["//changelog/release/@version", r"^([-.+~a-zA-Z0-9]+?)(?:-([.~+a-zA-Z0-9]+)){0,1}$"],
             ["//changelog/release/@revision", r"^[.~+a-zA-Z0-9]+$"],
             ["//changelog/release/@email", r"^[-_%.a-zA-Z0-9]+@[-.a-z0-9]+\.[a-z]{2,4}$"],
-            ["//changelog/release/@date", r"^\d{4}-\d{2}-\d{2}\s+\d{2}:\d{2}:\d{2}\s+(?:((?:-|\+)\d{4})|(?:(?:GMT|UTC)(?:(?:-|\+)\d{1,2}))|[a-zA-Z]+)$"]
+            ["//changelog/release/@date", r"^\d{4}-\d{2}-\d{2}\s+\d{2}:\d{2}:\d{2}\s*(?:((?:-|\+)\d{2}:?\d{2})|(?:(?:GMT|UTC)(?:(?:-|\+)\d{1,2}))|[a-zA-Z]+)$"]
         ]
 
         for xpath, regexp in specification:
