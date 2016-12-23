@@ -128,6 +128,9 @@ class ShlibCache:
                 stats = attr.stats
             #end if
 
+            if not stats.is_dynamically_linked:
+                continue
+
             new_shared_obj             = ShlibCache.SharedObject(src)
             new_shared_obj.pkg_name    = binary_package.name
             new_shared_obj.pkg_version = binary_package.version
