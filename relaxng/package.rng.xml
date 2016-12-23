@@ -356,6 +356,9 @@
                     <attribute name="date"/>
                     <oneOrMore>
                         <element name="changeset">
+                            <optional>
+                                <attribute name="contributor"/>
+                            </optional>
                             <oneOrMore>
                                 <element name="li">
                                     <ref name="text-inline"/>
