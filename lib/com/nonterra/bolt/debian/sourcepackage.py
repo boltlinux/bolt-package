@@ -86,7 +86,7 @@ SOURCE_PKG_XML_TEMPLATE = """\
         <sources>
             <file src="%(tarball)s" subdir="sources"
                 sha256sum="%(source_sha256sum)s"/>
-            <file src="patches.01.tar.gz" subdir="patches"
+            <file src="%(patch_tarball)s" subdir="patches"
                 sha256sum="%(patches_sha256sum)s"/>
         </sources>
 %(patches)s
@@ -121,6 +121,7 @@ class SourcePackage(BasePackageMixin):
         self.packages  = []
         self.directory = dirname
         self.tarball   = self.find_orig_tarball(dirname)
+        self.patch_tarball = "patches.01.tar.gz"
 
         for entry in blocks:
             bin_pkg = BinaryPackage(entry)
@@ -204,7 +205,8 @@ class SourcePackage(BasePackageMixin):
             "binary_packages": binary_pkgs,
             "patches": self.patches.as_xml(indent=2),
             "source_sha256sum": self.sha256sum,
-            "patches_sha256sum": self.sha256sum_patches
+            "patches_sha256sum": self.sha256sum_patches,
+            "patch_tarball": self.patch_tarball
         }
 
         return SOURCE_PKG_XML_TEMPLATE % info_set
@@ -240,7 +242,7 @@ class SourcePackage(BasePackageMixin):
 
         if gen_patches:
             patch_dir = self.directory + os.sep + "patches"
-            filename  = self.version + os.sep + "patch.%s.tar.gz" \
+            filename  = self.version + os.sep + "patches.%s.tar.gz" \
                     % self.revision.zfill(2)
             os.makedirs(self.version, exist_ok=True)
 
@@ -278,6 +280,7 @@ class SourcePackage(BasePackageMixin):
                     h.update(buf)
                 #end while
                 self.sha256sum_patches = h.hexdigest()
+                self.patch_tarball = os.path.basename(filename)
             #end with
         #end if
 
