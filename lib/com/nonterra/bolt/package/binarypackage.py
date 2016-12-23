@@ -48,6 +48,7 @@ class BinaryPackage(BasePackage):
             self.group    = spec.get("group")
             self.conffile = spec.get("conffile")
             self.stats    = spec.get("stats")
+            self.dbg_info = None
 
             if isinstance(self.conffile, str):
                 self.conffile = True if self.conffile.lower() == "true" \
