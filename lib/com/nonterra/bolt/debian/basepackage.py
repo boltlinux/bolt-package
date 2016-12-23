@@ -65,6 +65,7 @@ class BasePackageMixin:
                 val = re.sub(r"\[[^\]]+\]", "", val)
                 val = re.sub(r"(\([<=>]+)", r"\1 ", val)
                 val = re.sub(r"= \$\{binary:Version\}", "==", val)
+                val = re.sub(r"= \$\{source:Version\}", "==", val)
                 val = re.sub(r"", "", val)
                 val = val.split(",")
                 val = filter(lambda x: not x.startswith("$"), val)
