@@ -250,16 +250,16 @@ class SourcePackage(BasePackageMixin):
                     libarchive.COMPRESSION_GZIP) as archive:
                 with ArchiveEntry() as archive_entry:
                     for p in self.patches:
-                        abs_path = os.path.join(patch_dir, p)
+                        patch_abs_path = os.path.join(patch_dir, p)
 
                         archive_entry.clear()
-                        archive_entry.copy_stat(abs_path)
+                        archive_entry.copy_stat(patch_abs_path)
                         archive_entry.pathname = "patches" + os.sep + p
                         archive_entry.uname = "root"
                         archive_entry.gname = "root"
                         archive.write_entry(archive_entry)
 
-                        with open(filename, "rb") as f:
+                        with open(patch_abs_path, "rb") as f:
                             while True:
                                 buf = f.read(4096)
                                 if not buf:
