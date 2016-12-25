@@ -82,7 +82,7 @@ class BinaryPackage(BasePackage):
         self.description = PackageDescription(bin_node.find("description"))
         self.maintainer  = bin_node.get("maintainer") + " <" + \
                 bin_node.get("email") + ">"
-        self.version     = (epoch + ":" if epoch > 0 else "") + version + \
+        self.version     = (epoch + ":" if int(epoch) > 0 else "") + version + \
                 ("-" + revision if revision != None else "")
         self.section     = bin_node.get("section", "unknown")
         self.source      = bin_node.get("source")
