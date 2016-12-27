@@ -320,6 +320,9 @@ class BinaryPackage(BasePackage):
                         pkg_name, version = shared_obj.package_name_and_version()
                         if not pkg_name or not version or pkg_name == self.name:
                             continue
+                        if not "requires" in self.relations:
+                            self.relations["requires"] = \
+                                    BasePackage.DependencySpecification()
                         self.relations["requires"][pkg_name] = \
                                 BasePackage.Dependency(pkg_name, ">= %s" % version)
                     #end for
