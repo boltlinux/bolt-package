@@ -40,7 +40,7 @@ PKG_RULES_XML_TEMPLATE = """\
     <prepare>
     <![CDATA[
 
-cd $BOLT_BUILD_DIR
+cd "$BOLT_BUILD_DIR"
 $BOLT_SOURCE_DIR/configure \\
     --prefix=/usr \\
     --disable-nls
@@ -51,8 +51,8 @@ $BOLT_SOURCE_DIR/configure \\
     <build>
     <![CDATA[
 
-cd $BOLT_BUILD_DIR
-make -j$BOLT_PARALLEL_JOBS
+cd "$BOLT_BUILD_DIR"
+make -j"$BOLT_PARALLEL_JOBS"
 
     ]]>
     </build>
@@ -60,8 +60,8 @@ make -j$BOLT_PARALLEL_JOBS
     <install>
     <![CDATA[
 
-cd $BOLT_BUILD_DIR
-make DESTDIR=$BOLT_INSTALL_DIR install
+cd "$BOLT_BUILD_DIR"
+make DESTDIR="$BOLT_INSTALL_DIR" install
 
     ]]>
     </install>
