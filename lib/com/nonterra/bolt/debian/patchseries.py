@@ -28,10 +28,11 @@ import re
 
 class PatchSeries:
 
-    def __init__(self, series_file):
+    def __init__(self, series_file=None):
         self.patches = []
+        self.patch_subdir = "patches"
 
-        if os.path.exists(series_file):
+        if series_file and os.path.exists(series_file):
             with open(series_file, "r", encoding="utf-8") as f:
                 for line in f:
                     line = line.strip()
@@ -42,6 +43,8 @@ class PatchSeries:
                     self.patches.append(line)
                 #end for
             #end with
+
+            self.patch_subdir = os.path.basename(os.path.dirname(series_file))
         #end if
     #end function
 

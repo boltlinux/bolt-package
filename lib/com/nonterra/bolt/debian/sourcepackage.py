@@ -114,8 +114,16 @@ class SourcePackage(BasePackageMixin):
 
         self.parse_content(blocks.pop(0))
 
+        self.patches = PatchSeries()
+        for patch_subdir in ["patches-applied", "patches"]:
+            series_file = os.path.join(dirname, patch_subdir, "series")
+            if os.path.exists(series_file):
+                self.patches = PatchSeries(series_file)
+                break
+            #end if
+        #end for
+
         self.changelog = Changelog(os.path.join(dirname, "changelog"))
-        self.patches   = PatchSeries(os.path.join(dirname, "patches", "series"))
         self.version   = self.changelog.releases[0].version
         self.revision  = self.changelog.releases[0].revision
         self.packages  = []
@@ -243,7 +251,7 @@ class SourcePackage(BasePackageMixin):
         #end for
 
         if gen_patches:
-            patch_dir = self.directory + os.sep + "patches"
+            patch_dir = os.path.join(self.directory, self.patches.patch_subdir)
             filename  = self.version + os.sep + "patches.%s.tar.gz" \
                     % self.revision.zfill(2)
             os.makedirs(self.version, exist_ok=True)
