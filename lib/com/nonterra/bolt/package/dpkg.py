@@ -64,7 +64,7 @@ class Dpkg:
                             meta_data["provides"].split(",")]
                     for name in provides:
                         if not name in self.packages:
-                            self.packages[name] = ''
+                            self.packages[name] = meta_data["version"]
                     #end for
                 #end if
             #end if
