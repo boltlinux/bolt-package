@@ -133,7 +133,13 @@ class BinaryPackage(BasePackage):
             #end if
         #end for
 
-        self.content_subdir = bin_node.find("contents", {}).get("subdir")
+        content_node = bin_node.find("contents")
+        if content_node is not None:
+            self.content_subdir = content_node.get("subdir")
+        else:
+            self.content_subdir = ""
+        #end function
+
         self.basedir        = os.path.realpath(".")
         self.output_dir     = ".."
         self.host_arch      = Platform.config_guess()
