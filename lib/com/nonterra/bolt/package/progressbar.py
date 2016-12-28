@@ -32,10 +32,16 @@ class ProgressBar:
         self._total    = total_size
         self._isatty   = self._out_file.isatty()
         self._lastval  = -1
+        self._total_reached = False
     #end function
 
     def __call__(self, amount):
-        percent = int(amount * 100.0 / self._total)
+        if self._total == 0:
+            percent = 100
+        else:
+            percent = int(amount * 100.0 / self._total)
+        #end if
+
         if percent == self._lastval:
             return
 
@@ -46,8 +52,12 @@ class ProgressBar:
             self._out_file.write("[" + "#" * num_bars + \
                     " " * num_spaces + "] %i%%\r" % percent)
         if amount >= self._total:
-            self._out_file.write("[" + "#" * num_bars + \
-                    " " * num_spaces + "] %i%%\n" % percent)
+            if not self._total_reached:
+                self._out_file.write("[" + "#" * num_bars + \
+                        " " * num_spaces + "] %i%%\n" % percent)
+                self._total_reached = True
+            #end if
+        #end if
 
         self._lastval = percent
     #end function
