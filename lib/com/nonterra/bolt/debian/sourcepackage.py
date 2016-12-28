@@ -108,7 +108,7 @@ class SourcePackage(BasePackageMixin):
         with open(filename, "r", encoding="utf-8") as f:
             content = f.read()
 
-        content = re.sub(r"^\s*\n$", r"\n", content)
+        content = re.sub(r"^\s*\n$", r"\n", content, flags=re.M)
         blocks  = re.split(r"\n\n", content)
         dirname = os.path.dirname(filename)
 
@@ -124,6 +124,8 @@ class SourcePackage(BasePackageMixin):
         self.patch_tarball = "patches.01.tar.gz"
 
         for entry in blocks:
+            if not entry.strip():
+                continue
             bin_pkg = BinaryPackage(entry)
 
             # throw out udebs and debug packages
