@@ -15,9 +15,13 @@ setup(
     author='Tobias Koch',
     author_email='tobias.koch@nonterra.com',
     license='MIT',
-    package_dir={'': 'lib'},
-    platforms=['Linux'],
     packages=['com.nonterra.bolt.package', 'com.nonterra.bolt.debian'],
+    package_dir={'': 'lib'},
+    data_files=[
+        ('/usr/bin', ['bin/bolt-pack', 'bin/deb2bolt']),
+        ('/usr/share/bolt-pack/', ['relaxng/package.rng.xml'])
+    ],
+    platforms=['Linux'],
 
     classifiers=[
         'Development Status :: 5 - Production/Stable',
