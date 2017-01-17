@@ -112,7 +112,12 @@ class SourcePackage(BasePackageMixin):
         blocks  = re.split(r"\n\n", content)
         dirname = os.path.dirname(filename)
 
-        self.parse_content(blocks.pop(0))
+        try:
+            self.parse_content(blocks.pop(0))
+        except:
+            msg = "error parsing control file."
+            raise ControlFileSyntaxError(msg)
+        #end try
 
         self.patches = PatchSeries()
         for patch_subdir in ["patches-applied", "patches"]:

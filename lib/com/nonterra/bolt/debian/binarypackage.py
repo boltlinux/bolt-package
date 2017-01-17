@@ -26,6 +26,7 @@
 import os
 import re
 from com.nonterra.bolt.debian.basepackage import BasePackageMixin
+from com.nonterra.bolt.debian.error import ControlFileSyntaxError
 
 BINARY_PKG_XML_TEMPLATE = """\
 <?xml version="1.0" encoding="utf-8"?>
@@ -50,7 +51,13 @@ BINARY_PKG_XML_TEMPLATE = """\
 class BinaryPackage(BasePackageMixin):
 
     def __init__(self, content):
-        self.parse_content(content)
+        try:
+            self.parse_content(content)
+        except:
+            msg = "error parsing control file."
+            raise ControlFileSyntaxError(msg)
+        #end try
+    #end function
 
     def load_content_spec(self, directory):
         pkg_name = self.fields["name"]
