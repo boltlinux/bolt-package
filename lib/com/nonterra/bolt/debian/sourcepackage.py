@@ -139,7 +139,10 @@ class SourcePackage(BasePackageMixin):
         for entry in blocks:
             if not entry.strip():
                 continue
+
             bin_pkg = BinaryPackage(entry)
+            if not "name" in bin_pkg.fields:
+                continue
 
             # throw out udebs and debug packages
             if bin_pkg.fields.get("section", "") == "debian-installer":
@@ -265,6 +268,7 @@ class SourcePackage(BasePackageMixin):
                     libarchive.COMPRESSION_GZIP) as archive:
                 with ArchiveEntry() as archive_entry:
                     for p in self.patches:
+                        p = re.sub(r"\s+-p\d+\s*$", r"", p)
                         patch_abs_path = os.path.join(patch_dir, p)
 
                         archive_entry.clear()

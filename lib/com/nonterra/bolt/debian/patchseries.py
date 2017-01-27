@@ -61,6 +61,7 @@ class PatchSeries:
         buf += '<patches>\n'
         buf += '    <patchset subdir="sources">\n'
         for p in self.patches:
+            p = re.sub(r"\s+-p\d+\s*$", r"", p)
             buf += '        <file src="patches/%s"/>\n' % p
         buf += '    </patchset>\n'
         buf += '</patches>'
