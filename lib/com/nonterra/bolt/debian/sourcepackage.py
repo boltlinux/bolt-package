@@ -186,8 +186,10 @@ class SourcePackage(BasePackageMixin):
     def as_xml(self, indent=0):
         binary_pkgs = ""
         for pkg in self.packages:
-            binary_pkgs += "    " + "<xi:include href=\"%s.xml\"/>\n" \
-                    % pkg.get("name")
+            pkg_name = pkg.get("name")
+            if pkg_name.endswith("-doc"):
+                continue
+            binary_pkgs += "    " + "<xi:include href=\"%s.xml\"/>\n" % pkg_name
         #end for
 
         build_deps = ""
@@ -252,9 +254,13 @@ class SourcePackage(BasePackageMixin):
         source_section = self.get("section", "unknown")
 
         for pkg in self.packages:
+            pkg_name = pkg.get("name")
+
+            if pkg_name.endswith("-doc"):
+                continue
             if not pkg.get("section", ""):
                 pkg.fields["section"] = source_section
-            with open(pkg.get("name") + ".xml", "w+", encoding="utf-8") as f:
+            with open(pkg_name + ".xml", "w+", encoding="utf-8") as f:
                 f.write(pkg.as_xml())
         #end for
 
