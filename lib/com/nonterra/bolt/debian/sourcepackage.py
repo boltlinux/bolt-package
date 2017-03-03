@@ -104,13 +104,13 @@ SOURCE_PKG_XML_TEMPLATE = """\
 
 class SourcePackage(BasePackageMixin):
 
-    def __init__(self, filename):
+    def __init__(self, filename, use_network=True):
         with open(filename, "r", encoding="utf-8") as f:
             content = f.read()
 
         content = re.sub(r"^\s*\n$", r"\n", content, flags=re.M)
         blocks  = re.split(r"\n\n", content)
-        dirname = os.path.dirname(filename)
+        debdir  = os.path.dirname(filename)
 
         try:
             self.parse_content(blocks.pop(0))
@@ -121,19 +121,19 @@ class SourcePackage(BasePackageMixin):
 
         self.patches = PatchSeries()
         for patch_subdir in ["patches-applied", "patches"]:
-            series_file = os.path.join(dirname, patch_subdir, "series")
+            series_file = os.path.join(debdir, patch_subdir, "series")
             if os.path.exists(series_file):
                 self.patches = PatchSeries(series_file)
                 break
             #end if
         #end for
 
-        self.changelog = Changelog(os.path.join(dirname, "changelog"))
+        self.changelog = Changelog(os.path.join(debdir, "changelog"))
         self.version   = self.changelog.releases[0].version
         self.revision  = self.changelog.releases[0].revision
         self.packages  = []
-        self.directory = dirname
-        self.tarball   = self.find_orig_tarball(dirname)
+        self.directory = debdir
+        self.tarball   = self.find_orig_tarball(debdir)
         self.patch_tarball = "patches.01.tar.gz"
 
         for entry in blocks:
@@ -144,6 +144,8 @@ class SourcePackage(BasePackageMixin):
             if not "name" in bin_pkg.fields:
                 continue
 
+            bin_pkg.fields["version"] = self.version
+
             # throw out udebs and debug packages
             if bin_pkg.fields.get("section", "") == "debian-installer":
                 continue
@@ -153,7 +155,8 @@ class SourcePackage(BasePackageMixin):
             if bin_pkg.fields.get("xc-package-type", "") == "udeb":
                 continue
 
-            bin_pkg.load_content_spec(dirname)
+            bin_pkg.load_content_spec(debdir, bin_pkg.get("name"),
+                    self.version, use_network=use_network)
             self.packages.append(bin_pkg)
         #end for
 
@@ -245,7 +248,7 @@ class SourcePackage(BasePackageMixin):
         return None
     #end function
 
-    def to_bolt(self, gen_patches=False, use_orig=False):
+    def to_bolt(self, gen_patches=False, use_orig=False, use_network=True):
         with open("changelog.xml", "w+", encoding="utf-8") as f:
             f.write(self.changelog.as_xml())
         with open("rules.xml", "w+", encoding="utf-8") as f:

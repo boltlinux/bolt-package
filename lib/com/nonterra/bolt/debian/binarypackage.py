@@ -25,7 +25,10 @@
 
 import os
 import re
+import stat
+import sys
 from com.nonterra.bolt.debian.basepackage import BasePackageMixin
+from com.nonterra.bolt.debian.packageutils import PackageUtilsMixin
 from com.nonterra.bolt.debian.error import ControlFileSyntaxError
 
 BINARY_PKG_XML_TEMPLATE = """\
@@ -48,7 +51,7 @@ BINARY_PKG_XML_TEMPLATE = """\
 </package>
 """
 
-class BinaryPackage(BasePackageMixin):
+class BinaryPackage(BasePackageMixin, PackageUtilsMixin):
 
     def __init__(self, content):
         try:
@@ -59,65 +62,20 @@ class BinaryPackage(BasePackageMixin):
         #end try
     #end function
 
-    def load_content_spec(self, directory):
-        pkg_name = self.fields["name"]
-        content  = {}
-
-        extensions = [".files", ".install", ".dirs", ".files.in",
-                ".install.in", ".dirs.in"]
-        install_file_list  = [pkg_name + ext for ext in extensions] \
-                + ["files", "install", "dirs"]
-
-        for filename in install_file_list:
-            abs_path = os.path.join(directory, filename)
-            if not os.path.exists(abs_path):
-                continue
-
-            parts = filename.split(".")
-            if parts[-1] == "in":
-                content_type = parts[-2]
-            else:
-                content_type = parts[-1]
-
-            with open(abs_path, "r", encoding="utf-8") as f:
-                lines = []
-                for line in f.readlines():
-                    line = line.strip()
-
-                    if not line:
-                        continue
-
-                    m = re.match(r"^(\S+)\s+(\S+)$", line)
-                    if m:
-                        line = m.group(1)
-                    if "share/doc" in line:
-                        continue
-                    if "share/man" in line:
-                        continue
-
-                    line = re.sub(re.escape("${DEB_HOST_MULTIARCH}"), "", line)
-                    line = re.sub(r"^(/)?(s)?bin", r"\1usr/\2bin", line)
-                    line = re.sub(r"^(/)?lib", r"\1usr/lib", line)
-                    line = re.sub(r"usr/lib/\*/", r"usr/lib/", line)
-                    line = os.path.normpath(line)
-
-                    lines.append(line)
-                #end for
-
-                content[content_type] = lines
-            #end with
-        #end for
-
-        files = content.get("files", []) + content.get("install", [])
-        files = sorted(set(files))
-        files = [(os.sep + f).replace(os.sep*2, os.sep) for f in files]
-        dirs  = sorted(set(content.get("dirs", [])))
-        dirs  = [(os.sep + d).replace(os.sep*2, os.sep) for d in dirs ]
-        self.fields["files"], self.fields["dirs"] = files, dirs
+    def load_content_spec(self, debdir, pkg_name, pkg_version,
+            use_network=True):
+        sys.stdout.write("Trying to figure out '%s' contents ...\n" % pkg_name)
+        if use_network:
+            self.contents = self.get_content_spec_via_package_pool(
+                    pkg_name, pkg_version)
+        else:
+            self.contents = self.get_content_spec_local_guesswork(
+                    debdir, pkg_name, pkg_version)
     #end function
 
     def as_xml(self, indent=0):
         install_deps = ""
+
         for dep in self.get("depends", []) + self.get("pre-depends", []):
             if dep[1]:
                 install_deps += " " * 8
@@ -128,10 +86,40 @@ class BinaryPackage(BasePackageMixin):
         #end for
 
         contents = ""
-        for d in self.get("dirs", []):
-            contents += " " * 8 + "<dir src=\"%s\"/>\n" % d
-        for f in self.get("files", []):
-            contents += " " * 8 + "<file src=\"%s\"/>\n" % f
+
+        for entry in self.contents:
+            entry_path,  \
+            entry_type,  \
+            entry_mode,  \
+            entry_uname, \
+            entry_gname = entry
+
+            contents += \
+                " " * 8 + \
+                '<%s src="%s"' % ("dir" if entry_type == stat.S_IFDIR \
+                    else "file", entry_path)
+
+            if entry_type == stat.S_IFDIR:
+                default_mode = 0o755
+            elif entry_type == stat.S_IFLNK:
+                default_mode = 0o777
+            elif entry_type == stat.S_IFREG:
+                if "/bin/" in entry_path or "/sbin/" in entry_path:
+                    default_mode = 0o755
+                else:
+                    default_mode = 0o644
+                #end if
+            #end if
+
+            if entry_mode and entry_mode != default_mode:
+                contents += ' mode="%04o"' % entry_mode
+            if entry_uname and entry_uname != "root":
+                contents += ' user="%s"'   % entry_uname
+            if entry_gname and entry_gname != "root":
+                contents += ' group="%s"'  % entry_gname
+
+            contents += '/>\n'
+        #end for
 
         info_set = {
             "binary_name": self.get("name"),

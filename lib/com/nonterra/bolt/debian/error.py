@@ -28,3 +28,12 @@ class Deb2BoltError(Exception):
 
 class ControlFileSyntaxError(Deb2BoltError):
     pass
+
+class AptCacheNotFoundError(Deb2BoltError):
+    pass
+
+class DebianPackageContentMissing(Deb2BoltError):
+    pass
+
+class PackageRetrievalError(Deb2BoltError):
+    pass
