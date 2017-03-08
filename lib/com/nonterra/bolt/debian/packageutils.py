@@ -133,36 +133,32 @@ class PackageUtilsMixin:
             "/usr/share/man/",
             "/usr/share/info/"
         ]
-
         for prefix in doc_prefixes:
-            if path.startswith(prefix):
+            if path == prefix.rstrip(os.sep) or path.startswith(prefix):
                 return True
-
         return False
     #end function
 
     def is_l10n_path(self, path):
-        l10n_prefixes = [
-            "/usr/share/locale/",
-        ]
-
-        for prefix in l10n_prefixes:
-            if path.startswith(prefix):
-                return True
-
-        return False
+        if path  == "/usr/share/locale" or \
+                path.startswith("/usr/share/locale/"):
+            return True
+        else:
+            return False
     #end function
 
     def is_menu_path(self, path):
-        l10n_prefixes = [
-            "/usr/share/menu/",
-        ]
+        if path == "/usr/share/menu" or path.startswith("/usr/share/menu/"):
+            return True
+        else:
+            return False
+    #end function
 
-        for prefix in l10n_prefixes:
-            if path.startswith(prefix):
-                return True
-
-        return False
+    def is_mime_path(self, path):
+        if path == "/usr/lib/mime" or path.startswith("/usr/lib/mime/"):
+            return True
+        else:
+            return False
     #end function
 
     def fix_path(self, path):
@@ -221,12 +217,6 @@ class PackageUtilsMixin:
                     entry_path = self.fix_path(entry_path)
 
                     if self.is_path_implicit(entry_path):
-                        continue
-                    if self.is_doc_path(entry_path):
-                        continue
-                    if self.is_l10n_path(entry_path):
-                        continue
-                    if self.is_menu_path(entry_path):
                         continue
 
                     if content_type == "dirs":

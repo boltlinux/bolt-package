@@ -25,6 +25,7 @@
 
 import os
 import re
+import stat
 import hashlib
 import shutil
 import com.nonterra.bolt.package.libarchive as libarchive
@@ -160,6 +161,9 @@ class SourcePackage(BasePackageMixin):
             self.packages.append(bin_pkg)
         #end for
 
+        if use_network:
+            self.simplify_package_contents()
+
         self.arch_indep = True
         for bin_pkg in self.packages:
             if bin_pkg.fields.get("architecture", "all") != "all":
@@ -184,6 +188,83 @@ class SourcePackage(BasePackageMixin):
         #end if
 
         self.sha256sum_patches = ""
+    #end function
+
+    def simplify_package_contents(self):
+        for pkg in self.packages:
+            uniq_prefixes = {}
+            pkg.contents.sort()
+
+            for entry in pkg.contents:
+                entry_path = os.path.dirname(entry[0])
+                entry_type = entry[1]
+                entry_uniq = True
+
+                if not entry_path or entry_type == stat.S_IFDIR:
+                    continue
+
+                entry_path = entry_path.rstrip(os.sep) + os.sep
+
+                # check if the path is also in another package
+                for tmp_pkg in self.packages:
+                    if id(tmp_pkg) == id(pkg):
+                        continue
+                    for tmp_entry in tmp_pkg.contents:
+                        tmp_entry_path = tmp_entry[0]
+                        if tmp_entry_path.startswith(entry_path):
+                            entry_uniq = False
+                            break
+                    #end for
+                    if not entry_uniq:
+                        break
+                #end for
+
+                if not entry_uniq:
+                    continue
+
+                # check if there are collisions and fix them
+                for prefix in list(uniq_prefixes):
+                    if prefix.startswith(entry_path):
+                        del uniq_prefixes[prefix]
+                    elif entry_path.startswith(prefix + os.sep):
+                        entry_uniq = False
+                        break
+                    #end if
+                #end for
+
+                if entry_uniq:
+                    uniq_prefixes[entry_path.rstrip(os.sep)] = 1
+            #end for
+
+            # delete entries that are included in a prefix
+            i = 0
+            while i < len(pkg.contents):
+                entry = pkg.contents[i]
+
+                entry_path = entry[0]
+                entry_type = entry[1]
+
+                if entry_type != stat.S_IFDIR:
+                    entry_path = os.path.dirname(entry_path)
+
+                index_deleted = False
+
+                for prefix in uniq_prefixes:
+                    if entry_path == prefix or \
+                            entry_path.startswith(prefix + os.sep):
+                        del pkg.contents[i]
+                        index_deleted = True
+                        break
+                    #end if
+                #end for
+
+                if not index_deleted:
+                    i += 1
+            #end while
+
+            for entry_path in uniq_prefixes:
+                pkg.contents.append([entry_path, 0, 0, "root", "root"])
+        #end for
     #end function
 
     def as_xml(self, indent=0):

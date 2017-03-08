@@ -71,11 +71,13 @@ class BinaryPackage(BasePackageMixin, PackageUtilsMixin):
         else:
             self.contents = self.get_content_spec_local_guesswork(
                     debdir, pkg_name, pkg_version)
+        #end if
     #end function
 
     def as_xml(self, indent=0):
-        install_deps = ""
+        self.contents.sort()
 
+        install_deps = ""
         for dep in self.get("depends", []) + self.get("pre-depends", []):
             if dep[1]:
                 install_deps += " " * 8
@@ -86,13 +88,21 @@ class BinaryPackage(BasePackageMixin, PackageUtilsMixin):
         #end for
 
         contents = ""
-
         for entry in self.contents:
             entry_path,  \
             entry_type,  \
             entry_mode,  \
             entry_uname, \
             entry_gname = entry
+
+            if self.is_doc_path(entry_path):
+                continue
+            if self.is_l10n_path(entry_path):
+                continue
+            if self.is_menu_path(entry_path):
+                continue
+            if self.is_mime_path(entry_path):
+                continue
 
             contents += \
                 " " * 8 + \
