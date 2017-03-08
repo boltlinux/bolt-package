@@ -116,7 +116,6 @@ if __name__ == "__main__":
         SourcePackage(args[0], use_network=options["use_network"])\
                 .to_bolt(**options)
     except Exception as e:
-        raise
         sys.stderr.write("deb2bolt: %s\n" % str(e))
         sys.exit(1)
 #end __main__
