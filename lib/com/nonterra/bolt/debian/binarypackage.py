@@ -79,12 +79,17 @@ class BinaryPackage(BasePackageMixin, PackageUtilsMixin):
 
         install_deps = ""
         for dep in self.get("depends", []) + self.get("pre-depends", []):
-            if dep[1]:
+            pkg_name, pkg_version = dep
+
+            if self.is_pkg_name_debian_specific(pkg_name):
+                continue
+
+            if pkg_version:
                 install_deps += " " * 8
                 install_deps += "<package name=\"%s\" version=\"%s\"/>\n" \
-                        % (dep[0], dep[1])
+                        % (pkg_name, pkg_version)
             else:
-                install_deps += " " * 8 + "<package name=\"%s\"/>\n" % dep[0]
+                install_deps += " " * 8 + "<package name=\"%s\"/>\n" % pkg_name
         #end for
 
         contents = ""
@@ -102,6 +107,8 @@ class BinaryPackage(BasePackageMixin, PackageUtilsMixin):
             if self.is_menu_path(entry_path):
                 continue
             if self.is_mime_path(entry_path):
+                continue
+            if self.is_misc_unneeded(entry_path):
                 continue
 
             contents += \

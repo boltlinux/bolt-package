@@ -161,6 +161,29 @@ class PackageUtilsMixin:
             return False
     #end function
 
+    def is_misc_unneeded(self, path):
+        unneeded_prefixes = [
+            "/usr/share/lintian/",
+            "/usr/share/bash-completion/"
+        ]
+        for prefix in unneeded_prefixes:
+            if path == prefix.rstrip(os.sep) or path.startswith(prefix):
+                return True
+        return False
+    #end function
+
+    def is_pkg_name_debian_specific(self, name):
+        if name.startswith("dpkg"):
+            return True
+        if name.startswith("debhelper"):
+            return True
+        if name.endswith("debconf"):
+            return True
+        if name.startswith("dh-"):
+            return True
+        return False
+    #end function
+
     def fix_path(self, path):
         if path in ["./", "/"]:
             return "/"
@@ -174,6 +197,7 @@ class PackageUtilsMixin:
         path = re.sub(r"^(/)?(s)?bin", r"\1usr/\2bin", path)
         path = re.sub(r"^(/)?lib", r"\1usr/lib", path)
         path = re.sub(r"usr/lib/\*/", r"usr/lib/", path)
+        path = re.sub(r"usr/lib/\S+-linux-gnu(/|$)", r"usr/lib/\1", path)
         path = os.path.normpath(path)
 
         return path
@@ -247,7 +271,7 @@ class PackageUtilsMixin:
     def get_content_spec_via_package_pool(self, pkg_name, pkg_version):
         contents = []
 
-        apt_cmd = ["apt-cache", "show", "%s=%s*" % (pkg_name, pkg_version)]
+        apt_cmd = ["apt-cache", "--no-all-versions", "show",  "%s" % pkg_name]
         try:
             apt_output = subprocess.run(apt_cmd, stdout=subprocess.PIPE,
                     stderr=subprocess.STDOUT, check=True)\
@@ -277,8 +301,6 @@ class PackageUtilsMixin:
             raise AptCacheNotFoundError(
                     "could not find pool location for %s=%s" % \
                             (pkg_name, pkg_version))
-        #end if
-
         pool_url = "http://ftp.debian.org/debian/" + pool_path
 
         with TemporaryDirectory(prefix="deb2bolt-") as tmpdir:

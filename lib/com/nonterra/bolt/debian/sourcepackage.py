@@ -34,6 +34,7 @@ from com.nonterra.bolt.debian.changelog import Changelog
 from com.nonterra.bolt.debian.patchseries import PatchSeries
 from com.nonterra.bolt.debian.binarypackage import BinaryPackage
 from com.nonterra.bolt.debian.basepackage import BasePackageMixin
+from com.nonterra.bolt.debian.packageutils import PackageUtilsMixin
 
 PKG_RULES_XML_TEMPLATE = """\
 <?xml version="1.0" encoding="utf-8"?>
@@ -103,7 +104,7 @@ SOURCE_PKG_XML_TEMPLATE = """\
 </control>
 """
 
-class SourcePackage(BasePackageMixin):
+class SourcePackage(BasePackageMixin, PackageUtilsMixin):
 
     def __init__(self, filename, use_network=True):
         with open(filename, "r", encoding="utf-8") as f:
@@ -278,6 +279,11 @@ class SourcePackage(BasePackageMixin):
 
         build_deps = ""
         for dep in self.get("build-depends"):
+            pkg_name, pkg_version = dep
+
+            if self.is_pkg_name_debian_specific(pkg_name):
+                continue
+
             if dep[1]:
                 build_deps += " " * 12
                 build_deps += "<package name=\"%s\" version=\"%s\"/>\n" \

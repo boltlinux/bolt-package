@@ -71,7 +71,11 @@ class BasePackageMixin:
                 val = filter(lambda x: not x.startswith("$"), val)
                 val = filter(lambda x: x, val)
                 val = map(lambda x: re.match(r"([^(]+)(?:\(([^)]+)\))?", x)\
-                    .groups(default=""), val)
+                        .groups(default=""), val)
+                val = map(lambda x: (x[0].split("|")[0] \
+                        if "|" in x[0] else x[0], x[1]), val)
+                val = map(lambda x: (re.sub(r"<!?stage\d+>$", "", x[0]), x[1]),
+                        val)
                 fields[dep_type] = list(val)
             else:
                 fields[dep_type] = []
