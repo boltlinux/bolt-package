@@ -29,7 +29,8 @@ import stat
 import sys
 from com.nonterra.bolt.debian.basepackage import BasePackageMixin
 from com.nonterra.bolt.debian.packageutils import PackageUtilsMixin
-from com.nonterra.bolt.debian.error import ControlFileSyntaxError
+from com.nonterra.bolt.debian.error import ControlFileSyntaxError, \
+        AptCacheNotFoundError
 
 BINARY_PKG_XML_TEMPLATE = """\
 <?xml version="1.0" encoding="utf-8"?>
@@ -64,11 +65,22 @@ class BinaryPackage(BasePackageMixin, PackageUtilsMixin):
 
     def load_content_spec(self, debdir, pkg_name, pkg_version,
             use_network=True):
+        guess_pkg_contents = True
         sys.stdout.write("Trying to figure out '%s' contents ...\n" % pkg_name)
+
         if use_network:
-            self.contents = self.get_content_spec_via_package_pool(
-                    pkg_name, pkg_version)
-        else:
+            try:
+                self.contents = self.get_content_spec_via_package_pool(
+                        pkg_name, pkg_version)
+            except AptCacheNotFoundError:
+                sys.stdout.write(
+                        "Warning: %s not found via apt-cache. "
+                        "Using local fallback logic.\n" % pkg_name)
+            else:
+                guess_pkg_contents = False
+        #end if
+
+        if guess_pkg_contents:
             self.contents = self.get_content_spec_local_guesswork(
                     debdir, pkg_name, pkg_version)
         #end if
