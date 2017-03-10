@@ -58,6 +58,7 @@ def print_usage():
         "  --use-orig       Look for an *.orig.tar.* tarball to use.                    \n"
         "  --do-all, -a     Do all of the above.                                        \n"
         "                                                                               \n"
+        "  --set-maintainer Write maintainer info to changelog (initial import).        \n"
         "  --no-network     Don't download binary packages to examine contents.         \n"
         % BOLT_VERSION
     )
@@ -68,12 +69,13 @@ def parse_cmd_line():
     config = {
         "gen_patches": False,
         "use_orig": False,
-        "use_network": True
+        "use_network": True,
+        "set_maintainer": False
     }
 
     try:
-        opts, args = getopt.getopt(sys.argv[1:], "ha", ["help",
-            "gen-patches", "use-orig", "do-all", "no-network"])
+        opts, args = getopt.getopt(sys.argv[1:], "ha", ["help", "gen-patches",
+            "use-orig", "do-all", "no-network", "set-maintainer"])
     except getopt.GetoptError as e:
         raise InvocationError("Error parsing command line: %s" % str(e))
 
@@ -91,6 +93,9 @@ def parse_cmd_line():
                 break
             if case("--no-network"):
                 config["use_network"] = False
+                break
+            if case("--set-maintainer"):
+                config["set_maintainer"] = True
                 break
             if case("--do-all", "-a"):
                 config["gen_patches"] = True

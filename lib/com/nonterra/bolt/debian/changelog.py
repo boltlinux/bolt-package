@@ -23,9 +23,15 @@
 # THE SOFTWARE.
 #
 
+import os
 import re
+import pwd
+import socket
+from datetime import datetime
+from dateutil.tz import tzlocal
 from dateutil.parser import parse as parse_datetime
 from xml.sax.saxutils import escape as xml_escape
+from com.nonterra.bolt.package.appconfig import AppConfig
 
 class Change:
 
@@ -88,17 +94,18 @@ class Release:
 
     def __init__(self, version, content, maintainer, email, date):
         m = re.match(r"^(?:(\d+):)?([-+:~.a-zA-Z0-9]+?)(?:-([^-]+))?$", version)
+
         self.epoch, self.version, self.revision = \
                 m.groups(default="") if m else ("", "", "")
-
         if not self.revision:
             self.revision = "0"
 
         self.__parse_content(content)
 
+        self.upstream_version = version
         self.maintainer = maintainer
-        self.email      = email
-        self.date       = date
+        self.email = email
+        self.date = date
     #end function
 
     def __parse_content(self, content):
@@ -131,7 +138,7 @@ class Release:
         self.changesets = changesets
     #end function
 
-    def as_xml(self, indent=0):
+    def as_xml(self, indent=0, have_upstream_version=False):
         if self.epoch:
             epoch = ' epoch="%s"' % self.epoch
         else:
@@ -141,12 +148,17 @@ class Release:
             "epoch":      epoch,
             "version":    self.version,
             "revision":   self.revision,
+            "upstream":   self.upstream_version,
             "maintainer": self.maintainer,
             "email":      self.email,
             "date":       self.date
         }
 
-        buf  = '<release%(epoch)s version="%(version)s" revision="%(revision)s"\n'
+        buf  = '<release%(epoch)s version="%(version)s" revision="%(revision)s"'
+        if have_upstream_version:
+            buf += ' upstream-version="%(upstream)s"\n'
+        else:
+            buf += '\n'
         buf += '    maintainer="%(maintainer)s" email="%(email)s"\n'
         buf += '    date="%(date)s">\n'
         buf  = buf % info_set
@@ -195,11 +207,39 @@ class Changelog:
         #end with
     #end function
 
-    def as_xml(self, indent=0):
+    def generate_maintainer_info(self):
+        config = AppConfig.load_user_config()
+
+        pwent = pwd.getpwuid(os.getuid())
+        full_name = pwent.pw_gecos.split(",")[0] or "Unknown User"
+        email_address = pwent.pw_name + "@" + socket.gethostname()
+
+        info = config.get("maintainer-info", {
+            "name": full_name,
+            "email": email_address
+        })
+
+        version    = self.releases[0].upstream_version
+        maintainer = info["name" ]
+        email      = info["email"]
+        date       = datetime.now(tzlocal()).replace(microsecond=0)
+        content    = "* Adaptation of Debian sources for Bolt OS"
+        release    = Release(version, content, maintainer, email, date)
+
+        release.revision += "bolt1"
+        self.releases.insert(0, release)
+    #end function
+
+    def as_xml(self, indent=0, set_maintainer=False):
         buf  = '<?xml version="1.0" encoding="utf-8"?>\n'
         buf += '<changelog>\n'
-        for rel in self.releases:
-            buf += rel.as_xml(indent=1)
+        if set_maintainer:
+            self.generate_maintainer_info()
+            buf += self.releases[0].as_xml(indent=1, have_upstream_version=True)
+        else:
+            for rel in self.releases:
+                buf += rel.as_xml(indent=1)
+        #end if
         buf += '</changelog>'
         return re.sub(r"^", " " * 4 * indent, buf, flags=re.M) + "\n"
     #end function

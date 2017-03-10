@@ -335,9 +335,10 @@ class SourcePackage(BasePackageMixin, PackageUtilsMixin):
         return None
     #end function
 
-    def to_bolt(self, gen_patches=False, use_orig=False, use_network=True):
+    def to_bolt(self, gen_patches=False, use_orig=False, use_network=True,
+            set_maintainer=False):
         with open("changelog.xml", "w+", encoding="utf-8") as f:
-            f.write(self.changelog.as_xml())
+            f.write(self.changelog.as_xml(set_maintainer=set_maintainer))
         with open("rules.xml", "w+", encoding="utf-8") as f:
             f.write(PKG_RULES_XML_TEMPLATE)
 
