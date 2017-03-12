@@ -197,7 +197,7 @@ class PackageUtilsMixin:
         path = re.sub(r"^(/)?(s)?bin", r"\1usr/\2bin", path)
         path = re.sub(r"^(/)?lib", r"\1usr/lib", path)
         path = re.sub(r"usr/lib/\*/", r"usr/lib/", path)
-        path = re.sub(r"usr/lib/\S+-linux-gnu(/|$)", r"usr/lib/\1", path)
+        path = re.sub(r"usr/lib/[^/]+-linux-gnu(/|$)", r"usr/lib/\1", path)
         path = os.path.normpath(path)
 
         return path
@@ -349,7 +349,7 @@ class PackageUtilsMixin:
         return contents
     #end function
 
-    def __binary_deb_list_contents(self, filename, tmpdir=None):
+    def __binary_deb_list_contents(self, filename, tmpdir):
         # extract data file from deb
         with ArchiveFileReader(filename) as archive:
             data_name = None
