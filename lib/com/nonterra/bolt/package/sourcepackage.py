@@ -151,8 +151,10 @@ class SourcePackage(BasePackage):
                     os.makedirs(os.path.dirname(full_path), exist_ok=True)
 
                     if entry.is_directory:
+                        entry.mode |= 0o700
                         os.makedirs(full_path, exist_ok=True)
                     elif entry.is_file:
+                        entry.mode |= 0o600
                         with open(full_path, "wb+") as fp:
                             while True:
                                 buf = archive.read_data(4096)
@@ -162,7 +164,6 @@ class SourcePackage(BasePackage):
                                 fp.write(buf)
                             #end while
                         #end with
-
                         if self.verbose:
                             progress_bar(bytes_read)
                     elif entry.is_symbolic_link:
