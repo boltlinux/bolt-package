@@ -35,7 +35,7 @@ import com.nonterra.bolt.package.libarchive as libarchive
 from com.nonterra.bolt.package.progressbar import ProgressBar
 from com.nonterra.bolt.package.libarchive import ArchiveEntry, ArchiveFileReader
 from com.nonterra.bolt.debian.error import AptCacheNotFoundError, \
-        DebianPackageContentMissing, PackageRetrievalError
+        DebianPackageContentMissing, PackageRetrievalError, Deb2BoltError
 
 class PackageUtilsMixin:
 
@@ -180,6 +180,8 @@ class PackageUtilsMixin:
         if name.endswith("debconf"):
             return True
         if name.startswith("dh-"):
+            return True
+        if name in ["quilt", "lsb-release"]:
             return True
         return False
     #end function
@@ -400,10 +402,10 @@ class PackageUtilsMixin:
                     entry_type = stat.S_IFDIR
                 elif entry.is_symbolic_link:
                     entry_type = stat.S_IFLNK
-                elif entry.is_file:
+                elif entry.is_file or entry.is_hardlink:
                     entry_type = stat.S_IFREG
                 else:
-                    raise Deb2BoltError("type of '%s' unknown" % entry_path)
+                    raise Deb2BoltError("type of '%s' unknown '%d'" % (entry_path, entry_type))
 
                 contents.append([entry_path, entry_type, entry_mode,
                     entry_uname, entry_gname])
