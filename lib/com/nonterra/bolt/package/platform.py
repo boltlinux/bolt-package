@@ -72,10 +72,8 @@ class Platform:
 
     @staticmethod
     def find_executable(executable_name):
-        search_path = set(
-            os.environ.get("PATH", "").split(os.pathsep) + \
+        search_path = os.environ.get("PATH", "").split(os.pathsep) + \
                 ["/bin", "/sbin", "/usr/bin", "/usr/sbin"]
-        )
 
         for path in search_path:
             location = os.path.join(path, executable_name)
