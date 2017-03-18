@@ -131,8 +131,11 @@ class SourceCache:
                         #end while
                     #end with
                 #end with
-            except urllib.error.URLError:
+            except urllib.error.URLError as e:
+                sys.stderr.write("  Warning: failed to retrieve\n  "
+                    "%s\n  Reason: %s\n" % (source_url, e.reason))
                 continue
+            #end try
 
             if sha256sum and sha256sum != h.hexdigest():
                 if self.verbose:
