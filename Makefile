@@ -20,4 +20,4 @@ tarball:
 	    -o ../bolt-package-$(VERSION).tar.gz $(BRANCH)
 
 clean:
-	git clean -x -f -d
+	rm -fr build
