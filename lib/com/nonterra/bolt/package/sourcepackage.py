@@ -241,10 +241,10 @@ class SourcePackage(BasePackage):
         env.update(Platform.build_flags())
 
         num_parallel_jobs = str(int(Platform.num_cpus() * 1.5))
-        env["XPACK_PARALLEL_JOBS"] = num_parallel_jobs
+        env["BOLT_PARALLEL_JOBS"] = num_parallel_jobs
 
         for k, v in os.environ.items():
-            if k.startswith("XPACK_") or k in ["PATH", "USER", "USERNAME"]:
+            if k.startswith("BOLT_") or k in ["PATH", "USER", "USERNAME"]:
                 env[k] = v
         #end for
 
