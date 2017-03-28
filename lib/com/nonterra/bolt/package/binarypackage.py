@@ -141,7 +141,7 @@ class BinaryPackage(BasePackage):
         #end function
 
         self.basedir        = os.path.realpath(".")
-        self.output_dir     = ".."
+        self.output_dir     = "."
         self.host_arch      = Platform.config_guess()
     #end function
 
