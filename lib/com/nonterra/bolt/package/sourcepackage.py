@@ -91,7 +91,13 @@ class SourcePackage(BasePackage):
         self.maintainer = source_node.get("maintainer", "") + " <" + \
                 source_node.get("email", "") + ">"
 
-        self.rules = {}
+        self.rules = {
+            "prepare": "",
+            "build":   "",
+            "install": "",
+            "clean":   ""  # actually not supported anymore
+        }
+
         for node in source_node.xpath("rules/*"):
             if not node.tag in ["prepare", "build", "install", "clean"]:
                 continue

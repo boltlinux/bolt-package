@@ -72,56 +72,69 @@ class ShlibCache:
 
     #end class
 
-    def __init__(self):
-        ldconfig = Platform.find_executable("ldconfig")
+    def __init__(self, prefix="/usr"):
+        self.prefix = prefix
         self.map = {}
+        self.have_ldconfig = False
 
-        try:
-            procinfo = subprocess.run([ldconfig, "-p"], stdout=subprocess.PIPE,
-                    stderr=subprocess.STDOUT, check=True)
-        except subprocess.CalledProcessError as e:
-            raise ShlibCacheError("failed to initialize shlib cache: " + str(e))
+        ldconfig = Platform.find_executable("ldconfig")
+        if ldconfig:
+            self.have_ldconfig = True
 
-        output_lines = procinfo\
-                .stdout\
-                .decode(locale.getpreferredencoding(False))\
-                .splitlines()
+            try:
+                procinfo = subprocess.run([ldconfig, "-p"], stdout=subprocess.PIPE,
+                        stderr=subprocess.STDOUT, check=True)
+            except subprocess.CalledProcessError as e:
+                raise ShlibCacheError("failed to initialize shlib cache: " + str(e))
 
-        for line in output_lines:
-            m = re.match(r"^\s*(\S+) \((.*)\) => (\S+)", line)
-            if not m:
-                continue
-            if "hwcap" in m.group(2):
-                continue
+            output_lines = procinfo\
+                    .stdout\
+                    .decode(locale.getpreferredencoding(False))\
+                    .splitlines()
 
-            lib_name = m.group(1)
-            lib_path = m.group(3)
+            for line in output_lines:
+                m = re.match(r"^\s*(\S+) \((.*)\) => (\S+)", line)
+                if not m:
+                    continue
+                if "hwcap" in m.group(2):
+                    continue
 
-            if "libx" in lib_path:
-                continue
+                lib_name = m.group(1)
+                lib_path = m.group(3)
 
-            self.map.setdefault(lib_name, [])\
-                    .append(ShlibCache.SharedObject(lib_path))
-        #end for
+                if "libx" in lib_path:
+                    continue
+
+                self.map.setdefault(lib_name, [])\
+                        .append(ShlibCache.SharedObject(lib_path))
+            #end for
+        #end if
     #end function
 
     def __getitem__(self, key):
-        return self.map[key]
+        if self.have_ldconfig:
+            return self.map[key]
+        else:
+            return self.map.get(key, self.__find_object(key))
     #end function
 
     def get(self, key, default=None):
         try:
-            return self.map[key]
+            if self.have_ldconfig:
+                return self.map[key]
+            else:
+                return self.map.get(key, self.__find_object(key))
         except KeyError:
             return default
     #end function
 
     def overlay_package(self, binary_package):
         for src, attr in binary_package.contents.items():
-
             if attr.stats.is_symbolic_link:
                 abs_path = os.path.normpath(
                         binary_package.basedir + os.sep + src)
+                if not os.path.exists(abs_path):
+                    continue
                 stats = FileStats.detect_from_filename(
                         os.path.realpath(abs_path))
             else:
@@ -154,6 +167,21 @@ class ShlibCache:
             if new_shared_obj is not None:
                 shared_obj_list.append(new_shared_obj)
         #end for
+    #end function
+
+    # PRIVATE
+
+    def __find_object(self, lib_name):
+        lib_path = [self.prefix + os.sep + "lib"]
+
+        for path in lib_path:
+            object_path = lib_path + os.sep + path
+            if os.path.isfile(path):
+                self.map.setdefault(lib_name, []) \
+                        .append(ShlibCache.SharedObject(lib_path))
+        #end for
+
+        return self.map[lib_name]
     #end function
 
 #end class

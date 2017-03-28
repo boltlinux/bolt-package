@@ -175,7 +175,7 @@ class DebianPackage(BinaryPackage):
             conffiles = self.conffiles(pkg_contents)
 
             if conffiles:
-                control_contents.append("conffiles", conffiles, 0o644)
+                control_contents.append(["conffiles", conffiles, 0o644])
 
             timestamp = int(time.time())
 

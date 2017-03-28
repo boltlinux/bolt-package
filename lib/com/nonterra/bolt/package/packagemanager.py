@@ -24,7 +24,7 @@
 #
 
 import os
-from com.nonterra.bolt.package.dpkg import Dpkg
+from com.nonterra.bolt.package.xpkg import Dpkg, Opkg
 from com.nonterra.bolt.package.error import PackageManagerError
 
 class PackageManager:
@@ -40,7 +40,7 @@ class PackageManager:
 
     @classmethod
     def system_package_manager(klass):
-        for executable in ["dpkg"]:
+        for executable in ["dpkg", "opkg"]:
             for search_dir in os.environ.get("PATH", "").split(os.pathsep):
                 if os.path.exists(os.path.join(search_dir, executable)):
                     return globals()[executable.capitalize()]

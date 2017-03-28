@@ -196,11 +196,6 @@
                         <text/>
                     </element>
                 </optional>
-                <optional>
-                    <element name="clean">
-                        <text/>
-                    </element>
-                </optional>
             </interleave>
         </element>
     </define>

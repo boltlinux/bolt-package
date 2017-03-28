@@ -28,9 +28,7 @@ import re
 import subprocess
 import locale
 
-class Dpkg:
-
-    STATUS_FILE = '/var/lib/dpkg/status'
+class BaseXpkg:
 
     def __init__(self):
         # PACKAGE LIST
@@ -38,7 +36,7 @@ class Dpkg:
         self.packages = {}
         self.preferred_encoding = locale.getpreferredencoding(False)
 
-        with open(Dpkg.STATUS_FILE, "r", encoding="utf-8") as fp:
+        with open(self.STATUS_FILE, "r", encoding="utf-8") as fp:
             buf = fp.read()
 
         package_list = re.split(r"\n\n+", buf , flags=re.MULTILINE)
@@ -55,7 +53,7 @@ class Dpkg:
                     meta_data[m.group(1).lower()] = m.group(2).strip()
             #end for
 
-            if re.match(r"install\s+ok\s+installed",
+            if re.match(r"install\s+(?:ok|user)\s+installed",
                     meta_data.get("status", "")):
                 self.packages[meta_data["package"]] = meta_data["version"]
 
@@ -86,27 +84,8 @@ class Dpkg:
             self._char_vals[chr(ascii_val)] = ascii_val
     #end function
 
-    def which_package_provides(self, filename):
-        result  = None
-        abspath = os.path.abspath(filename)
-        cmd     = ["dpkg", "-S", abspath]
-
-        try:
-            procinfo = subprocess.run(cmd, stdout=subprocess.PIPE,
-                    stderr=subprocess.STDOUT, check=True)
-        except subprocess.CalledProcessError:
-            return None
-        #end try
-
-        return procinfo.stdout\
-            .decode(self.preferred_encoding)\
-            .strip()\
-            .split(":", 1)[0]
-    #end function
-
     def installed_version_of_package(self, package_name):
         return self.packages.get(package_name, None)
-    #end function
 
     def compare_versions(self, a, b):
         m = re.match(r"^(?:(\d+):)?([-+:~.a-zA-Z0-9]+?)(?:-([^-]+))?$", a)
@@ -213,4 +192,61 @@ class Dpkg:
         return False
     #end function
 
+    # PRIVATE
+
+    def __which_package_provides(self, cmd, abspath):
+        result  = None
+    #end function
+
 #end class
+
+class Dpkg(BaseXpkg):
+    STATUS_FILE = '/var/lib/dpkg/status'
+
+    def __init(self):
+        super(BaseXpkg, self).__init__()
+
+    def which_package_provides(self, filename):
+        abspath = os.path.abspath(filename)
+        cmd     = ["dpkg", "-S", abspath]
+
+        try:
+            procinfo = subprocess.run(cmd, stdout=subprocess.PIPE,
+                    stderr=subprocess.STDOUT, check=True)
+        except subprocess.CalledProcessError:
+            return None
+        #end try
+
+        return procinfo.stdout\
+            .decode(self.preferred_encoding)\
+            .strip()\
+            .split(":", 1)[0]
+    #end function
+
+#end class
+
+class Opkg(BaseXpkg):
+    STATUS_FILE = '/var/lib/opkg/status'
+
+    def __init(self):
+        super(BaseXpkg, self).__init__()
+
+    def which_package_provides(self, filename):
+        abspath = os.path.abspath(filename)
+        cmd     = ["opkg", "search", abspath]
+
+        try:
+            procinfo = subprocess.run(cmd, stdout=subprocess.PIPE,
+                    stderr=subprocess.STDOUT, check=True)
+        except subprocess.CalledProcessError:
+            return None
+        #end try
+
+        return procinfo.stdout\
+            .decode(self.preferred_encoding)\
+            .strip()\
+            .split(" - ", 1)[0]
+    #end function
+
+#end class
+

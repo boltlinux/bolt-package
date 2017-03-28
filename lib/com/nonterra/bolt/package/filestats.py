@@ -92,15 +92,22 @@ class FileStats:
 
     @staticmethod
     def detect_from_filename(filename):
-        if not os.path.exists(filename):
-            raise ValueError("no such file '%s'" % filename)
+        if os.path.islink(filename):
+            link_target = os.readlink(filename)
+            magic_obj = magic.FileMagic(
+                    mime_type='inode/symlink', encoding='binary',
+                    name='symbolic link to ' + link_target)
+        else:
+            if not os.path.exists(filename):
+                raise ValueError("no such file '%s'" % filename)
+            magic_obj = magic.detect_from_filename(filename)
+        #end if
 
-        magic_obj = magic.detect_from_filename(filename)
         stats_obj = os.lstat(filename)
         filestats = FileStats(magic_obj, stats_obj)
 
         if filestats.is_symbolic_link:
-            filestats.link_target = os.readlink(filename)
+            filestats.link_target = link_target
 
         return filestats
     #end function
