@@ -189,6 +189,7 @@ class DebianPackage(BinaryPackage):
 
             with ArchiveEntry() as archive_entry:
                 for entry_name, entry_contents, entry_mode in control_contents:
+                    entry_contents = entry_contents.encode("utf-8")
                     archive_entry.clear()
                     archive_entry.pathname = entry_name
                     archive_entry.mode = stat.S_IFREG | entry_mode
@@ -201,7 +202,7 @@ class DebianPackage(BinaryPackage):
                     archive_entry.gname = "root"
                     archive_entry.size = len(entry_contents)
                     archive.write_entry(archive_entry)
-                    archive.write_data(entry_contents.encode("utf-8"))
+                    archive.write_data(entry_contents)
                 #end for
             #end with
         #end with
