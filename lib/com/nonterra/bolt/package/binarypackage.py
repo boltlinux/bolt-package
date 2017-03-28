@@ -109,7 +109,10 @@ class BinaryPackage(BasePackage):
         self.contents = {}
         self.content_spec = {}
         for node in bin_node.findall('contents/*'):
-            src = node.get("src").strip().rstrip(os.sep)
+            src = node.get("src").strip()
+            
+            if len(src) > 1:
+                src = src.rstrip(os.sep)
 
             # '<file>' nodes have precedence over '<dir>'
             entry = self.content_spec.get(src)
@@ -247,6 +250,29 @@ class BinaryPackage(BasePackage):
                 #end if
             #end for
         #end for
+
+        # make sure all directories are included, as well
+        extra_contents = {}
+        for k in contents:
+            while k != "/" and k != "":
+                k = os.path.dirname(k)
+
+                if (not k in contents) and (not k in extra_contents):
+                    abs_path = self.basedir + os.sep + k
+                    if os.path.exists(abs_path):
+                        extra_contents[k] = BinaryPackage.EntryAttributes({
+                            "deftype":  "dir",
+                            "mode":     None,
+                            "owner":    None,
+                            "group":    None,
+                            "conffile": False,
+                            "stats":    FileStats.detect_from_filename(abs_path)
+                        })
+                    #end if
+                #end if
+            #end while
+        #end for
+        contents.update(extra_contents)
 
         self.contents = \
             OrderedDict(sorted(set(contents.items()), key=lambda x: x[0]))
