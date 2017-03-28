@@ -46,15 +46,23 @@ class DebianPackage(BinaryPackage):
     def architecture(self):
         if self.is_arch_indep:
             return "all"
-        if re.search(r"^i.86", self.host_arch):
-            return "i686"
-        if re.search(r"^x86[-_]64", self.host_arch):
-            return "amd64"
-        if re.search(r"^armel", self.host_arch):
-            return "arm"
         else:
-            msg = "unknown target architecture '%s'." % self.host_arch
-            raise DebianPackageError(msg)
+            if os.path.exists("/etc/target"):
+                with open("/etc/target", "r", encoding="utf-8") as fp:
+                    for line in fp:
+                        try:
+                            k, v = [x.strip() for x in line.split("=", 1)]
+                        except ValueError:
+                            continue
+                        if k == "ARCHITECTURE":
+                            return v
+                    #end for
+                #end with
+            #end if
+        #end if
+
+        # last resort
+        return self.host_arch.split("-")[0]
     #end function
 
     def do_pack(self):
