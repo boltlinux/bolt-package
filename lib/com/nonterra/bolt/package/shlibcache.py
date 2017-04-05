@@ -175,10 +175,10 @@ class ShlibCache:
         lib_path = [self.prefix + os.sep + "lib"]
 
         for path in lib_path:
-            object_path = lib_path + os.sep + path
-            if os.path.isfile(path):
+            object_path = path + os.sep + lib_name
+            if os.path.isfile(object_path):
                 self.map.setdefault(lib_name, []) \
-                        .append(ShlibCache.SharedObject(lib_path))
+                        .append(ShlibCache.SharedObject(object_path))
         #end for
 
         return self.map[lib_name]
