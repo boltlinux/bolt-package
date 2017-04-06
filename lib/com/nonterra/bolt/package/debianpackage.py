@@ -267,7 +267,7 @@ class DebianPackage(BinaryPackage):
         }
 
         if debug_pkg:
-            meta = "Package: %s-debug\n" % self.name
+            meta = "Package: %s-dbg\n" % self.name
         else:
             meta = "Package: %s\n" % self.name
         #end if
