@@ -224,8 +224,9 @@ class BinaryPackage(BasePackage):
                         # entry is a real directory
                         listing = list(Path(self.basedir)\
                             .rglob(rel_path + "/**/*"))
-                        attr.stats = FileStats.detect_from_filename(abs_path)
-                        contents[src] = attr
+                        if not src in contents:
+                            attr.stats = FileStats.detect_from_filename(abs_path)
+                            contents.setdefault(src, attr)
                     else:
                         # entry is a symlink or file
                         attr.stats = FileStats.detect_from_filename(abs_path)
