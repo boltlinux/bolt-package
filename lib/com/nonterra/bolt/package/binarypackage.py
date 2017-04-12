@@ -185,7 +185,7 @@ class BinaryPackage(BasePackage):
             self.generate_file_list()
         except ValueError as e:
             raise XPackError("error generating file list: " + str(e))
-        self.strip_debug_symbols()
+        self.strip_debug_symbols_and_delete_rpath()
     #end function
 
     def pack(self, shlib_cache):
@@ -285,8 +285,9 @@ class BinaryPackage(BasePackage):
         return self.contents
     #end function
 
-    def strip_debug_symbols(self):
+    def strip_debug_symbols_and_delete_rpath(self):
         objcopy   = Platform.find_executable("objcopy")
+        chrpath   = Platform.find_executable("chrpath")
         hardlinks = {}
 
         # strip unstripped objects
@@ -316,12 +317,14 @@ class BinaryPackage(BasePackage):
 
             # separate debug information
             cmd_list = [
-                [objcopy, "--only-keep-debug", src_path, dbg_path],
-                [objcopy, "--strip-unneeded",  src_path          ]
+                ([objcopy, "--only-keep-debug", src_path, dbg_path], True),
+                ([objcopy, "--strip-unneeded",  src_path          ], True),
+                ([chrpath, "-d", src_path                         ], False)
             ]
 
-            for cmd in cmd_list:
-                subprocess.run(cmd, stderr=subprocess.STDOUT, check=True)
+            for cmd, check_retval in cmd_list:
+                subprocess.run(cmd, stderr=subprocess.STDOUT,
+                        check=check_retval)
 
             # file size has changed
             attr.stats.restat(src_path)
