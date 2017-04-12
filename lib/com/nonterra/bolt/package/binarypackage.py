@@ -30,6 +30,7 @@ import subprocess
 from pathlib import Path
 from collections import OrderedDict
 from lxml import etree
+from com.nonterra.bolt.package.error import XPackError
 from com.nonterra.bolt.package.braceexpand import braceexpand
 from com.nonterra.bolt.package.platform import Platform
 from com.nonterra.bolt.package.basepackage import BasePackage
@@ -180,7 +181,10 @@ class BinaryPackage(BasePackage):
     #end function
 
     def prepare(self):
-        self.generate_file_list()
+        try:
+            self.generate_file_list()
+        except ValueError as e:
+            raise XPackError("error generating file list: " + str(e))
         self.strip_debug_symbols()
     #end function
 
