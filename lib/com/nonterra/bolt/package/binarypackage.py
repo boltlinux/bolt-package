@@ -26,6 +26,7 @@
 import os
 import re
 import glob
+import stat
 import subprocess
 from pathlib import Path
 from collections import OrderedDict
@@ -314,6 +315,10 @@ class BinaryPackage(BasePackage):
             attr.dbg_info = pkg_path
 
             os.makedirs(os.path.dirname(dbg_path), exist_ok=True)
+
+            # if u+w bit is missing objcopy will bail out
+            if not (attr.stats.mode & stat.S_IWUSR):
+                os.chmod(src_path, attr.stats.mode | stat.S_IWUSR)
 
             # separate debug information
             cmd_list = [
