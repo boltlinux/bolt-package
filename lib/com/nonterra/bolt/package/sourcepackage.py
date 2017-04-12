@@ -244,6 +244,9 @@ class SourcePackage(BasePackage):
         env["BOLT_PARALLEL_JOBS"] = num_parallel_jobs
 
         for k, v in os.environ.items():
+            if k in ["BOLT_WORK_DIR", "BOLT_SOURCE_DIR", "BOLT_BUILD_DIR",
+                    "BOLT_INSTALL_DIR"]:
+                continue
             if k.startswith("BOLT_") or k in ["PATH", "USER", "USERNAME"]:
                 env[k] = v
         #end for
