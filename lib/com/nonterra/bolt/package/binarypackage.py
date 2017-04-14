@@ -100,7 +100,8 @@ class BinaryPackage(BasePackage):
                 continue
 
             for pkg_node in dep_node.findall(".//package"):
-                pkg_tmp_version = pkg_node.get("version").strip()
+                pkg_tmp_version = pkg_node.get("version", "").strip()
+
                 if pkg_tmp_version.endswith("=="):
                     pkg_node.attrib["version"] = pkg_tmp_version[:-1] + " " \
                             + self.version
