@@ -38,6 +38,17 @@ from com.nonterra.bolt.package.error import SourcePackageError
 
 class SourcePackage(BasePackage):
 
+    BOLT_HELPERS_SEARCH_PATH = [
+        os.path.normpath(
+            os.path.join(
+                os.path.dirname(os.path.realpath(__file__)),
+                "..", "..", "..", "..", "..", "helpers"
+            )
+        ),
+        os.path.join(os.sep, "usr", "share", "bolt-pack", "helpers"),
+        os.path.join(os.sep, "tools", "share", "bolt-pack", "helpers")
+    ]
+
     def __init__(self, xml_config, verbose=True):
         if isinstance(xml_config, etree._Element):
             source_node = xml_config
@@ -222,19 +233,37 @@ class SourcePackage(BasePackage):
         #end if
 
         env    = self.__update_env(env)
-        script = self.rules[action].encode("utf-8")
+        script = self.__load_helpers() + "\n" + self.rules[action]
         cmd    = ["/bin/sh", "-e", "-x", "-s"]
 
         sys.stdout.flush()
         sys.stderr.flush()
 
         try:
-            subprocess.run(cmd, env=env, input=script,
+            subprocess.run(cmd, env=env, input=script.encode("utf-8"),
                     stderr=subprocess.STDOUT, check=True)
         except subprocess.CalledProcessError:
             msg = "failed to %s the source package." % action
             raise SourcePackageError(msg)
         #end try
+    #end function
+
+    # PRIVATE
+
+    def __load_helpers(self):
+        result = []
+
+        for script in ["arch.sh"]:
+            for path in SourcePackage.BOLT_HELPERS_SEARCH_PATH:
+                abs_path = os.path.join(path, script)
+                if not os.path.isfile(abs_path):
+                    continue
+                with open(abs_path, "r", encoding="utf-8") as fp:
+                    result.append(fp.read())
+            #end for
+        #end for
+
+        return "\n".join(result)
     #end function
 
     def __update_env(self, env):
