@@ -30,6 +30,7 @@ import time
 from tempfile import TemporaryDirectory
 from collections import OrderedDict
 import com.nonterra.bolt.package.libarchive as libarchive
+from com.nonterra.bolt.package.platform import Platform
 from com.nonterra.bolt.package.libarchive import ArchiveEntry, ArchiveFileWriter
 from com.nonterra.bolt.package.filestats import FileStats
 from com.nonterra.bolt.package.binarypackage import BinaryPackage
@@ -40,30 +41,6 @@ class DebianPackage(BinaryPackage):
     @property
     def debian_binary_version(self):
         return "2.0"
-    #end function
-
-    @property
-    def architecture(self):
-        if self.is_arch_indep:
-            return "all"
-        else:
-            if os.path.exists("/etc/target"):
-                with open("/etc/target", "r", encoding="utf-8") as fp:
-                    for line in fp:
-                        try:
-                            k, v = [x.strip() for x in line.split("=", 1)]
-                        except ValueError:
-                            continue
-                        if k == "ARCHITECTURE":
-                            return v
-                    #end for
-                #end with
-            #end if
-        #end if
-
-        # last resort
-        return self.host_arch.split("-")[0]
-    #end function
 
     def do_pack(self):
         self.pack_package()
@@ -121,9 +98,10 @@ class DebianPackage(BinaryPackage):
             if not contents:
                 return
 
-            contents["/usr/lib/debug"]           = default_dir_attrs
-            contents["/usr/lib/debug/.build-id"] = default_dir_attrs
-
+            contents[self.install_prefix + "/lib/debug"] = \
+                    default_dir_attrs
+            contents[self.install_prefix + "/lib/debug/.build-id"] = \
+                    default_dir_attrs
             contents = OrderedDict(sorted(set(contents.items()),
                 key=lambda x: x[0]))
         #end if

@@ -43,7 +43,8 @@ class PackageControl:
             "outdir": None,
             "ignore_deps": False,
             "format": "deb",
-            "debug_pkgs": True
+            "debug_pkgs": True,
+            "tools_build": False
         }
         self.parms.update(parms)
 
@@ -74,7 +75,13 @@ class PackageControl:
         #end try
         for pkg_node in xml_doc.xpath("/control/package"):
             pkg_node.attrib["source"] = source_name
-            pkg_node.attrib["architecture-independent"] = is_arch_indep
+
+            if self.parms["tools_build"]:
+                pkg_node.attrib["architecture"] = "tools"
+            elif is_arch_indep.lower() == "true":
+                pkg_node.attrib["architecture"] = "all"
+            else:
+                pkg_node.attrib["architecture"] = Platform.target_machine()
         #end for
 
         xml_doc.xpath("/control/changelog")[0].attrib["source"] = source_name
@@ -84,13 +91,21 @@ class PackageControl:
             "BOLT_INSTALL_DIR": "install"
         }
 
-        self.defines["BOLT_BUILD_TYPE"]  = self.parms.get("build_type")  or\
-                Platform.config_guess()
-        self.defines["BOLT_HOST_TYPE"]   = self.parms.get("host_type")   or\
-                self.defines["BOLT_BUILD_TYPE"]
-        self.defines["BOLT_TARGET_TYPE"] = self.parms.get("target_type") or\
-                self.defines["BOLT_HOST_TYPE"]
-        self.defines["BOLT_WORK_DIR"]    = os.getcwd()
+        self.defines["BOLT_WORK_DIR"] = os.getcwd()
+        self.defines["BOLT_BUILD_TYPE"] = Platform.target_type()
+
+        if self.parms["tools_build"]:
+            # this will cause a cross build for tools...
+            self.defines["BOLT_HOST_TYPE"] = Platform.tools_type()
+            self.defines["BOLT_TARGET_TYPE"] = Platform.target_type()
+            self.defines["BOLT_INSTALL_PREFIX"] = "/tools"
+        else:
+            # and a normal build for target binaries :-)
+            self.defines["BOLT_HOST_TYPE"] = Platform.target_type()
+            self.defines["BOLT_TARGET_TYPE"] = Platform.target_type()
+            self.defines["BOLT_INSTALL_PREFIX"] = "/usr"
+        #end if
+
 
         for node in xml_doc.xpath("/control/defines/def"):
             self.defines[node.get("name")] = node.get("value", "")
@@ -116,14 +131,21 @@ class PackageControl:
 
         self.bin_pkgs = []
         for node in xml_doc.xpath("/control/package"):
-            pkg = DebianPackage(node, debug_pkgs=self.parms["debug_pkgs"])
-            pkg.basedir    = self.defines["BOLT_INSTALL_DIR"]
+            pkg = DebianPackage(
+                node,
+                debug_pkgs=self.parms["debug_pkgs"],
+                install_prefix=self.defines["BOLT_INSTALL_PREFIX"],
+                host_type=self.defines["BOLT_HOST_TYPE"]
+            )
+
+            pkg.basedir = self.defines["BOLT_INSTALL_DIR"]
+
             if self.parms.get("outdir"):
                 pkg.output_dir = os.path.realpath(self.parms["outdir"])
             else:
                 pkg_output_dir = None
             #end if
-            pkg.host_arch = self.defines["BOLT_HOST_TYPE"]
+
             self.bin_pkgs.append(pkg)
         #end for
 

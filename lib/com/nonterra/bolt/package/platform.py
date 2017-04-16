@@ -112,6 +112,30 @@ class Platform:
     #end function
 
     @staticmethod
+    def target_machine():
+        result = Platform.__target_attribute("TARGET_MACHINE")
+        if not result:
+            return Platform.config_guess().split("-")[0]
+        return result
+    #end function
+
+    @staticmethod
+    def target_type():
+        result = Platform.__target_attribute("TARGET_TYPE")
+        if not result:
+            return Platform.config_guess()
+        return result
+    #end function
+
+    @staticmethod
+    def tools_type():
+        result = Platform.__target_attribute("TOOLS_TYPE")
+        if not result:
+            return "x86_64-tools-linux-musl"
+        return result
+    #end function
+
+    @staticmethod
     def kernel_name():
         uname = Platform.find_executable("uname")
 
@@ -154,6 +178,24 @@ class Platform:
         #end for
 
         return build_flags
+    #end function
+
+    @staticmethod
+    def __target_attribute(attr_name):
+        if os.path.exists("/etc/target"):
+            with open("/etc/target", "r", encoding="utf-8") as fp:
+                for line in fp:
+                    try:
+                        k, v = [x.strip() for x in line.split("=", 1)]
+                    except ValueError:
+                        continue
+                    if k == attr_name:
+                        return v
+                #end for
+            #end with
+        #end if
+
+        return None
     #end function
 
 #end class

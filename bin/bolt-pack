@@ -64,19 +64,11 @@ def print_usage():
         "  -i --install         Run the install target defined in the rules file.       \n"
         "  -r --repackage       Run the install target and generate binary packages.    \n"
         "                                                                               \n"
-        "CROSS BUILD SUPPORT:                                                           \n"
+        "BUILT TOOLS PACKAGES:                                                          \n"
         "                                                                               \n"
-        "                       The following parameters take as an argument a triplet  \n"
-        "                       <cpu>-<manufacturer>-<os_type> as produced by the       \n"
-        "                       config.guess script distributed with the GNU Autotools. \n"
-        "                                                                               \n"
-        "  --build-type=<type>  Build system type (guessed automatically)               \n"
-        "  --host-type=<type>   Host system type (defaults to build type)               \n"
-        "  --target-type=<type> Target system type (only for building cross-compilers)  \n"
-        "                                                                               \n"
-        "                       Each of the above is made available to the package      \n"
-        "                       scripts as environment variables                        \n"
-        "                       BOLT_{BUILD,HOST,TARGET}_TYPE, respectively.            \n"
+        "  --tools-build        Instructs bolt-pack to change install prefix, host      \n"
+        "                       triplet, target triplet and content filters to produce  \n"
+        "                       packages for the /tools folder.                         \n"
         "                                                                               \n"
         "MISCELLANEOUS OPTIONS:                                                         \n"
         "                                                                               \n"
@@ -96,7 +88,8 @@ def parse_cmd_line():
         "debug_pkgs": True,
         "build_type": None,
         "host_type": None,
-        "target_type": None
+        "target_type": None,
+        "tools_build": False
     }
 
     try:
@@ -111,9 +104,7 @@ def parse_cmd_line():
             "build",
             "install",
             "repackage",
-            "build-type=",
-            "host-type=",
-            "target-type="
+            "tools-build"
         ])
     except getopt.GetoptError as e:
         raise InvocationError("Error parsing command line: %s" % str(e))
@@ -153,14 +144,8 @@ def parse_cmd_line():
             if case("--repackage", "-r"):
                 config["action"] = "repackage"
                 break
-            if case("--build-type"):
-                config["build_type"] = v.strip()
-                break
-            if case("--host-type"):
-                config["host_type"] = v.strip()
-                break
-            if case("--target-type"):
-                config["target_type"] = v.strip()
+            if case("--tools-build"):
+                config["tools_build"] = True
                 break
         #end switch
     #end for

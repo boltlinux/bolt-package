@@ -80,17 +80,22 @@ class BinaryPackage(BasePackage):
         revision  = bin_node.get("revision", None)
         archindep = bin_node.get("architecture-independent", "false")
 
-        self.name        = bin_node.get("name")
-        self.description = PackageDescription(bin_node.find("description"))
-        self.maintainer  = bin_node.get("maintainer") + " <" + \
+        self.name         = bin_node.get("name")
+        self.description  = PackageDescription(bin_node.find("description"))
+        self.maintainer   = bin_node.get("maintainer") + " <" + \
                 bin_node.get("email") + ">"
-        self.version     = (epoch + ":" if int(epoch) > 0 else "") + version + \
+        self.version      = (epoch + ":" if int(epoch) > 0 else "") + version + \
                 ("-" + revision if revision != None else "")
-        self.section     = bin_node.get("section", "unknown")
-        self.source      = bin_node.get("source")
-        self.is_arch_indep = True if archindep == "true" else False
+        self.section      = bin_node.get("section", "unknown")
+        self.source       = bin_node.get("source")
+        self.architecture = bin_node.get("architecture")
+
+        if self.architecture == "tools":
+            self.name = "tools-" + self.name
 
         self.make_debug_pkgs = params["debug_pkgs"]
+        self.install_prefix  = params["install_prefix"]
+        self.host_type       = params["host_type"]
 
         self.relations = {}
         for dep_type in ["requires", "provides", "conflicts", "replaces"]:
@@ -114,9 +119,11 @@ class BinaryPackage(BasePackage):
 
         self.contents = {}
         self.content_spec = {}
+        prefix_regex = re.compile("^" + re.escape("${prefix}"))
+
         for node in bin_node.findall('contents/*'):
-            src = node.get("src").strip()
-            
+            src = prefix_regex.sub(self.install_prefix, node.get("src").strip())
+
             if len(src) > 1:
                 src = src.rstrip(os.sep)
 
@@ -151,7 +158,6 @@ class BinaryPackage(BasePackage):
 
         self.basedir        = os.path.realpath(".")
         self.output_dir     = "."
-        self.host_arch      = Platform.config_guess()
     #end function
 
     @property
@@ -291,9 +297,10 @@ class BinaryPackage(BasePackage):
     #end function
 
     def strip_debug_symbols_and_delete_rpath(self):
-        objcopy   = Platform.find_executable("objcopy")
+        objcopy   = Platform.find_executable(self.host_type + "-objcopy")
         chrpath   = Platform.find_executable("chrpath")
         hardlinks = {}
+        install_prefix = self.install_prefix.lstrip("/")
 
         # strip unstripped objects
         for src, attr in self.contents.items():
@@ -311,7 +318,7 @@ class BinaryPackage(BasePackage):
 
             build_id = attr.stats.build_id
             src_path = os.path.normpath(os.sep.join([self.basedir, src]))
-            pkg_path = os.sep + os.path.join("usr", "lib", "debug",
+            pkg_path = os.sep + os.path.join(install_prefix, "lib", "debug",
                     ".build-id", build_id[0:2], build_id[2:] + ".debug")
             dbg_path = os.path.normpath(os.sep.join([self.basedir, pkg_path]))
 
