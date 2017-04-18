@@ -88,6 +88,7 @@ class PackageControl:
 
         self.defines = {
             "BOLT_SOURCE_DIR":  "sources",
+            "BOLT_BUILD_DIR":   "sources",
             "BOLT_INSTALL_DIR": "install"
         }
 
@@ -106,12 +107,8 @@ class PackageControl:
             self.defines["BOLT_INSTALL_PREFIX"] = "/usr"
         #end if
 
-
         for node in xml_doc.xpath("/control/defines/def"):
             self.defines[node.get("name")] = node.get("value", "")
-
-        self.defines.setdefault("BOLT_BUILD_DIR",
-                self.defines["BOLT_SOURCE_DIR"])
 
         # these *must* be absolute paths
         for s in ["SOURCE", "BUILD", "INSTALL"]:
@@ -210,7 +207,7 @@ class PackageControl:
     #end function
 
     def package(self):
-        shlib_cache = ShlibCache()
+        shlib_cache = ShlibCache(prefix=self.defines["BOLT_INSTALL_PREFIX"])
         for pkg in self.bin_pkgs:
             pkg.prepare()
             shlib_cache.overlay_package(pkg)
