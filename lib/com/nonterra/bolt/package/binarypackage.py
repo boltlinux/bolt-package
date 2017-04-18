@@ -383,7 +383,7 @@ class BinaryPackage(BasePackage):
     #end function
 
     def shlib_deps(self, shlib_cache=None):
-        objdump = Platform.find_executable("objdump")
+        objdump = Platform.find_executable(self.host_type + "-objdump")
 
         for src, attr in self.contents.items():
             if not attr.stats.is_file or not attr.stats.is_elf_binary:
