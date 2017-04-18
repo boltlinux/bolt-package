@@ -64,7 +64,7 @@ def print_usage():
         "  -i --install         Run the install target defined in the rules file.       \n"
         "  -r --repackage       Run the install target and generate binary packages.    \n"
         "                                                                               \n"
-        "BUILT TOOLS PACKAGES:                                                          \n"
+        "BUILD TOOLS PACKAGES:                                                          \n"
         "                                                                               \n"
         "  --tools-build        Instructs bolt-pack to change install prefix, host      \n"
         "                       triplet, target triplet and content filters to produce  \n"
