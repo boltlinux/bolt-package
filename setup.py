@@ -18,8 +18,9 @@ setup(
     packages=['com.nonterra.bolt.package', 'com.nonterra.bolt.debian'],
     package_dir={'': 'lib'},
     data_files=[
-        ('/usr/bin', ['bin/bolt-pack', 'bin/deb2bolt']),
-        ('/usr/share/bolt-pack/', ['relaxng/package.rng.xml'])
+        ('bin', ['bin/bolt-pack', 'bin/deb2bolt']),
+        ('share/bolt-pack/relaxng', ['relaxng/package.rng.xml']),
+        ('share/bolt-pack/helpers', ['helpers/arch.sh']
     ],
     platforms=['Linux'],
 

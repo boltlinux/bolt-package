@@ -37,8 +37,10 @@ class Specfile:
                 "..", "..", "..", "..", "..", "relaxng", "package.rng.xml"
             )
         ),
-        os.path.join(os.sep, "usr", "share", "bolt-pack", "package.rng.xml"),
-        os.path.join(os.sep, "tools", "share", "bolt-pack", "package.rng.xml"),
+        os.path.join(os.sep, "usr", "share", "bolt-pack", "relaxng",
+            "package.rng.xml"),
+        os.path.join(os.sep, "tools", "share", "bolt-pack", "relaxng",
+            "package.rng.xml"),
     ]
 
     def __init__(self, filename):
