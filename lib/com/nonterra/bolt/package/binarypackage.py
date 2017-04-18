@@ -34,6 +34,7 @@ from lxml import etree
 from com.nonterra.bolt.package.error import XPackError
 from com.nonterra.bolt.package.braceexpand import braceexpand
 from com.nonterra.bolt.package.platform import Platform
+from com.nonterra.bolt.package.packagemanager import PackageManager
 from com.nonterra.bolt.package.basepackage import BasePackage
 from com.nonterra.bolt.package.packagedesc import PackageDescription
 from com.nonterra.bolt.package.filestats import FileStats
@@ -97,6 +98,7 @@ class BinaryPackage(BasePackage):
         self.install_prefix  = params["install_prefix"]
         self.host_type       = params["host_type"]
 
+
         self.relations = {}
         for dep_type in ["requires", "provides", "conflicts", "replaces"]:
             dep_node = bin_node.find(dep_type)
@@ -105,12 +107,35 @@ class BinaryPackage(BasePackage):
                 continue
 
             for pkg_node in dep_node.findall(".//package"):
-                pkg_tmp_version = pkg_node.get("version", "").strip()
+                dep_version = pkg_node.get("version", "").strip()
+                dep_name    = pkg_node.get("name").strip()
 
-                if pkg_tmp_version.endswith("=="):
-                    pkg_node.attrib["version"] = pkg_tmp_version[:-1] + " " \
-                            + self.version
+                if dep_version.endswith("=="):
+                    is_own_package = False
+
+                    for tmp_node in bin_node.getparent().iterfind("package"):
+                        if tmp_node.get("name") == dep_name:
+                            is_own_package = True
+                            break
+                    #end for
+
+                    if is_own_package:
+                        pkg_node.attrib["version"] = dep_version[:-1] \
+                            + " " + self.version
+                    else:
+                        pkg_manager = PackageManager.instance()
+                        tmp_version = pkg_manager\
+                                .installed_version_of_package(dep_name)
+                        if not tmp_version:
+                            raise XPackError("cannot resolve dependency '%s'." \
+                                    % dep_name)
+                        pkg_node.attrib["version"] = dep_version[:-1] \
+                            + " " + tmp_version
+                    #end if
                 #end if
+
+                if self.architecture == "tools":
+                    pkg_node.attrib["name"] = "tools-" + pkg_node.attrib["name"]
             #end for
 
             self.relations[dep_type] = BasePackage.DependencySpecification\
@@ -290,8 +315,18 @@ class BinaryPackage(BasePackage):
         #end for
         contents.update(extra_contents)
 
-        self.contents = \
-            OrderedDict(sorted(set(contents.items()), key=lambda x: x[0]))
+        if self.architecture == "tools":
+            # filter out /etc and /var directories, these are shared
+            def filter_etc_var(item):
+                return False if path.as_posix()[0:5] in ["/etc", "/var"] \
+                        else True
+            #end inline function
+            self.contents = OrderedDict(sorted(filter(filter_etc_var,
+                set(contents.items())), key=lambda x: x[0]))
+        else:
+            self.contents = \
+                OrderedDict(sorted(set(contents.items()), key=lambda x: x[0]))
+        #end if
 
         return self.contents
     #end function
@@ -370,6 +405,8 @@ class BinaryPackage(BasePackage):
                         continue
                     lib_name = m.group(1)
 
+                    found = False
+
                     for shared_obj in shlib_cache.get(lib_name, []):
                         if shared_obj.arch_word_size() != word_size:
                             continue
@@ -381,7 +418,12 @@ class BinaryPackage(BasePackage):
                                     BasePackage.DependencySpecification()
                         self.relations["requires"][pkg_name] = \
                                 BasePackage.Dependency(pkg_name, ">= %s" % version)
+                        found = True
                     #end for
+
+                    if not found:
+                        raise XPackError("dependency '%s' not found in any "
+                            "installed package." % lib_name)
                 #end for
             #end with
         #end for
