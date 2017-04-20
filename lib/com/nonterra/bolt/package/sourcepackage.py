@@ -119,11 +119,9 @@ class SourcePackage(BasePackage):
 
     def missing_build_dependencies(self):
         return self.relations["requires"].unfulfilled_dependencies()
-    #end function
 
     def build_dependencies(self):
         return self.relations["requires"]
-    #end function
 
     def unpack(self, source_dir=".", source_cache=None):
         for src_name, subdir, sha256sum in self.sources:

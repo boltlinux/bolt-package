@@ -26,6 +26,7 @@
 import os
 import shutil
 from lxml import etree
+from com.nonterra.bolt.package.error import XPackError
 from com.nonterra.bolt.package.sourcepackage import SourcePackage
 from com.nonterra.bolt.package.debianpackage import DebianPackage
 from com.nonterra.bolt.package.shlibcache import ShlibCache
@@ -44,7 +45,8 @@ class PackageControl:
             "ignore_deps": False,
             "format": "deb",
             "debug_pkgs": True,
-            "tools_build": False
+            "tools_build": False,
+            "packages": []
         }
         self.parms.update(parms)
 
@@ -135,6 +137,10 @@ class PackageControl:
                 host_type=self.defines["BOLT_HOST_TYPE"]
             )
 
+            if self.parms["packages"]:
+                if not pkg.name in self.parms["packages"]:
+                    continue
+
             pkg.basedir = self.defines["BOLT_INSTALL_DIR"]
 
             if self.parms.get("outdir"):
@@ -145,6 +151,14 @@ class PackageControl:
 
             self.bin_pkgs.append(pkg)
         #end for
+
+        if self.parms["packages"]:
+            bin_pkg_names = [p.name for p in self.bin_pkgs]
+            for p in self.parms["packages"]:
+                if not p in bin_pkg_names:
+                    raise XPackError("unknown binary package '%s'." % p)
+            #end for
+        #end if
 
         self.changelog = Changelog(xml_doc.xpath('/control/changelog')[0])
     #end function

@@ -64,6 +64,9 @@ def print_usage():
         "  -i --install         Run the install target defined in the rules file.       \n"
         "  -r --repackage       Run the install target and generate binary packages.    \n"
         "                                                                               \n"
+        "  --packages=<list>    A comma-separated list of binary packages. Only the     \n"
+        "                       binary packages in this list will be generated.         \n"
+        "                                                                               \n"
         "BUILD TOOLS PACKAGES:                                                          \n"
         "                                                                               \n"
         "  --tools-build        Instructs bolt-pack to change install prefix, host      \n"
@@ -89,7 +92,8 @@ def parse_cmd_line():
         "build_type": None,
         "host_type": None,
         "target_type": None,
-        "tools_build": False
+        "tools_build": False,
+        "packages": []
     }
 
     try:
@@ -104,6 +108,7 @@ def parse_cmd_line():
             "build",
             "install",
             "repackage",
+            "packages=",
             "tools-build"
         ])
     except getopt.GetoptError as e:
@@ -143,6 +148,9 @@ def parse_cmd_line():
                 break
             if case("--repackage", "-r"):
                 config["action"] = "repackage"
+                break
+            if case("--packages"):
+                config["packages"] = [x.strip() for x in v.split(",")]
                 break
             if case("--tools-build"):
                 config["tools_build"] = True
