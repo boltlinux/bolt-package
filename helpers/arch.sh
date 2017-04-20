@@ -132,3 +132,19 @@ bh_gcc_config_for_machine()
     esac
 }
 
+###############################################################################
+#
+# Takes a <machine>-<vendor>-<os> target triplet and inserts 'xxx' for the 
+# vendor part. This is commonly used to trigger a cross compilation.
+#
+# $1: a target triplet
+#
+# Prints the modified target triplet.
+#
+###############################################################################
+bh_spoof_target_triplet()
+{
+    echo "$1" | \
+        sed 's/\([^-]\+\)-\([^-]\+-\)\?\([^-]\+\)-\([^-]\+\)/\1-xxx-\3-\4/g'
+}
+
