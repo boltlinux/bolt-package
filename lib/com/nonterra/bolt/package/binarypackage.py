@@ -411,8 +411,11 @@ class BinaryPackage(BasePackage):
                         if shared_obj.arch_word_size() != word_size:
                             continue
                         pkg_name, version = shared_obj.package_name_and_version()
-                        if not pkg_name or not version or pkg_name == self.name:
+                        if not pkg_name or not version:
                             continue
+                        if pkg_name == self.name:
+                            found = True
+                            break
                         if not "requires" in self.relations:
                             self.relations["requires"] = \
                                     BasePackage.DependencySpecification()
@@ -422,8 +425,8 @@ class BinaryPackage(BasePackage):
                     #end for
 
                     if not found:
-                        raise XPackError("dependency '%s' not found in any "
-                            "installed package." % lib_name)
+                        raise XPackError("'%s' dependency '%s' not found in any "
+                            "installed package." % (self.name, lib_name))
                 #end for
             #end with
         #end for
