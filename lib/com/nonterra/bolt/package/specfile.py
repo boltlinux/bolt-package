@@ -67,6 +67,7 @@ class Specfile:
         for path in Specfile.RELAXNG_SCHEMA_SEARCH_PATH:
             if os.path.exists(path):
                 relaxng = etree.RelaxNG(file=path)
+                break
         #end for
 
         if not relaxng.validate(xml_doc):
