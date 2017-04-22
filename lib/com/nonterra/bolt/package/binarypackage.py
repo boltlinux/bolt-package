@@ -90,14 +90,14 @@ class BinaryPackage(BasePackage):
         self.section      = bin_node.get("section", "unknown")
         self.source       = bin_node.get("source")
         self.architecture = bin_node.get("architecture")
+        self.build_for    = bin_node.get("build-for")
 
-        if self.architecture == "tools":
-            self.name = "tools-" + self.name
+        if self.build_for:
+            self.build_for = [v.strip() for v in self.build_for.split(",")]
 
         self.make_debug_pkgs = params["debug_pkgs"]
         self.install_prefix  = params["install_prefix"]
         self.host_type       = params["host_type"]
-
 
         self.relations = {}
         for dep_type in ["requires", "provides", "conflicts", "replaces"]:

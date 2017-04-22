@@ -69,9 +69,9 @@ def print_usage():
         "                                                                               \n"
         "BUILD TOOLS PACKAGES:                                                          \n"
         "                                                                               \n"
-        "  --tools-build        Instructs bolt-pack to change install prefix, host      \n"
-        "                       triplet, target triplet and content filters to produce  \n"
-        "                       packages for the /tools folder.                         \n"
+        "  --build-for=<what>   Specify if a package should be built for the target     \n"
+        "                       or for the tools folder. `what` must be one of 'target' \n"
+        "                       (default), 'tools' or 'cross-tools'.                    \n"
         "                                                                               \n"
         "MISCELLANEOUS OPTIONS:                                                         \n"
         "                                                                               \n"
@@ -92,7 +92,7 @@ def parse_cmd_line():
         "build_type": None,
         "host_type": None,
         "target_type": None,
-        "tools_build": False,
+        "build_for": "target",
         "packages": []
     }
 
@@ -109,7 +109,7 @@ def parse_cmd_line():
             "install",
             "repackage",
             "packages=",
-            "tools-build"
+            "build-for="
         ])
     except getopt.GetoptError as e:
         raise InvocationError("Error parsing command line: %s" % str(e))
@@ -131,7 +131,7 @@ def parse_cmd_line():
                 break
             if case("--outdir", "-o"):
                 if not os.path.isdir(v):
-                    raise InvocationError("No such directory '%s'" % v)
+                    raise InvocationError("no such directory '%s'" % v)
                 config["outdir"] = v
                 break
             if case("--unpack", "-u"):
@@ -152,8 +152,10 @@ def parse_cmd_line():
             if case("--packages"):
                 config["packages"] = [x.strip() for x in v.split(",")]
                 break
-            if case("--tools-build"):
-                config["tools_build"] = True
+            if case("--build-for"):
+                if not v in ["target", "tools", "cross-tools"]:
+                    raise InvocationError("cannot build for '%s'." % v)
+                config["build_for"] = v
                 break
         #end switch
     #end for

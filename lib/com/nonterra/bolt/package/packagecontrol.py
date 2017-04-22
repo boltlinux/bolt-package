@@ -45,7 +45,7 @@ class PackageControl:
             "ignore_deps": False,
             "format": "deb",
             "debug_pkgs": True,
-            "tools_build": False,
+            "build_for": "target",
             "packages": []
         }
         self.parms.update(parms)
@@ -78,7 +78,7 @@ class PackageControl:
         for pkg_node in xml_doc.xpath("/control/package"):
             pkg_node.attrib["source"] = source_name
 
-            if self.parms["tools_build"]:
+            if self.parms["build_for"] in ["tools", "cross-tools"]:
                 pkg_node.attrib["architecture"] = "tools"
             elif is_arch_indep.lower() == "true":
                 pkg_node.attrib["architecture"] = "all"
@@ -91,19 +91,21 @@ class PackageControl:
         self.defines = {
             "BOLT_SOURCE_DIR":  "sources",
             "BOLT_BUILD_DIR":   "sources",
-            "BOLT_INSTALL_DIR": "install"
+            "BOLT_INSTALL_DIR": "install",
+            "BOLT_WORK_DIR":    os.getcwd(),
+            "BOLT_BUILD_TYPE":  Platform.target_type(),
+            "BOLT_BUILD_FOR":   self.parms["build_for"]
         }
 
-        self.defines["BOLT_WORK_DIR"] = os.getcwd()
-        self.defines["BOLT_BUILD_TYPE"] = Platform.target_type()
-
-        if self.parms["tools_build"]:
-            # this will cause a cross build for tools...
+        if self.parms["build_for"] == "tools":
+            self.defines["BOLT_HOST_TYPE"] = Platform.tools_type()
+            self.defines["BOLT_TARGET_TYPE"] = Platform.tools_type()
+            self.defines["BOLT_INSTALL_PREFIX"] = "/tools"
+        elif self.parms["build_for"] == "cross-tools":
             self.defines["BOLT_HOST_TYPE"] = Platform.tools_type()
             self.defines["BOLT_TARGET_TYPE"] = Platform.target_type()
             self.defines["BOLT_INSTALL_PREFIX"] = "/tools"
         else:
-            # and a normal build for target binaries :-)
             self.defines["BOLT_HOST_TYPE"] = Platform.target_type()
             self.defines["BOLT_TARGET_TYPE"] = Platform.target_type()
             self.defines["BOLT_INSTALL_PREFIX"] = "/usr"
@@ -140,6 +142,15 @@ class PackageControl:
             if self.parms["packages"]:
                 if not pkg.name in self.parms["packages"]:
                     continue
+
+            if pkg.build_for and not self.parms["build_for"] in pkg.build_for:
+                continue
+
+            if self.parms["build_for"] == "tools":
+                pkg.name = "tools-" + pkg.name
+            elif self.parms["build_for"] == "cross-tools":
+                pkg.name = "tools-target-" + pkg.name
+            #end if
 
             pkg.basedir = self.defines["BOLT_INSTALL_DIR"]
 
