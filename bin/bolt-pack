@@ -77,6 +77,7 @@ def print_usage():
         "                                                                               \n"
         "  -h --help            Print this help message.                                \n"
         "  --list-deps          List all build dependencies.                            \n"
+        "  --work-dir=<dir>     Change to the given directory before running actions.   \n"
         % BOLT_VERSION
     )
 #end function
@@ -93,7 +94,8 @@ def parse_cmd_line():
         "host_type": None,
         "target_type": None,
         "build_for": "target",
-        "packages": []
+        "packages": [],
+        "work_dir": None
     }
 
     try:
@@ -109,7 +111,8 @@ def parse_cmd_line():
             "install",
             "repackage",
             "packages=",
-            "build-for="
+            "build-for=",
+            "work-dir="
         ])
     except getopt.GetoptError as e:
         raise InvocationError("Error parsing command line: %s" % str(e))
@@ -157,6 +160,11 @@ def parse_cmd_line():
                     raise InvocationError("cannot build for '%s'." % v)
                 config["build_for"] = v
                 break
+            if case("--work-dir"):
+                if not os.path.isdir(v):
+                    raise InvocationError("no such directory '%s'." % v)
+                config["work_dir"] = v
+                break
         #end switch
     #end for
 
@@ -176,6 +184,14 @@ if __name__ == "__main__":
         # LOAD USER CONFIG
         config = AppConfig.load_user_config()
         config.update(options)
+
+        # SET WORKING DIRECTORY
+        if config["work_dir"]:
+            try:
+                os.chdir(config["work_dir"])
+            except OSError as e:
+                raise XPackError("failed to set working directory: " + str(e))
+        #end if
 
         # RUN ACTION
         pkg_ctrl = PackageControl(args[0], config)
