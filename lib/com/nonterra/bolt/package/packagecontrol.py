@@ -130,6 +130,13 @@ class PackageControl:
         self.src_pkg = SourcePackage(xml_doc.xpath("/control/source")[0])
         self.src_pkg.basedir = self.defines["BOLT_WORK_DIR"]
 
+        if self.parms["packages"]:
+            for p in self.parms["packages"]:
+                if not xml_doc.xpath("/control/package[@name='%s']" % p):
+                    raise XPackError("unknown binary package '%s'." % p)
+            #end for
+        #end if
+
         self.bin_pkgs = []
         for node in xml_doc.xpath("/control/package"):
             pkg = DebianPackage(
@@ -162,14 +169,6 @@ class PackageControl:
 
             self.bin_pkgs.append(pkg)
         #end for
-
-        if self.parms["packages"]:
-            bin_pkg_names = [p.name for p in self.bin_pkgs]
-            for p in self.parms["packages"]:
-                if not p in bin_pkg_names:
-                    raise XPackError("unknown binary package '%s'." % p)
-            #end for
-        #end if
 
         self.changelog = Changelog(xml_doc.xpath('/control/changelog')[0])
     #end function
