@@ -54,7 +54,7 @@ class Specfile:
         try:
             xml_doc = etree.parse(filename, parser)
             xml_doc.xinclude()
-        except etree.XMLSyntaxError as e:
+        except (etree.XMLSyntaxError, etree.XIncludeError) as e:
             raise SpecfileError(str(e))
 
         self.validate_structure(xml_doc)
