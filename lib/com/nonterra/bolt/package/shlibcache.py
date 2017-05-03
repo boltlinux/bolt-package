@@ -73,7 +73,7 @@ class ShlibCache:
     #end class
 
     def __init__(self, prefix="/usr"):
-        self.prefix = prefix
+        self.prefixes = [prefix,]
         self.map = {}
         self.have_ldconfig = False
 
@@ -115,15 +115,15 @@ class ShlibCache:
         if self.have_ldconfig:
             return self.map[key]
         else:
-            return self.map.get(key, self.__find_object(key))
+            return self.map.get(key) or self.__find_object(key)
     #end function
 
-    def get(self, key, default=None):
+    def get(self, key, default=None, fallback=None):
         try:
             if self.have_ldconfig:
                 return self.map[key]
             else:
-                return self.map.get(key, self.__find_object(key))
+                return self.map.get(key) or self.__find_object(key, fallback)
         except KeyError:
             return default
     #end function
@@ -171,14 +171,18 @@ class ShlibCache:
 
     # PRIVATE
 
-    def __find_object(self, lib_name):
-        lib_path = [self.prefix + os.sep + "lib"]
+    def __find_object(self, lib_name, fallback=None):
+        lib_path = [p + os.sep + "lib" for p in self.prefixes]
+
+        if fallback and not fallback in self.prefixes:
+            lib_path.append(fallback + os.sep + "lib")
 
         for path in lib_path:
             object_path = path + os.sep + lib_name
             if os.path.isfile(object_path):
                 self.map.setdefault(lib_name, []) \
                         .append(ShlibCache.SharedObject(object_path))
+            #end if
         #end for
 
         return self.map[lib_name]

@@ -386,6 +386,22 @@ class BinaryPackage(BasePackage):
         objdump = Platform.find_executable(self.host_type + "-objdump")
 
         for src, attr in self.contents.items():
+            fallback = None
+
+            if attr.stats.is_symbolic_link and src.endswith(".so"):
+                link_target = attr.stats.link_target
+
+                if not os.path.isabs(link_target):
+                    link_target = os.path.normpath(os.path.dirname(src) + \
+                            os.sep + link_target)
+                else:
+                    fallback = "/usr"
+                #end if
+
+                self.__find_and_register_dependency(link_target, shlib_cache,
+                        hard_relation=True, fallback=fallback)
+                continue
+
             if not attr.stats.is_file or not attr.stats.is_elf_binary:
                 continue
 
@@ -404,32 +420,55 @@ class BinaryPackage(BasePackage):
                     if not m:
                         continue
                     lib_name = m.group(1)
-
-                    found = False
-
-                    for shared_obj in shlib_cache.get(lib_name, []):
-                        if shared_obj.arch_word_size() != word_size:
-                            continue
-                        pkg_name, version = shared_obj.package_name_and_version()
-                        if not pkg_name or not version:
-                            continue
-                        if pkg_name == self.name:
-                            found = True
-                            break
-                        if not "requires" in self.relations:
-                            self.relations["requires"] = \
-                                    BasePackage.DependencySpecification()
-                        self.relations["requires"][pkg_name] = \
-                                BasePackage.Dependency(pkg_name, ">= %s" % version)
-                        found = True
-                    #end for
-
-                    if not found:
-                        raise XPackError("'%s' dependency '%s' not found in any "
-                            "installed package." % (self.name, lib_name))
+                    self.__find_and_register_dependency(lib_name, shlib_cache,
+                            word_size=word_size)
                 #end for
             #end with
         #end for
+    #end function
+
+    # PRIVATE
+
+    def __find_and_register_dependency(self, lib_name, shlib_cache,
+            word_size=None, hard_relation=False, fallback=None):
+        found  = False
+
+        if os.path.isabs(lib_name):
+            lib_path = lib_name
+            lib_name = os.path.basename(lib_name)
+        else:
+            lib_path = ""
+            is_abs = False
+        #end if
+
+        relation = "=" if hard_relation else ">="
+
+        for shared_obj in shlib_cache.get(lib_name, [], fallback=fallback):
+            if word_size and shared_obj.arch_word_size() != word_size:
+                continue
+            if lib_path and shared_obj.lib_path != lib_path:
+                continue
+
+            pkg_name, version = shared_obj.package_name_and_version()
+
+            if not pkg_name or not version:
+                continue
+            if pkg_name == self.name:
+                found = True
+                break
+
+            if not "requires" in self.relations:
+                self.relations["requires"] = \
+                        BasePackage.DependencySpecification()
+
+            self.relations["requires"][pkg_name] = BasePackage\
+                    .Dependency(pkg_name, "%s %s" % (relation, version))
+            found = True
+        #end for
+
+        if not found:
+            raise XPackError("'%s' dependency '%s' not found in any "
+                "installed package." % (self.name, lib_name))
     #end function
 
 #end class
