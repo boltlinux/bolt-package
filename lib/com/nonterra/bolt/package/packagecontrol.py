@@ -46,7 +46,8 @@ class PackageControl:
             "format": "deb",
             "debug_pkgs": True,
             "build_for": "target",
-            "packages": []
+            "enable_packages": [],
+            "disable_packages": [],
         }
         self.parms.update(parms)
 
@@ -130,8 +131,15 @@ class PackageControl:
         self.src_pkg = SourcePackage(xml_doc.xpath("/control/source")[0])
         self.src_pkg.basedir = self.defines["BOLT_WORK_DIR"]
 
-        if self.parms["packages"]:
-            for p in self.parms["packages"]:
+        if self.parms["enable_packages"]:
+            for p in self.parms["enable_packages"]:
+                if not xml_doc.xpath("/control/package[@name='%s']" % p):
+                    raise XPackError("unknown binary package '%s'." % p)
+            #end for
+        #end if
+
+        if self.parms["disable_packages"]:
+            for p in self.parms["disable_packages"]:
                 if not xml_doc.xpath("/control/package[@name='%s']" % p):
                     raise XPackError("unknown binary package '%s'." % p)
             #end for
@@ -146,8 +154,11 @@ class PackageControl:
                 host_type=self.defines["BOLT_HOST_TYPE"]
             )
 
-            if self.parms["packages"]:
-                if not pkg.name in self.parms["packages"]:
+            if self.parms["enable_packages"]:
+                if not pkg.name in self.parms["enable_packages"]:
+                    continue
+            if self.parms["disable_packages"]:
+                if pkg.name in self.parms["disable_packages"]:
                     continue
 
             if pkg.build_for and not self.parms["build_for"] in pkg.build_for:
