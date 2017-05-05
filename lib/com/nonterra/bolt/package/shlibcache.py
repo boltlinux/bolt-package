@@ -130,6 +130,11 @@ class ShlibCache:
 
     def overlay_package(self, binary_package):
         for src, attr in binary_package.contents.items():
+            lib_name = os.path.basename(src)
+
+            if not re.match(r'^lib.*?\.so.*$', lib_name):
+                continue
+
             if attr.stats.is_symbolic_link:
                 abs_path = os.path.normpath(
                         binary_package.basedir + os.sep + src)
@@ -148,7 +153,6 @@ class ShlibCache:
             new_shared_obj.pkg_name    = binary_package.name
             new_shared_obj.pkg_version = binary_package.version
             new_shared_obj.word_size   = stats.arch_word_size
-            lib_name                   = os.path.basename(src)
 
             shared_obj_list = self.map.setdefault(lib_name, [])
 
