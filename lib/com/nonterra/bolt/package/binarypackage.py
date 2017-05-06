@@ -432,21 +432,10 @@ class BinaryPackage(BasePackage):
     def __find_and_register_dependency(self, lib_name, shlib_cache,
             word_size=None, hard_relation=False, fallback=None):
         found  = False
-
-        if os.path.isabs(lib_name):
-            lib_path = lib_name
-            lib_name = os.path.basename(lib_name)
-        else:
-            lib_path = ""
-            is_abs = False
-        #end if
-
         relation = "=" if hard_relation else ">="
 
         for shared_obj in shlib_cache.get(lib_name, [], fallback=fallback):
             if word_size and shared_obj.arch_word_size() != word_size:
-                continue
-            if lib_path and shared_obj.lib_path != lib_path:
                 continue
 
             pkg_name, version = shared_obj.package_name_and_version()

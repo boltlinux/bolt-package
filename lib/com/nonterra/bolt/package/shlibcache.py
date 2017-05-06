@@ -111,19 +111,23 @@ class ShlibCache:
         #end if
     #end function
 
-    def __getitem__(self, key):
-        if self.have_ldconfig:
-            return self.map[key]
+    def get(self, lib_name, default=None, fallback=None):
+        if os.path.isabs(lib_name):
+            lib_path = lib_name
+            lib_name = os.path.basename(lib_name)
         else:
-            return self.map.get(key) or self.__find_object(key)
-    #end function
+            lib_path = None
+        #end if
 
-    def get(self, key, default=None, fallback=None):
         try:
             if self.have_ldconfig:
-                return self.map[key]
+                return self.map[lib_name]
             else:
-                return self.map.get(key) or self.__find_object(key, fallback)
+                if lib_path:
+                    return self.__find_object(lib_name, fallback)
+                else:
+                    return self.map.get(lib_name) or \
+                            self.__find_object(lib_name)
         except KeyError:
             return default
     #end function
