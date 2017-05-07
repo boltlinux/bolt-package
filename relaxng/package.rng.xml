@@ -177,6 +177,15 @@
             <optional>
                 <attribute name="version"/>
             </optional>
+            <optional>
+                <attribute name="target-prefix"/>
+            </optional>
+            <optional>
+                <attribute name="tools-prefix"/>
+            </optional>
+            <optional>
+                <attribute name="cross-tools-prefix"/>
+            </optional>
         </element>
     </define>
 

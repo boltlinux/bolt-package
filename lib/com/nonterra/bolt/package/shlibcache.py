@@ -124,12 +124,16 @@ class ShlibCache:
                 return self.map[lib_name]
             else:
                 if lib_path:
-                    return self.__find_object(lib_name, fallback)
+                    for shared_obj in self.__find_object(lib_name, fallback):
+                        if shared_obj.lib_path == lib_path:
+                            return [shared_obj]
                 else:
                     return self.map.get(lib_name) or \
                             self.__find_object(lib_name)
         except KeyError:
-            return default
+            pass
+        
+        return default
     #end function
 
     def overlay_package(self, binary_package):

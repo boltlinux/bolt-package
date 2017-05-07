@@ -63,8 +63,8 @@ class BinaryPackage(BasePackage):
     #end class
 
     def __init__(self, xml_config, **kwargs):
-        params = {"debug_pkgs": True}
-        params.update(kwargs)
+        parms = {"debug_pkgs": True}
+        parms.update(kwargs)
 
         if isinstance(xml_config, etree._Element):
             bin_node = xml_config
@@ -95,11 +95,12 @@ class BinaryPackage(BasePackage):
         if self.build_for:
             self.build_for = [v.strip() for v in self.build_for.split(",")]
 
-        self.make_debug_pkgs = params["debug_pkgs"]
-        self.install_prefix  = params["install_prefix"]
-        self.host_type       = params["host_type"]
+        self.make_debug_pkgs = parms["debug_pkgs"]
+        self.install_prefix  = parms["install_prefix"]
+        self.host_type       = parms["host_type"]
+        self.relations       = {}
+        actual_build_for     = parms.get("build_for", None)
 
-        self.relations = {}
         for dep_type in ["requires", "provides", "conflicts", "replaces"]:
             dep_node = bin_node.find(dep_type)
 
@@ -134,8 +135,17 @@ class BinaryPackage(BasePackage):
                     #end if
                 #end if
 
-                if self.architecture == "tools":
-                    pkg_node.attrib["name"] = "tools-" + pkg_node.attrib["name"]
+                pkg_prefix = None
+
+                if actual_build_for != None:
+                    pkg_prefix = pkg_node.get(actual_build_for + \
+                            "-prefix", None)
+                if pkg_prefix == None:
+                    if self.architecture == "tools":
+                        pkg_prefix = "tools-"
+                if pkg_prefix != None:
+                    pkg_node.attrib["name"] = pkg_prefix + \
+                            pkg_node.attrib["name"]
             #end for
 
             self.relations[dep_type] = BasePackage.DependencySpecification\

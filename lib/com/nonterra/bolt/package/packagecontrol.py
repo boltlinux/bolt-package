@@ -151,7 +151,8 @@ class PackageControl:
                 node,
                 debug_pkgs=self.parms["debug_pkgs"],
                 install_prefix=self.defines["BOLT_INSTALL_PREFIX"],
-                host_type=self.defines["BOLT_HOST_TYPE"]
+                host_type=self.defines["BOLT_HOST_TYPE"],
+                build_for=self.parms["build_for"]
             )
 
             if self.parms["enable_packages"]:
