@@ -467,8 +467,7 @@ class BinaryPackage(BasePackage):
 
         if not found:
             raise XPackError("'%s' dependency '%s' not found in any "
-                "installed or built package." % (self.name, lib_path if
-                    lib_path else lib_name))
+                "installed or built package." % (self.name, lib_name))
     #end function
 
 #end class
