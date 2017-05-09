@@ -328,7 +328,8 @@ class BinaryPackage(BasePackage):
         if self.architecture == "tools":
             # filter out /etc and /var directories, these are shared
             def filter_etc_var(item):
-                return False if item[0][0:5] in ["/etc", "/var"] \
+                print(item)
+                return False if item[0][0:4] in ["/etc", "/var"] \
                         else True
             #end inline function
             self.contents = OrderedDict(sorted(filter(filter_etc_var,
