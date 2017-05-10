@@ -148,3 +148,33 @@ bh_spoof_target_triplet()
         sed 's/\([^-]\+\)-\([^-]\+-\)\?\([^-]\+\)-\([^-]\+\)/\1-xxx-\3-\4/g'
 }
 
+###############################################################################
+#
+# Replace all occurences of config.sub and config.guess in the current source
+# tree with the versions stored in /usr/share/misc.
+#
+# Prints nothing.
+#
+###############################################################################
+bh_autotools_dev_update()
+{
+    find . -name "config.guess" | while read filename
+    do
+        if [ -f "/tools/share/misc/config.guess" ]
+        then
+            cp "/tools/share/misc/config.guess" "$filename"
+        else
+            cp "/usr/share/misc/config.guess" "$filename"
+        fi
+    done
+    find . -name "config.sub" | while read filename
+    do
+        if [ -f "/tools/share/misc/config.sub" ]
+        then
+            cp "/tools/share/misc/config.sub" "$filename"
+        else
+            cp "/usr/share/misc/config.sub" "$filename"
+        fi
+    done
+}
+
