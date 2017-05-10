@@ -234,8 +234,8 @@ class BinaryPackage(BasePackage):
         self.strip_debug_symbols_and_delete_rpath()
     #end function
 
-    def pack(self, shlib_cache):
-        self.shlib_deps(shlib_cache)
+    def pack(self, shlib_cache, bin_pkgs):
+        self.shlib_deps(shlib_cache, bin_pkgs)
         self.do_pack()
     #end function
 
@@ -392,7 +392,7 @@ class BinaryPackage(BasePackage):
         #end for
     #end function
 
-    def shlib_deps(self, shlib_cache=None):
+    def shlib_deps(self, shlib_cache, bin_pkgs):
         objdump = Platform.find_executable(self.host_type + "-objdump")
 
         for src, attr in self.contents.items():
@@ -409,7 +409,7 @@ class BinaryPackage(BasePackage):
                 #end if
 
                 self.__find_and_register_dependency(link_target, shlib_cache,
-                        hard_relation=True, fallback=fallback)
+                        bin_pkgs, hard_relation=True, fallback=fallback)
                 continue
 
             if not attr.stats.is_file or not attr.stats.is_elf_binary:
@@ -431,7 +431,7 @@ class BinaryPackage(BasePackage):
                         continue
                     lib_name = m.group(1)
                     self.__find_and_register_dependency(lib_name, shlib_cache,
-                            word_size=word_size)
+                            bin_pkgs, word_size=word_size)
                 #end for
             #end with
         #end for
@@ -440,10 +440,11 @@ class BinaryPackage(BasePackage):
     # PRIVATE
 
     def __find_and_register_dependency(self, lib_name, shlib_cache,
-            word_size=None, hard_relation=False, fallback=None):
+            bin_pkgs, word_size=None, hard_relation=False, fallback=None):
         found  = False
         relation = "=" if hard_relation else ">="
 
+        # in 99% of all cases, we should find the object here
         for shared_obj in shlib_cache.get(lib_name, [], fallback=fallback):
             if word_size and shared_obj.arch_word_size() != word_size:
                 continue
@@ -464,6 +465,27 @@ class BinaryPackage(BasePackage):
                     .Dependency(pkg_name, "%s %s" % (relation, version))
             found = True
         #end for
+
+        # last resort in case .so is a linker script, for example
+        if not found:
+            for pkg in bin_pkgs:
+                if not lib_name in pkg.contents:
+                    continue
+
+                found = True
+
+                if pkg.name != self.name:
+                    if not "requires" in self.relations:
+                        self.relations["requires"] = \
+                                BasePackage.DependencySpecification()
+                    self.relations["requires"][pkg_name] = \
+                            BasePackage.Dependency(pkg_name, "%s %s" %
+                                    (relation, self.version))
+                #end if
+
+                break
+            #end for
+        #end if
 
         if not found:
             raise XPackError("'%s' dependency '%s' not found in any "

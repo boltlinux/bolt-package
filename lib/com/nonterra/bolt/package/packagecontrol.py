@@ -248,7 +248,7 @@ class PackageControl:
             pkg.prepare()
             shlib_cache.overlay_package(pkg)
         for pkg in self.bin_pkgs:
-            pkg.pack(shlib_cache)
+            pkg.pack(shlib_cache, self.bin_pkgs)
     #end function
 
     def repackage(self):
