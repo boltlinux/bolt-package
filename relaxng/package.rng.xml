@@ -222,6 +222,9 @@
             <optional>
                 <attribute name="build-for"/>
             </optional>
+            <optional>
+                <attribute name="xml:base"/>
+            </optional>
 
             <!-- DESCRIPTION -->
             <ref name="description"/>
