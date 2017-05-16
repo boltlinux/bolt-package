@@ -251,7 +251,7 @@ class SourcePackage(BasePackage):
     def __load_helpers(self):
         result = []
 
-        for script in ["arch.sh"]:
+        for script in ["arch.sh", "python.sh"]:
             for path in SourcePackage.BOLT_HELPERS_SEARCH_PATH:
                 abs_path = os.path.join(path, script)
                 if not os.path.isfile(abs_path):
