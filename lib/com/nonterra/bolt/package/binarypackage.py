@@ -187,8 +187,15 @@ class BinaryPackage(BasePackage):
         content_node = bin_node.find("contents")
         if content_node is not None:
             self.content_subdir = content_node.get("subdir")
+            if content_node.get("collect-py-cache-files", "false")\
+                    .lower() == "true":
+                self.collect_py_cache_files = True
+            else:
+                self.collect_py_cache_files = False
+            #end if
         else:
             self.content_subdir = ""
+            self.collect_py_cache_files = False
         #end function
 
         self.basedir        = os.path.realpath(".")
@@ -282,29 +289,77 @@ class BinaryPackage(BasePackage):
                         attr.stats = FileStats.detect_from_filename(abs_path)
                         contents[src] = attr
                     break
+                #end if
             #end switch
 
             for path in listing:
                 abs_path = path.as_posix()
                 pkg_path = os.sep + path.relative_to(self.basedir).as_posix()
-
-                if not pkg_path in contents:
-                    stats = FileStats.detect_from_filename(abs_path)
-                    contents[pkg_path] = BinaryPackage.EntryAttributes({
-                        "deftype":  "file",
-                        "mode":     mode,
-                        "owner":    owner,
-                        "group":    group,
-                        "conffile": False if not stats.is_file else conffile,
-                        "stats":    stats
-                    })
-                #end if
+                if pkg_path in contents:
+                    continue
+                stats = FileStats.detect_from_filename(abs_path)
+                contents[pkg_path] = BinaryPackage.EntryAttributes({
+                    "deftype":  "file",
+                    "mode":     mode,
+                    "owner":    owner,
+                    "group":    group,
+                    "conffile": False if not stats.is_file else conffile,
+                    "stats":    stats
+                })
             #end for
         #end for
 
-        # make sure all directories are included, as well
+        # make sure directories are included and collect byte code files
         extra_contents = {}
         for k in contents:
+            if self.collect_py_cache_files and k.endswith(".py"):
+                py2_style = False
+
+                for letter in [ "c", "o" ]:
+                    k_opt = k + letter
+                    abs_path = self.basedir + os.sep + k_opt
+                    if not os.path.isfile(abs_path):
+                        continue
+                    py2_style = True
+                    if (k_opt in contents) or (k_opt in extra_contents):
+                        continue
+                    extra_contents[k_opt] = BinaryPackage.EntryAttributes({
+                        "deftype": "file",
+                        "stats":   FileStats.detect_from_filename(abs_path)
+                    })
+                #end for
+
+                if py2_style:
+                    continue
+
+                k_cache_dir = os.path.dirname(k) + os.sep + "__pycache__"
+                k_base_name = os.path.basename(k)[0:-3]
+                if not os.path.isdir(self.basedir + os.sep + k_cache_dir):
+                    continue
+                listing = list(Path(self.basedir).glob(
+                    k_cache_dir.lstrip(os.sep) + os.sep + k_base_name + 
+                        ".cpython*.pyc"))
+                if not listing:
+                    continue
+
+                extra_contents[k_cache_dir] = BinaryPackage.EntryAttributes({
+                    "deftype": "dir",
+                    "stats":   FileStats.default_dir_stats()
+                })
+
+                for path in listing:
+                    abs_path = path.as_posix()
+                    pkg_path = os.sep + path.relative_to(self.basedir)\
+                            .as_posix()
+                    if pkg_path in contents:
+                        continue
+                    extra_contents[pkg_path] = BinaryPackage.EntryAttributes({
+                        "deftype": "file",
+                        "stats":   FileStats.detect_from_filename(abs_path)
+                    })
+                #end for
+            #end if
+
             while k != "/" and k != "":
                 k = os.path.dirname(k)
 
@@ -313,10 +368,6 @@ class BinaryPackage(BasePackage):
                     if os.path.exists(abs_path):
                         extra_contents[k] = BinaryPackage.EntryAttributes({
                             "deftype":  "dir",
-                            "mode":     None,
-                            "owner":    None,
-                            "group":    None,
-                            "conffile": False,
                             "stats":    FileStats.detect_from_filename(abs_path)
                         })
                     #end if

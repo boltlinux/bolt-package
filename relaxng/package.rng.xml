@@ -281,6 +281,14 @@
                         <optional>
                             <attribute name="subdir"/>
                         </optional>
+                        <optional>
+                            <attribute name="collect-py-cache-files">
+                                <choice>
+                                    <value>true</value>
+                                    <value>false</value>
+                                </choice>
+                            </attribute>
+                        </optional>
 
                         <interleave>
                             <zeroOrMore>
