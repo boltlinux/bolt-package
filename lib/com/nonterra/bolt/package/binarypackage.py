@@ -179,7 +179,9 @@ class BinaryPackage(BasePackage):
         self.maintainer_scripts = {}
         for node in bin_node.findall("maintainer-scripts/*"):
             if node.tag in ["preinst", "postinst", "prerm", "postrm"]:
-                self.maintainer_scripts[node.tag] = "#!/bin/sh -e\n" + \
+                self.maintainer_scripts[node.tag] = "#!/bin/sh -e\n\n" + \
+                        ("export BOLT_INSTALL_PREFIX=\"%s\"\n" % self.install_prefix) + \
+                        ("export BOLT_HOST_TYPE=\"%s\"\n\n" % self.host_type) + \
                         etree.tostring(node, method="text", encoding="unicode")
             #end if
         #end for

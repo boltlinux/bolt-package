@@ -158,8 +158,11 @@ class DebianPackage(BinaryPackage):
                 libarchive.COMPRESSION_GZIP) as archive:
 
             control_contents = [("control", meta_data, 0o644)]
-            conffiles = self.conffiles(pkg_contents)
 
+            for script_name, script_content in self.maintainer_scripts.items():
+                control_contents.append([script_name, script_content, 0o754])
+
+            conffiles = self.conffiles(pkg_contents)
             if conffiles:
                 control_contents.append(["conffiles", conffiles, 0o644])
 
