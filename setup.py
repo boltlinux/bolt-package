@@ -20,7 +20,7 @@ setup(
     data_files=[
         ('bin', ['bin/bolt-pack', 'bin/deb2bolt']),
         ('share/bolt-pack/relaxng', ['relaxng/package.rng.xml']),
-        ('share/bolt-pack/helpers', ['helpers/arch.sh'])
+        ('share/bolt-pack/helpers', ['helpers/arch.sh', 'helpers/python.sh'])
     ],
     platforms=['Linux'],
 
