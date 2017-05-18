@@ -8,6 +8,8 @@
 #
 # It looks at the value of `$BOLT_BUILD_FOR` to choose the correct prefix.
 #
+# $1: The installation path.
+#
 ###############################################################################
 bh_python_install()
 {
