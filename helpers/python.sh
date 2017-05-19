@@ -38,8 +38,8 @@ bh_python_install()
     done
 
     if [ -z "$1" ] || [ ! -d "$1" ]; then
-        echo "Invalid or empty installation path '$1'. Aborting." >&2
-        exit 1
+        echo "bh_python_install: invalid or empty installation path '$1', aborting." >&2
+        exit 17
     fi
 
     local py_root="$1"
