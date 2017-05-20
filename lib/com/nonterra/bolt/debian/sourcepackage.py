@@ -136,7 +136,7 @@ class SourcePackage(BasePackageMixin, PackageUtilsMixin):
         self.packages  = []
         self.directory = debdir
         self.tarball   = self.find_orig_tarball(debdir)
-        self.patch_tarball = "patches.01.tar.gz"
+        self.patch_tarball = "debian.1.tar.gz"
 
         for entry in blocks:
             if not entry.strip():
@@ -357,8 +357,8 @@ class SourcePackage(BasePackageMixin, PackageUtilsMixin):
 
         if gen_patches:
             patch_dir = os.path.join(self.directory, self.patches.patch_subdir)
-            filename  = self.version + os.sep + "patches.%s.tar.gz" \
-                    % self.revision.zfill(2)
+            filename  = self.version + os.sep + \
+                    "debian.%s.tar.gz" % self.revision
             os.makedirs(self.version, exist_ok=True)
 
             with ArchiveFileWriter(filename, libarchive.FORMAT_TAR_USTAR,
