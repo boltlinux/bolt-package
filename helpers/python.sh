@@ -6,6 +6,9 @@
 # --python3, --py3  Use the appropriate Python3 interpreter.
 # --python2, --py2  Use the appropriate Python2 interpreter.
 #
+# --build           Run the build action.
+# --install         Run the install action.
+#
 # It looks at the value of `$BOLT_BUILD_FOR` to choose the correct prefix.
 #
 # $1: The installation path.
@@ -20,36 +23,50 @@ bh_python_install()
     fi
 
     local py_interp="python2"
+    local py_action="install"
 
     while true; do
         case "$1" in
             --python2|--py2)
-                py_interp="python2"
+                local py_interp="python2"
                 shift
                 ;;
             --python3|--py3)
-                py_interp="python3"
+                local py_interp="python3"
+                shift
+                ;;
+            --build)
+                local py_action="build"
+                shift
+                ;;
+            --install)
+                local py_action="install"
                 shift
                 ;;
             *)
+                local py_root="$1"
                 break
                 ;;
         esac
     done
 
-    if [ -z "$1" ] || [ ! -d "$1" ]; then
-        echo "bh_python_install: invalid or empty installation path '$1', aborting." >&2
-        exit 17
-    fi
-
-    local py_root="$1"
     local py_interp="$py_prefix/bin/$py_interp"
 
-    local __python_site_packages=`$py_interp -c \
-        "from distutils import sysconfig; print(sysconfig.get_python_lib())"`
-    "$py_interp" setup.py install \
-        --prefix="$py_prefix" \
-        --root="$py_root" \
-        --install-lib="${__python_site_packages}"
+    if [ "$py_action" = "install" ]; then
+        if [ -z "$py_root" ] || [ ! -d "$py_root" ]; then
+            echo "bh_python_install: invalid or empty installation path '$1', aborting." >&2
+            exit 17
+        fi
+
+        local py_site_packages=`$py_interp -c \
+            "from distutils import sysconfig; print(sysconfig.get_python_lib())"`
+        "$py_interp" setup.py install \
+            --force \
+            --prefix="$py_prefix" \
+            --root="$py_root" \
+            --install-lib="$py_site_packages"
+    else
+        "$py_interp" setup.py build
+    fi
 }
 
