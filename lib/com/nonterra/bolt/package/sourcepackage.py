@@ -258,6 +258,7 @@ class SourcePackage(BasePackage):
                     continue
                 with open(abs_path, "r", encoding="utf-8") as fp:
                     result.append(fp.read())
+                    break
             #end for
         #end for
 
