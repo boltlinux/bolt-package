@@ -178,3 +178,26 @@ bh_autotools_dev_update()
     done
 }
 
+###############################################################################
+#
+# Takes a machine name (armv6, x86_64) or a target triplet
+# (armv6-linux-gnueabihf, x86_64-pc-linux-gnu) and tells the native word size
+# of that platform (i.e. "32" or "64").
+#
+# $1: a machine name or target triplet
+#
+# Prints the corresponding word size in bits.
+#
+###############################################################################
+bh_os_bits()
+{
+    case "$1" in
+        *64*)
+            echo "64"
+            ;;
+        *)
+            echo "32"
+            ;;
+    esac
+}
+
