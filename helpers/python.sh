@@ -3,25 +3,16 @@
 # Installs a Python package using distutils setup tools. Understands the
 # following parameters:
 #
-# --python3, --py3  Use the appropriate Python3 interpreter.
-# --python2, --py2  Use the appropriate Python2 interpreter.
-#
 # --build           Run the build action.
 # --install         Run the install action.
-#
-# It looks at the value of `$BOLT_BUILD_FOR` to choose the correct prefix.
+# --python3, --py3  Use the appropriate Python3 interpreter.
+# --python2, --py2  Use the appropriate Python2 interpreter.
 #
 # $1: The installation path.
 #
 ###############################################################################
 bh_python_install()
 {
-    if [ "$BOLT_BUILD_FOR" = "tools" ]; then
-        local py_prefix="/tools"
-    else
-        local py_prefix="/usr"
-    fi
-
     local py_interp="python2"
     local py_action="install"
 
@@ -50,7 +41,7 @@ bh_python_install()
         esac
     done
 
-    local py_interp="$py_prefix/bin/$py_interp"
+    local py_interp="$BOLT_INSTALL_PREFIX/bin/$py_interp"
 
     if [ "$py_action" = "install" ]; then
         if [ -z "$py_root" ] || [ ! -d "$py_root" ]; then
@@ -62,8 +53,8 @@ bh_python_install()
             "from distutils import sysconfig; print(sysconfig.get_python_lib())"`
         "$py_interp" setup.py install \
             --force \
-            --prefix="$py_prefix" \
             --root="$py_root" \
+            --prefix="$BOLT_INSTALL_PREFIX" \
             --install-lib="$py_site_packages"
     else
         "$py_interp" setup.py build
