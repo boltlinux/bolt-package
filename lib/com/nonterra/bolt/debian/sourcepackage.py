@@ -43,8 +43,10 @@ PKG_RULES_XML_TEMPLATE = """\
     <![CDATA[
 
 cd "$BOLT_BUILD_DIR"
-$BOLT_SOURCE_DIR/configure \\
-    --prefix=/usr \\
+"$BOLT_SOURCE_DIR/configure" \\
+    --prefix="$BOLT_INSTALL_PREFIX" \\
+    --build="$BOLT_HOST_TYPE" \\
+    --host="$BOLT_HOST_TYPE" \\
     --disable-nls
 
     ]]>
