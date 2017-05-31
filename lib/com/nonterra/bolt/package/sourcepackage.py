@@ -168,6 +168,7 @@ class SourcePackage(BasePackage):
                     if entry.is_directory:
                         entry.mode |= 0o700
                         os.makedirs(full_path, exist_ok=True)
+                        os.chmod(full_path, entry.mode)
                     elif entry.is_file:
                         entry.mode |= 0o600
                         with open(full_path, "wb+") as fp:
@@ -181,18 +182,17 @@ class SourcePackage(BasePackage):
                         #end with
                         if self.verbose:
                             progress_bar(bytes_read)
+                        os.chmod(full_path, entry.mode)
+                        # assume it is sufficient to do this for files
+                        os.utime(full_path, (entry.atime, entry.mtime))
                     elif entry.is_symbolic_link:
                         if os.path.exists(full_path):
                             os.unlink(full_path)
                         os.symlink(entry.symlink, full_path)
-                        # IMPORTANT: don't do chmod on the symlink
-                        continue
                     else:
                         msg = "file '%s' has unsupported file type."
                         raise SourcePackageError(msg)
                     #end if
-
-                    os.chmod(full_path, entry.mode)
                 #end for
             #end with
         #end for
