@@ -34,8 +34,11 @@ bh_python_install()
                 local py_action="install"
                 shift
                 ;;
+            --root)
+                local py_root="$2"
+                shift 2
+                ;;
             *)
-                local py_root="$1"
                 break
                 ;;
         esac
@@ -55,9 +58,10 @@ bh_python_install()
             --force \
             --root="$py_root" \
             --prefix="$BOLT_INSTALL_PREFIX" \
-            --install-lib="$py_site_packages"
+            --install-lib="$py_site_packages" \
+            "$@"
     else
-        "$py_interp" setup.py build
+        "$py_interp" setup.py build "$@"
     fi
 }
 
