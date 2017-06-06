@@ -95,6 +95,7 @@ class PackageControl:
             "BOLT_INSTALL_DIR": "install",
             "BOLT_WORK_DIR":    os.getcwd(),
             "BOLT_BUILD_TYPE":  Platform.target_type(),
+            "BOLT_TOOLS_TYPE":  Platform.tools_type(),
             "BOLT_BUILD_FOR":   self.parms["build_for"]
         }
 
