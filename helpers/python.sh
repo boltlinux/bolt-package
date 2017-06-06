@@ -38,7 +38,12 @@ bh_python_install()
                 local py_root="$2"
                 shift 2
                 ;;
+            --)
+                shift
+                break
+                ;;
             *)
+                # unknown argument
                 break
                 ;;
         esac
