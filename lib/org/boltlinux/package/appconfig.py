@@ -32,8 +32,8 @@ class AppConfig:
 {
   "repositories": [
     {
-      "name": "packages.nonterra.com",
-      "url":  "http://packages.nonterra.com/repo/sources"
+      "name": "packages.boltlinux.org",
+      "url":  "http://packages.boltlinux.org/repo/sources"
     }
   ]
 }

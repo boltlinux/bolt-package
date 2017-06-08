@@ -3,7 +3,7 @@ Upstream-Name: bolt-package
 Source: https://github.com/tobijk/bolt-package.git
 
 Files: *
-Copyright: 2016 Tobias Koch <tobias.koch@nonterra.com>
+Copyright: 2016 Tobias Koch <tobias.koch@gmail.com>
 License: MIT
  The MIT License (MIT)
  .
@@ -27,7 +27,7 @@ License: MIT
  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  THE SOFTWARE.
 
-Files: lib/com/nonterra/bolt/braceexpand.py
+Files: lib/org/boltlinux/package/braceexpand.py
 Copyright: 2015 Stanis Trendelenburg
 License: MIT
  The MIT License (MIT)

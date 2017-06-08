@@ -13,9 +13,9 @@ setup(
     version='1.0.0',
     url='https://github.com/tobijk/bolt-package',
     author='Tobias Koch',
-    author_email='tobias.koch@nonterra.com',
+    author_email='tobias.koch@gmail.com',
     license='MIT',
-    packages=['com.nonterra.bolt.package', 'com.nonterra.bolt.debian'],
+    packages=['org.boltlinux.package', 'org.boltlinux.deb2bolt'],
     package_dir={'': 'lib'},
     data_files=[
         ('bin', ['bin/bolt-pack', 'bin/deb2bolt']),

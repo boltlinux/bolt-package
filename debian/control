@@ -1,7 +1,7 @@
 Source: bolt-package
 Section: devel
 Priority: optional
-Maintainer: Tobias Koch <tobias.koch@nonterra.com>
+Maintainer: Tobias Koch <tobias.koch@gmail.com>
 Build-Depends: debhelper (>= 9), dh-python, python3-all, python3-setuptools
 Standards-Version: 3.9.8
 
