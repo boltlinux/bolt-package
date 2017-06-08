@@ -2,7 +2,7 @@
 #
 # The MIT License (MIT)
 #
-# Copyright (c) 2016 Tobias Koch <tobias.koch@nonterra.com>
+# Copyright (c) 2016 Tobias Koch <tobias.koch@gmail.com>
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -26,16 +26,16 @@
 import os
 import shutil
 from lxml import etree
-from com.nonterra.bolt.package.error import XPackError
-from com.nonterra.bolt.package.sourcepackage import SourcePackage
-from com.nonterra.bolt.package.debianpackage import DebianPackage
-from com.nonterra.bolt.package.shlibcache import ShlibCache
-from com.nonterra.bolt.package.specfile import Specfile
-from com.nonterra.bolt.package.changelog import Changelog
-from com.nonterra.bolt.package.sourcecache import SourceCache
-from com.nonterra.bolt.package.platform import Platform
-from com.nonterra.bolt.package.appconfig import AppConfig
-from com.nonterra.bolt.package.error import MissingDependencies
+from org.boltlinux.package.error import XPackError
+from org.boltlinux.package.sourcepackage import SourcePackage
+from org.boltlinux.package.debianpackage import DebianPackage
+from org.boltlinux.package.shlibcache import ShlibCache
+from org.boltlinux.package.specfile import Specfile
+from org.boltlinux.package.changelog import Changelog
+from org.boltlinux.package.sourcecache import SourceCache
+from org.boltlinux.package.platform import Platform
+from org.boltlinux.package.appconfig import AppConfig
+from org.boltlinux.package.error import MissingDependencies
 
 class PackageControl:
 

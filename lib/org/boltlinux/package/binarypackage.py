@@ -2,7 +2,7 @@
 #
 # The MIT License (MIT)
 #
-# Copyright (c) 2016 Tobias Koch <tobias.koch@nonterra.com>
+# Copyright (c) 2016 Tobias Koch <tobias.koch@gmail.com>
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -31,14 +31,14 @@ import subprocess
 from pathlib import Path
 from collections import OrderedDict
 from lxml import etree
-from com.nonterra.bolt.package.error import XPackError
-from com.nonterra.bolt.package.braceexpand import braceexpand
-from com.nonterra.bolt.package.platform import Platform
-from com.nonterra.bolt.package.packagemanager import PackageManager
-from com.nonterra.bolt.package.basepackage import BasePackage
-from com.nonterra.bolt.package.packagedesc import PackageDescription
-from com.nonterra.bolt.package.filestats import FileStats
-from com.nonterra.bolt.package.util import switch
+from org.boltlinux.package.error import XPackError
+from org.boltlinux.package.braceexpand import braceexpand
+from org.boltlinux.package.platform import Platform
+from org.boltlinux.package.packagemanager import PackageManager
+from org.boltlinux.package.basepackage import BasePackage
+from org.boltlinux.package.packagedesc import PackageDescription
+from org.boltlinux.package.filestats import FileStats
+from org.boltlinux.package.util import switch
 
 class BinaryPackage(BasePackage):
 

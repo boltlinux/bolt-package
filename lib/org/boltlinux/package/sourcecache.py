@@ -2,7 +2,7 @@
 #
 # The MIT License (MIT)
 #
-# Copyright (c) 2016 Tobias Koch <tobias.koch@nonterra.com>
+# Copyright (c) 2016 Tobias Koch <tobias.koch@gmail.com>
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -27,7 +27,7 @@ import os
 import sys
 import hashlib
 import urllib.request
-from com.nonterra.bolt.package.progressbar import ProgressBar
+from org.boltlinux.package.progressbar import ProgressBar
 
 class SourceCache:
 

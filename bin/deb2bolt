@@ -3,7 +3,7 @@
 #
 # The MIT License (MIT)
 #
-# Copyright (c) 2016 Tobias Koch <tobias.koch@nonterra.com>
+# Copyright (c) 2016 Tobias Koch <tobias.koch@gmail.com>
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -33,9 +33,9 @@ INSTALL_DIR = os.path.normpath(os.path.dirname(
     os.path.realpath(sys.argv[0])) + os.sep + ".." )
 sys.path.insert(1, INSTALL_DIR + os.sep + 'lib')
 
-from com.nonterra.bolt.package.util import switch
-from com.nonterra.bolt.package.error import InvocationError
-from com.nonterra.bolt.debian.sourcepackage import SourcePackage
+from org.boltlinux.package.util import switch
+from org.boltlinux.package.error import InvocationError
+from org.boltlinux.deb2bolt.sourcepackage import SourcePackage
 
 BOLT_VERSION = "1.0.0"
 BOLT_ERR_INVOCATION = 1
@@ -44,7 +44,7 @@ BOLT_ERR_RUNTIME    = 2
 def print_usage():
     print(
         "Debian to Bolt Source Package Converter, version %s                            \n"
-        "Copyright (C) 2016-2017 Tobias Koch <tobias.koch@nonterra.com>                 \n"
+        "Copyright (C) 2016-2017 Tobias Koch <tobias.koch@gmail.com>                 \n"
         "                                                                               \n"
         "USAGE:                                                                         \n"
         "                                                                               \n"

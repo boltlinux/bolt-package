@@ -2,7 +2,7 @@
 #
 # The MIT License (MIT)
 #
-# Copyright (c) 2016 Tobias Koch <tobias.koch@nonterra.com>
+# Copyright (c) 2016 Tobias Koch <tobias.koch@gmail.com>
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -28,13 +28,13 @@ import re
 import stat
 import hashlib
 import shutil
-import com.nonterra.bolt.package.libarchive as libarchive
-from com.nonterra.bolt.package.libarchive import ArchiveEntry, ArchiveFileWriter
-from com.nonterra.bolt.debian.changelog import Changelog
-from com.nonterra.bolt.debian.patchseries import PatchSeries
-from com.nonterra.bolt.debian.binarypackage import BinaryPackage
-from com.nonterra.bolt.debian.basepackage import BasePackageMixin
-from com.nonterra.bolt.debian.packageutils import PackageUtilsMixin
+import org.boltlinux.package.libarchive as libarchive
+from org.boltlinux.package.libarchive import ArchiveEntry, ArchiveFileWriter
+from org.boltlinux.deb2bolt.changelog import Changelog
+from org.boltlinux.deb2bolt.patchseries import PatchSeries
+from org.boltlinux.deb2bolt.binarypackage import BinaryPackage
+from org.boltlinux.deb2bolt.basepackage import BasePackageMixin
+from org.boltlinux.deb2bolt.packageutils import PackageUtilsMixin
 
 PKG_RULES_XML_TEMPLATE = """\
 <?xml version="1.0" encoding="utf-8"?>

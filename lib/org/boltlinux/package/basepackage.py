@@ -2,7 +2,7 @@
 #
 # The MIT License (MIT)
 #
-# Copyright (c) 2016 Tobias Koch <tobias.koch@nonterra.com>
+# Copyright (c) 2016 Tobias Koch <tobias.koch@gmail.com>
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -24,7 +24,7 @@
 #
 
 from lxml import etree
-from com.nonterra.bolt.package.packagemanager import PackageManager
+from org.boltlinux.package.packagemanager import PackageManager
 
 class BasePackage:
 

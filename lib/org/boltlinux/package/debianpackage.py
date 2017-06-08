@@ -2,7 +2,7 @@
 #
 # The MIT License (MIT)
 #
-# Copyright (c) 2016 Tobias Koch <tobias.koch@nonterra.com>
+# Copyright (c) 2016 Tobias Koch <tobias.koch@gmail.com>
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -29,12 +29,12 @@ import stat
 import time
 from tempfile import TemporaryDirectory
 from collections import OrderedDict
-import com.nonterra.bolt.package.libarchive as libarchive
-from com.nonterra.bolt.package.platform import Platform
-from com.nonterra.bolt.package.libarchive import ArchiveEntry, ArchiveFileWriter
-from com.nonterra.bolt.package.filestats import FileStats
-from com.nonterra.bolt.package.binarypackage import BinaryPackage
-from com.nonterra.bolt.package.util import switch
+import org.boltlinux.package.libarchive as libarchive
+from org.boltlinux.package.platform import Platform
+from org.boltlinux.package.libarchive import ArchiveEntry, ArchiveFileWriter
+from org.boltlinux.package.filestats import FileStats
+from org.boltlinux.package.binarypackage import BinaryPackage
+from org.boltlinux.package.util import switch
 
 class DebianPackage(BinaryPackage):
 

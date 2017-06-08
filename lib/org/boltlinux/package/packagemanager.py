@@ -2,7 +2,7 @@
 #
 # The MIT License (MIT)
 #
-# Copyright (c) 2016 Tobias Koch <tobias.koch@nonterra.com>
+# Copyright (c) 2016 Tobias Koch <tobias.koch@gmail.com>
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -24,8 +24,8 @@
 #
 
 import os
-from com.nonterra.bolt.package.xpkg import Dpkg, Opkg
-from com.nonterra.bolt.package.error import PackageManagerError
+from org.boltlinux.package.xpkg import Dpkg, Opkg
+from org.boltlinux.package.error import PackageManagerError
 
 class PackageManager:
 

@@ -2,7 +2,7 @@
 #
 # The MIT License (MIT)
 #
-# Copyright (c) 2016 Tobias Koch <tobias.koch@nonterra.com>
+# Copyright (c) 2016 Tobias Koch <tobias.koch@gmail.com>
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -31,7 +31,7 @@ from datetime import datetime
 from dateutil.tz import tzlocal
 from dateutil.parser import parse as parse_datetime
 from xml.sax.saxutils import escape as xml_escape
-from com.nonterra.bolt.package.appconfig import AppConfig
+from org.boltlinux.package.appconfig import AppConfig
 
 class Change:
 

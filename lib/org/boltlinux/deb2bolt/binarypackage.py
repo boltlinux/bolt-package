@@ -2,7 +2,7 @@
 #
 # The MIT License (MIT)
 #
-# Copyright (c) 2016 Tobias Koch <tobias.koch@nonterra.com>
+# Copyright (c) 2016 Tobias Koch <tobias.koch@gmail.com>
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -27,9 +27,9 @@ import os
 import re
 import stat
 import sys
-from com.nonterra.bolt.debian.basepackage import BasePackageMixin
-from com.nonterra.bolt.debian.packageutils import PackageUtilsMixin
-from com.nonterra.bolt.debian.error import ControlFileSyntaxError, \
+from org.boltlinux.deb2bolt.basepackage import BasePackageMixin
+from org.boltlinux.deb2bolt.packageutils import PackageUtilsMixin
+from org.boltlinux.deb2bolt.error import ControlFileSyntaxError, \
         AptCacheNotFoundError
 
 BINARY_PKG_XML_TEMPLATE = """\

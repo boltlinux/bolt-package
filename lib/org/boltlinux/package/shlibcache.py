@@ -2,7 +2,7 @@
 #
 # The MIT License (MIT)
 #
-# Copyright (c) 2016 Tobias Koch <tobias.koch@nonterra.com>
+# Copyright (c) 2016 Tobias Koch <tobias.koch@gmail.com>
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -27,10 +27,10 @@ import os
 import re
 import locale
 import subprocess
-from com.nonterra.bolt.package.platform import Platform
-from com.nonterra.bolt.package.filestats import FileStats
-from com.nonterra.bolt.package.packagemanager import PackageManager
-from com.nonterra.bolt.package.error import ShlibCacheError
+from org.boltlinux.package.platform import Platform
+from org.boltlinux.package.filestats import FileStats
+from org.boltlinux.package.packagemanager import PackageManager
+from org.boltlinux.package.error import ShlibCacheError
 
 class ShlibCache:
 
