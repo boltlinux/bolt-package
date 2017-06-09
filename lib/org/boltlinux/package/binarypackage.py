@@ -114,6 +114,9 @@ class BinaryPackage(BasePackage):
                 if dep_version.endswith("=="):
                     is_own_package = False
 
+                    if dep_type == "provides":
+                        is_own_package = True
+
                     for tmp_node in bin_node.getparent().iterfind("package"):
                         if tmp_node.get("name") == dep_name:
                             is_own_package = True
