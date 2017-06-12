@@ -115,10 +115,10 @@ bh_gcc_config_for_machine()
             echo "--with-tune=generic"
             ;;
         mips64el*)
-            echo "--with-abi=64 --with-arch=mips64r2 --with-madd4=no --with-lxc1-sxc1=no"
+            echo "--with-abi=64 --with-arch=mips64r2 --with-fp-32=xx --with-madd4=no --with-lxc1-sxc1=no"
             ;;
         mips*el*)
-            echo "--with-abi=32 --with-arch=mips32r2 --with-fp=xx --with-madd4=no --with-lxc1-sxc1=no"
+            echo "--with-abi=32 --with-arch=mips32r2 --with-fp-32=xx --with-madd4=no --with-lxc1-sxc1=no"
             ;;
         powerpc64el*|powerpc64le*|ppc64el*)
             echo "--enable-secureplt --with-abi=elfv2"
