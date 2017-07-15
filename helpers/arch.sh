@@ -201,3 +201,25 @@ bh_os_bits()
     esac
 }
 
+###############################################################################
+#
+# Copies the contents of the lib64 directory to the standard lib directory.
+#
+# $1: the base directory (think $1/$prefix/lib64).
+#
+# Prints nothing.
+#
+###############################################################################
+bh_unify_lib64_with_lib()
+{
+    local __base="$1"
+
+    if [ -d "$__base/$BOLT_INSTALL_PREFIX/lib64" ]; then
+        mkdir -p "$__base/$BOLT_INSTALL_PREFIX/lib"
+        mv "$__base/$BOLT_INSTALL_PREFIX/lib64/"* \
+            "$__base/$BOLT_INSTALL_PREFIX/lib/"
+        rmdir "$__base/$BOLT_INSTALL_PREFIX/lib64"
+        ln -sf lib "$__base/$BOLT_INSTALL_PREFIX/lib64"
+    fi
+}
+
