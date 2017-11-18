@@ -14,13 +14,13 @@ bh_kernel_arch_for_target()
     local uname="`echo $1 | cut -d'-' -f1`"
 
     echo $(
-        # The following is stolen from a kernel makefile
-        echo "$uname" | sed -e 's/i.86/x86/'      -e 's/x86_64/x86/'     \
-                          -e 's/sun4u/sparc64/'                          \
-                          -e 's/arm.*/arm/'     -e 's/sa110/arm/'        \
-                          -e 's/s390x/s390/'    -e 's/parisc64/parisc/'  \
-                          -e 's/ppc.*/powerpc/' -e 's/mips.*/mips/'      \
-                          -e 's/sh[234].*/sh/'  -e 's/aarch64.*/arm64/'
+        # The following is in large parts stolen from a kernel makefile
+        echo "$uname" | sed -e 's/i.86/x86/'        -e 's/x86_64/x86/'     \
+                            -e 's/sun4u/sparc64/'   -e 's/arm.*/arm/'      \
+                            -e 's/sa110/arm/'       -e 's/s390x/s390/'     \
+                            -e 's/parisc64/parisc/' -e 's/ppc.*/powerpc/'  \
+                            -e 's/mips.*/mips/'     -e 's/sh[234].*/sh/'   \
+                            -e 's/aarch64.*/arm64/' -e 's/powerpc64.*/powerpc/'
     )
 }
 
