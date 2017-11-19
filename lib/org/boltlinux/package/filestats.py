@@ -144,7 +144,7 @@ class FileStats:
 
     @property
     def build_id(self):
-        regexp_build_id = r"ELF \d+-bit LSB .*, BuildID\[sha1\]=([0-9a-fA-F]+).*"
+        regexp_build_id = r"ELF \d+-bit .SB .*, BuildID\[sha1\]=([0-9a-fA-F]+).*"
         m = re.match(regexp_build_id, self._magic_obj.name)
         if m:
             return m.group(1)
@@ -153,7 +153,7 @@ class FileStats:
 
     @property
     def is_elf_binary(self):
-        regexp = r"ELF \d+-bit LSB .*"
+        regexp = r"ELF \d+-bit .SB .*"
         if re.match(regexp, self._magic_obj.name):
             return True
         return False
@@ -161,7 +161,7 @@ class FileStats:
 
     @property
     def is_stripped(self):
-        regexp = r"ELF \d+-bit LSB .*, .* linked.*, .*not stripped"
+        regexp = r"ELF \d+-bit .SB .*, .* linked.*, .*not stripped"
         if re.match(regexp, self._magic_obj.name):
             return False
         return True
@@ -169,8 +169,8 @@ class FileStats:
 
     @property
     def is_dynamically_linked(self):
-        regexp_bin = r"ELF \d+-bit LSB executable.*, dynamically linked.*"
-        regexp_lib = r"ELF \d+-bit LSB shared object.*, dynamically linked.*"
+        regexp_bin = r"ELF \d+-bit .SB executable.*, dynamically linked.*"
+        regexp_lib = r"ELF \d+-bit .SB shared object.*, dynamically linked.*"
 
         magic = self._magic_obj.name
         if re.match(regexp_bin, magic) or re.match(regexp_lib, magic):
@@ -181,7 +181,7 @@ class FileStats:
 
     @property
     def arch_word_size(self):
-        regexp_elf = r"ELF (\d+)-bit LSB.*"
+        regexp_elf = r"ELF (\d+)-bit .SB.*"
         m = re.match(regexp_elf, self._magic_obj.name)
         if m:
             return m.group(1)
