@@ -121,10 +121,10 @@ bh_gcc_config_for_machine()
             echo "--with-abi=32 --with-arch=mips32r2 --with-fp-32=xx --with-madd4=no --with-lxc1-sxc1=no"
             ;;
         powerpc64el*|powerpc64le*|ppc64el*)
-            echo "--enable-secureplt --with-abi=elfv2"
+            echo "--enable-secureplt --with-abi=elfv2 --without-long-double-128"
             ;;
         powerpc*)
-            echo "--enable-secureplt --with-float=hard --with-cpu=default32 --with-long-double-64"
+            echo "--enable-secureplt --with-float=hard --with-cpu=default32 --without-long-double-128"
             ;;
         x86_64*)
             echo "--with-tune=generic"
