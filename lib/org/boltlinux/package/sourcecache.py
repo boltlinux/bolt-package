@@ -32,7 +32,7 @@ from org.boltlinux.package.progressbar import ProgressBar
 class SourceCache:
 
     def __init__(self, cache_dir, repo_config, verbose=True):
-        self.cache_dir   = cache_dir
+        self.cache_dir   = os.path.join(cache_dir, "sources")
         self.repo_config = repo_config
         self.verbose     = verbose
     #end function
@@ -95,7 +95,6 @@ class SourceCache:
         #end if
 
         rel_path = os.sep.join([first_letter, pkg_name, version, filename])
-        abs_path = os.path.join(self.cache_dir, rel_path)
 
         for repo in self.repo_config:
             source_url = repo["url"]    + "/"    + rel_path
