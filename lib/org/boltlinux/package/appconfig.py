@@ -24,12 +24,17 @@
 #
 
 import os
+import pwd
+import copy
 import json
+import socket
+import getpass
 
 class AppConfig:
 
     DEFAULT_CONFIG = """\
 {
+
   "repositories": [
     {
       "name": "packages.boltlinux.org",
@@ -42,7 +47,6 @@ class AppConfig:
     @classmethod
     def get_config_folder(klass):
         return os.path.join(os.path.expanduser("~"), ".bolt")
-    #end function
 
     @classmethod
     def load_user_config(klass):
@@ -68,13 +72,27 @@ class AppConfig:
         user_config_file = os.path.join(
               AppConfig.get_config_folder(), "config.json")
 
+        default_config = json.loads(AppConfig.DEFAULT_CONFIG)
+
+        # construct maintainer info
+        hostname = socket.gethostname()
+        useruid  = os.getuid()
+        username = pwd.getpwuid(useruid).pw_name
+        realname = pwd.getpwuid(useruid).pw_gecos.split(',')[0]
+        usermail = username + "@" + hostname
+
+        default_config["maintainer-info"] = {
+            "name":  realname,
+            "email": usermail
+        }
+
         if not os.path.exists(user_config_dir):
             os.mkdir(user_config_dir, 0o0700)
 
-            with open(user_config_file, "w", encoding="utf-8") as fp:
-                fp.write(AppConfig.DEFAULT_CONFIG)
-            #end with
-        #end if
+        print(default_config)
+
+        with open(user_config_file, "w", encoding="utf-8") as fp:
+            fp.write(json.dumps(default_config, indent=4))
     #end function
 
 #end class
