@@ -34,7 +34,7 @@ class Specfile:
         os.path.normpath(
             os.path.join(
                 os.path.dirname(os.path.realpath(__file__)),
-                "..", "..", "..", "..", "..", "relaxng", "package.rng.xml"
+                "..", "..", "..", "..", "relaxng", "package.rng.xml"
             )
         ),
         os.path.join(os.sep, "usr", "share", "bolt-pack", "relaxng",
@@ -64,11 +64,17 @@ class Specfile:
     #end function
 
     def validate_structure(self, xml_doc):
+        relaxng = None
+
         for path in Specfile.RELAXNG_SCHEMA_SEARCH_PATH:
+            print(path)
             if os.path.exists(path):
                 relaxng = etree.RelaxNG(file=path)
                 break
         #end for
+
+        if relaxng is None:
+            raise SpecfileError("RELAX NG ruleset not found.")
 
         if not relaxng.validate(xml_doc):
             errors = []
