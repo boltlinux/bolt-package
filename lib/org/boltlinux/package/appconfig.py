@@ -40,16 +40,35 @@ class AppConfig:
       "name": "packages.boltlinux.org",
       "url":  "http://packages.boltlinux.org/repo/sources"
     }
-  ]
+  ],
+
+  "upstream": {
+    "mirror": "http://ftp.debian.org/debian/",
+    "release": "stable",
+    "components": [
+        "main",
+        "contrib",
+        "non-free"
+    ],
+    "distribution": "debian"
+  }
 }
 """
+
+    INSTANCE = None
+
+    @classmethod
+    def instance(klass):
+        if not AppConfig.INSTANCE:
+            AppConfig.INSTANCE = AppConfig()
+        return AppConfig.INSTANCE
+    #end function
 
     @classmethod
     def get_config_folder(klass):
         return os.path.join(os.path.expanduser("~"), ".bolt")
 
-    @classmethod
-    def load_user_config(klass):
+    def load_user_config(self):
         config = json.loads(AppConfig.DEFAULT_CONFIG)
 
         user_config_file = os.path.join(
@@ -58,16 +77,13 @@ class AppConfig:
         if os.path.exists(user_config_file):
             with open(user_config_file, "r", encoding="utf-8") as fp:
                 config = json.load(fp)
-            #end with
         else:
-            AppConfig.create_default_user_config()
-        #end if
+            self.create_default_user_config()
 
         return config
     #end function
 
-    @classmethod
-    def create_default_user_config(klass):
+    def create_default_user_config(self):
         user_config_dir  = AppConfig.get_config_folder()
         user_config_file = os.path.join(
               AppConfig.get_config_folder(), "config.json")
@@ -88,8 +104,6 @@ class AppConfig:
 
         if not os.path.exists(user_config_dir):
             os.mkdir(user_config_dir, 0o0700)
-
-        print(default_config)
 
         with open(user_config_file, "w", encoding="utf-8") as fp:
             fp.write(json.dumps(default_config, indent=4))

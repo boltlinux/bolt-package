@@ -33,7 +33,6 @@ INSTALL_DIR = os.path.normpath(os.path.dirname(
     os.path.realpath(sys.argv[0])) + os.sep + ".." )
 sys.path.insert(1, INSTALL_DIR + os.sep + 'lib')
 
-from org.boltlinux.package.appconfig import AppConfig
 from org.boltlinux.package.packagecontrol import PackageControl
 from org.boltlinux.package.error import XPackError, InvocationError
 from org.boltlinux.package.util import switch
@@ -45,7 +44,7 @@ BOLT_ERR_RUNTIME    = 2
 def print_usage():
     print(
         "Bolt OS Package Generator, version %s                                          \n"
-        "Copyright (C) 2016-2017 Tobias Koch <tobias.koch@gmail.com>                 \n"
+        "Copyright (C) 2016-2017 Tobias Koch <tobias.koch@gmail.com>                    \n"
         "                                                                               \n"
         "USAGE:                                                                         \n"
         "                                                                               \n"
@@ -191,21 +190,16 @@ if __name__ == "__main__":
             sys.exit(BOLT_ERR_INVOCATION)
         #end if
 
-        # LOAD USER CONFIG
-        config = AppConfig.load_user_config()
-        config.update(options)
-
         # SET WORKING DIRECTORY
-        if config["work_dir"]:
+        if options["work_dir"]:
             try:
-                os.chdir(config["work_dir"])
+                os.chdir(options["work_dir"])
             except OSError as e:
                 raise XPackError("failed to set working directory: " + str(e))
         #end if
 
         # RUN ACTION
-        pkg_ctrl = PackageControl(args[0], config)
-        pkg_ctrl(config["action"])
+        PackageControl(args[0], options)(options["action"])
     except InvocationError as e:
         sys.stderr.write("bolt-pack: %s\n" % str(e))
         sys.exit(BOLT_ERR_INVOCATION)

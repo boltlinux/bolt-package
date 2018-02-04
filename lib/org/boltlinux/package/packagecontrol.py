@@ -100,16 +100,16 @@ class PackageControl:
         }
 
         if self.parms["build_for"] == "tools":
-            self.defines["BOLT_HOST_TYPE"] = Platform.tools_type()
-            self.defines["BOLT_TARGET_TYPE"] = Platform.tools_type()
+            self.defines["BOLT_HOST_TYPE"]      = Platform.tools_type()
+            self.defines["BOLT_TARGET_TYPE"]    = Platform.tools_type()
             self.defines["BOLT_INSTALL_PREFIX"] = "/tools"
         elif self.parms["build_for"] == "cross-tools":
-            self.defines["BOLT_HOST_TYPE"] = Platform.tools_type()
-            self.defines["BOLT_TARGET_TYPE"] = Platform.target_type()
+            self.defines["BOLT_HOST_TYPE"]      = Platform.tools_type()
+            self.defines["BOLT_TARGET_TYPE"]    = Platform.target_type()
             self.defines["BOLT_INSTALL_PREFIX"] = "/tools"
         else:
-            self.defines["BOLT_HOST_TYPE"] = Platform.target_type()
-            self.defines["BOLT_TARGET_TYPE"] = Platform.target_type()
+            self.defines["BOLT_HOST_TYPE"]      = Platform.target_type()
+            self.defines["BOLT_TARGET_TYPE"]    = Platform.target_type()
             self.defines["BOLT_INSTALL_PREFIX"] = "/usr"
         #end if
 
@@ -204,13 +204,15 @@ class PackageControl:
         print(self.src_pkg.build_dependencies())
 
     def unpack(self):
+        config    = AppConfig.instance().load_user_config()
+        cache_dir = os.path.realpath(AppConfig.get_config_folder() + \
+                os.sep + "cache")
+
         directory = self.defines["BOLT_WORK_DIR"]
         if not os.path.exists(directory):
             os.makedirs(directory)
 
-        cache_dir = os.path.realpath(AppConfig.get_config_folder() + \
-                os.sep + "cache")
-        repo_conf = self.parms.get("repositories", [])
+        repo_conf    = config.get("repositories", [])
         source_cache = SourceCache(cache_dir, repo_conf)
 
         self.src_pkg.unpack(directory, source_cache)

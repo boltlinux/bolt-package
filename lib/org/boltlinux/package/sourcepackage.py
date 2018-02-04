@@ -45,7 +45,7 @@ class SourcePackage(BasePackage):
                 "..", "..", "..", "..", "..", "helpers"
             )
         ),
-        os.path.join(os.sep, "usr", "share", "bolt-pack", "helpers"),
+        os.path.join(os.sep, "usr",   "share", "bolt-pack", "helpers"),
         os.path.join(os.sep, "tools", "share", "bolt-pack", "helpers")
     ]
 
@@ -106,7 +106,6 @@ class SourcePackage(BasePackage):
             "prepare": "",
             "build":   "",
             "install": "",
-            "clean":   ""  # actually not supported anymore
         }
 
         for node in source_node.xpath("rules/*"):

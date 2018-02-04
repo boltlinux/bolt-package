@@ -67,7 +67,6 @@ class Specfile:
         relaxng = None
 
         for path in Specfile.RELAXNG_SCHEMA_SEARCH_PATH:
-            print(path)
             if os.path.exists(path):
                 relaxng = etree.RelaxNG(file=path)
                 break

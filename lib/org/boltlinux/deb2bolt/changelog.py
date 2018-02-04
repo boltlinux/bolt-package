@@ -208,7 +208,7 @@ class Changelog:
     #end function
 
     def generate_maintainer_info(self):
-        config = AppConfig.load_user_config()
+        config = AppConfig.instance().load_user_config()
 
         pwent = pwd.getpwuid(os.getuid())
         full_name = pwent.pw_gecos.split(",")[0] or "Unknown User"
