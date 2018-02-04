@@ -27,6 +27,8 @@ import os
 import re
 import stat
 import sys
+
+from org.boltlinux.package.appconfig import AppConfig
 from org.boltlinux.deb2bolt.basepackage import BasePackageMixin
 from org.boltlinux.deb2bolt.packageutils import PackageUtilsMixin
 from org.boltlinux.deb2bolt.error import ControlFileSyntaxError, \
@@ -65,13 +67,18 @@ class BinaryPackage(BasePackageMixin, PackageUtilsMixin):
 
     def load_content_spec(self, debdir, pkg_name, pkg_version,
             use_network=True):
-        guess_pkg_contents = True
         sys.stdout.write("Trying to figure out '%s' contents ...\n" % pkg_name)
+
+        config = AppConfig.instance().load_user_config()
+        mirror = config.get("upstream", {})\
+                .get("mirror", "http://ftp.debian.org/debian/") 
+
+        guess_pkg_contents = True
 
         if use_network:
             try:
                 self.contents = self.get_content_spec_via_package_pool(
-                        pkg_name, pkg_version)
+                        pkg_name, pkg_version, mirror=mirror)
             except AptCacheNotFoundError:
                 sys.stdout.write(
                         "Warning: %s not found via apt-cache. "

@@ -270,7 +270,7 @@ class PackageUtilsMixin:
         return contents
     #end function
 
-    def get_content_spec_via_package_pool(self, pkg_name, pkg_version):
+    def get_content_spec_via_package_pool(self, pkg_name, pkg_version, mirror):
         contents = []
 
         apt_cmd = ["apt-cache", "--no-all-versions", "show",  "%s" % pkg_name]
@@ -303,7 +303,8 @@ class PackageUtilsMixin:
             raise AptCacheNotFoundError(
                     "could not find pool location for %s=%s" % \
                             (pkg_name, pkg_version))
-        pool_url = "http://ftp.debian.org/debian/" + pool_path
+
+        pool_url = mirror + pool_path
 
         with TemporaryDirectory(prefix="deb2bolt-") as tmpdir:
             try:
