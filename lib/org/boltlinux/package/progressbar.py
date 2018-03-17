@@ -35,7 +35,7 @@ class ProgressBar:
         self._total_reached = False
     #end function
 
-    def __call__(self, amount):
+    def __call__(self, amount, total_bars=60):
         if self._total == 0:
             percent = 100
         else:
@@ -45,8 +45,8 @@ class ProgressBar:
         if percent == self._lastval:
             return
 
-        num_bars   = int(percent * 0.6)
-        num_spaces = 60 - num_bars
+        num_bars   = int(percent * total_bars / 100.0)
+        num_spaces = total_bars - num_bars
 
         if self._isatty:
             self._out_file.write("[" + "#" * num_bars + \
