@@ -25,13 +25,10 @@
 
 import os
 import re
-import pwd
-import socket
 from datetime import datetime
 from dateutil.tz import tzlocal
 from dateutil.parser import parse as parse_datetime
 from xml.sax.saxutils import escape as xml_escape
-from org.boltlinux.package.appconfig import AppConfig
 
 class Change:
 
@@ -173,13 +170,15 @@ class Release:
 
 class Changelog:
 
-    def __init__(self, filename):
+    def __init__(self, filename, maintainer_info):
         self.releases = []
 
         version = None
         content = ""
         email   = ""
         date    = None
+
+        self.maintainer_info = maintainer_info
 
         with open(filename, "r", encoding="utf-8") as f:
             for line in f:
@@ -208,20 +207,9 @@ class Changelog:
     #end function
 
     def generate_maintainer_info(self):
-        config = AppConfig.instance().load_user_config()
-
-        pwent = pwd.getpwuid(os.getuid())
-        full_name = pwent.pw_gecos.split(",")[0] or "Unknown User"
-        email_address = pwent.pw_name + "@" + socket.gethostname()
-
-        info = config.get("maintainer-info", {
-            "name": full_name,
-            "email": email_address
-        })
-
         version    = self.releases[0].upstream_version
-        maintainer = info["name" ]
-        email      = info["email"]
+        maintainer = self.maintainer_info["name" ]
+        email      = self.maintainer_info["email"]
         date       = datetime.now(tzlocal()).replace(microsecond=0)
         content    = "* Adaptation of Debian sources for Bolt OS"
         release    = Release(version, content, maintainer, email, date)

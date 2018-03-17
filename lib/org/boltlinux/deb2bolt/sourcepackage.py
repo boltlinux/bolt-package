@@ -25,9 +25,12 @@
 
 import os
 import re
+import pwd
 import stat
 import hashlib
 import shutil
+import socket
+
 import org.boltlinux.package.libarchive as libarchive
 from org.boltlinux.package.libarchive import ArchiveEntry, ArchiveFileWriter
 from org.boltlinux.deb2bolt.changelog import Changelog
@@ -108,9 +111,20 @@ SOURCE_PKG_XML_TEMPLATE = """\
 
 class SourcePackage(BasePackageMixin, PackageUtilsMixin):
 
-    def __init__(self, filename, use_network=True):
+    def __init__(self, filename, app_config, use_network=True):
         with open(filename, "r", encoding="utf-8") as f:
             content = f.read()
+
+        self.app_config = app_config
+
+        # generate maintainer info
+        pwent            = pwd.getpwuid(os.getuid())
+        maintainer_name  = pwent.pw_gecos.split(",")[0] or "Unknown User"
+        maintainer_email = pwent.pw_name + "@" + socket.gethostname()
+        maintainer_info  = app_config.get("maintainer-info", {})
+
+        maintainer_info.setdefault("name",  maintainer_name)
+        maintainer_info.setdefault("email", maintainer_email)
 
         content = re.sub(r"^\s*\n$", r"\n", content, flags=re.M)
         blocks  = re.split(r"\n\n", content)
@@ -132,13 +146,18 @@ class SourcePackage(BasePackageMixin, PackageUtilsMixin):
             #end if
         #end for
 
-        self.changelog = Changelog(os.path.join(debdir, "changelog"))
+        self.changelog = Changelog(
+            os.path.join(debdir, "changelog"),
+            maintainer_info
+        )
         self.version   = self.changelog.releases[0].version
         self.revision  = self.changelog.releases[0].revision
         self.packages  = []
         self.directory = debdir
         self.tarball   = self.find_orig_tarball(debdir)
         self.patch_tarball = "debian.1.tar.gz"
+
+        pkg_mirror = self.app_config.get("upstream", {}).get("mirror")
 
         for entry in blocks:
             if not entry.strip():
@@ -160,7 +179,7 @@ class SourcePackage(BasePackageMixin, PackageUtilsMixin):
                 continue
 
             bin_pkg.load_content_spec(debdir, bin_pkg.get("name"),
-                    self.version, use_network=use_network)
+                    self.version, use_network=use_network, mirror=pkg_mirror)
             self.packages.append(bin_pkg)
         #end for
 

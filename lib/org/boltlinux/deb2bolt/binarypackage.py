@@ -28,7 +28,6 @@ import re
 import stat
 import sys
 
-from org.boltlinux.package.appconfig import AppConfig
 from org.boltlinux.deb2bolt.basepackage import BasePackageMixin
 from org.boltlinux.deb2bolt.packageutils import PackageUtilsMixin
 from org.boltlinux.deb2bolt.error import ControlFileSyntaxError, \
@@ -66,12 +65,10 @@ class BinaryPackage(BasePackageMixin, PackageUtilsMixin):
     #end function
 
     def load_content_spec(self, debdir, pkg_name, pkg_version,
-            use_network=True):
+            use_network=True, **kwargs):
         sys.stdout.write("Trying to figure out '%s' contents ...\n" % pkg_name)
 
-        config = AppConfig.instance().load_user_config()
-        mirror = config.get("upstream", {})\
-                .get("mirror", "http://ftp.debian.org/debian/") 
+        mirror = kwargs.get("mirror", "http://ftp.debian.org/debian/")
 
         guess_pkg_contents = True
 

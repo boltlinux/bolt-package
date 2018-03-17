@@ -35,6 +35,7 @@ sys.path.insert(1, INSTALL_DIR + os.sep + 'lib')
 
 from org.boltlinux.package.util import switch
 from org.boltlinux.package.error import InvocationError
+from org.boltlinux.package.appconfig import AppConfig
 from org.boltlinux.deb2bolt.sourcepackage import SourcePackage
 from org.boltlinux.package.version import VERSION as BOLT_VERSION
 
@@ -118,10 +119,14 @@ if __name__ == "__main__":
             sys.exit(BOLT_ERR_INVOCATION)
         #end if
 
+        # LOAD APP CONFIG
+        app_config = AppConfig.instance().load_user_config()
+
         # RUN ACTION
-        SourcePackage(args[0], use_network=options["use_network"])\
+        SourcePackage(args[0], app_config, use_network=options["use_network"])\
                 .to_bolt(**options)
     except Exception as e:
         sys.stderr.write("deb2bolt: %s\n" % str(e))
+        raise
         sys.exit(1)
 #end __main__
