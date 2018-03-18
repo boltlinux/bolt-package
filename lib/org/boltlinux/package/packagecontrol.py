@@ -39,7 +39,7 @@ from org.boltlinux.package.error import MissingDependencies
 
 class PackageControl:
 
-    def __init__(self, filename, parms={}):
+    def __init__(self, filename, app_config, parms={}):
         self.parms = {
             "outdir": None,
             "ignore_deps": False,
@@ -53,6 +53,8 @@ class PackageControl:
 
         xml_doc   = Specfile(filename).xml_doc
         self.info = {}
+
+        self.app_config = app_config
 
         # copy maintainer, email, version, revision to package sections
         for attr_name in ["maintainer", "email", "epoch",
@@ -204,15 +206,15 @@ class PackageControl:
         print(self.src_pkg.build_dependencies())
 
     def unpack(self):
-        config    = AppConfig.instance().load_user_config()
-        cache_dir = os.path.realpath(AppConfig.get_config_folder() + \
-                os.sep + "cache")
+        cache_dir = self.app_config.get("cache-dir",
+            os.path.realpath(AppConfig.get_config_folder() + \
+                os.sep + "cache"))
 
         directory = self.defines["BOLT_WORK_DIR"]
         if not os.path.exists(directory):
             os.makedirs(directory)
 
-        repo_conf    = config.get("repositories", [])
+        repo_conf    = self.app_config.get("repositories", [])
         source_cache = SourceCache(cache_dir, repo_conf)
 
         self.src_pkg.unpack(directory, source_cache)
