@@ -28,8 +28,8 @@ import sys
 import re
 import subprocess
 from lxml import etree
-import org.boltlinux.package.libarchive as libarchive
-from org.boltlinux.package.libarchive import ArchiveEntry, ArchiveFileReader
+
+from org.boltlinux.package.libarchive import ArchiveFileReader
 from org.boltlinux.package.packagedesc import PackageDescription
 from org.boltlinux.package.basepackage import BasePackage
 from org.boltlinux.package.platform import Platform
@@ -144,8 +144,7 @@ class SourcePackage(BasePackage):
             #end with
 
             if self.verbose:
-                sys.stdout.write("Upacking '%s' (%s): %s\n" %
-                        (self.name, self.version, src_name))
+                sys.stdout.write("Upacking '%s' ...\n" % src_name)
 
             with ArchiveFileReader(archive_file) as archive:
                 progress_bar = ProgressBar(total_size)
@@ -285,3 +284,4 @@ class SourcePackage(BasePackage):
     #end function
 
 #end function
+
