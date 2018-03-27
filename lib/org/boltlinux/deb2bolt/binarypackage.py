@@ -66,10 +66,9 @@ class BinaryPackage(BasePackageMixin, PackageUtilsMixin):
 
     def load_content_spec(self, debdir, pkg_name, pkg_version,
             use_network=True, **kwargs):
-        sys.stdout.write("Trying to figure out '%s' contents ...\n" % pkg_name)
+        sys.stdout.write("Guessing contents of '%s' ...\n" % pkg_name)
 
         mirror = kwargs.get("mirror", "http://ftp.debian.org/debian/")
-
         guess_pkg_contents = True
 
         if use_network:
@@ -77,9 +76,9 @@ class BinaryPackage(BasePackageMixin, PackageUtilsMixin):
                 self.contents = self.get_content_spec_via_package_pool(
                         pkg_name, pkg_version, mirror=mirror)
             except AptCacheNotFoundError:
-                sys.stdout.write(
-                        "Warning: %s not found via apt-cache. "
-                        "Using local fallback logic.\n" % pkg_name)
+                sys.stderr.write(
+                    "Package '%s' not found via apt-cache. "
+                        "Applying local fallback logic.\n" % pkg_name)
             else:
                 guess_pkg_contents = False
         #end if
@@ -167,3 +166,4 @@ class BinaryPackage(BasePackageMixin, PackageUtilsMixin):
     #end function
 
 #end class
+

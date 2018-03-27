@@ -31,6 +31,7 @@ import locale
 import subprocess
 import urllib.request
 from tempfile import TemporaryDirectory
+
 import org.boltlinux.package.libarchive as libarchive
 from org.boltlinux.package.progressbar import ProgressBar
 from org.boltlinux.package.libarchive import ArchiveEntry, ArchiveFileReader
@@ -251,8 +252,10 @@ class PackageUtilsMixin:
                         entry_uname = "root"
                         entry_gname = "root"
                     else:
+                        #
                         # We don't know whether it's a dir or a file and I do
                         # not want to guess. Move on.
+                        #
                         entry_type  = 0
                         entry_mode  = 0
                         entry_uname = "root"
@@ -406,7 +409,8 @@ class PackageUtilsMixin:
                 elif entry.is_file or entry.is_hardlink:
                     entry_type = stat.S_IFREG
                 else:
-                    raise Deb2BoltError("type of '%s' unknown '%d'" % (entry_path, entry_type))
+                    raise Deb2BoltError("type of '%s' unknown '%d'" %
+                            (entry_path, entry_type))
 
                 contents.append([entry_path, entry_type, entry_mode,
                     entry_uname, entry_gname])
