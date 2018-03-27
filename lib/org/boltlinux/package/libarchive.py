@@ -201,8 +201,10 @@ lib.archive_write_open_filename.restype = ctypes.c_int
 lib.archive_write_data.argtypes = [ctypes.c_void_p, ctypes.c_void_p, ctypes.c_size_t]
 lib.archive_write_data.restype = ctypes.c_ssize_t
 
+lib.archive_read_free.argtypes = [ctypes.c_void_p]
+lib.archive_write_free.restype = ctypes.c_int
 lib.archive_read_data.argtypes = [ctypes.c_void_p, ctypes.c_void_p, ctypes.c_size_t]
-lib.archive_read_data.restype = ctypes.c_int
+lib.archive_read_data.restype = ctypes.c_ssize_t
 lib.archive_read_new.argtypes = []
 lib.archive_read_new.restype = ctypes.c_void_p
 lib.archive_read_next_header2.argtypes = [ctypes.c_void_p, ctypes.c_void_p]
@@ -580,7 +582,6 @@ class ArchiveFileReader:
 
     def __init__(self, filename, cmd=None, raw=False, buf_size=4096):
         self._c_archive_p = lib.archive_read_new()
-        self._buf = (ctypes.c_char*buf_size)()
 
         try:
             self.__init_helper(filename, cmd=cmd, raw=raw)
@@ -638,7 +639,7 @@ class ArchiveFileReader:
 
     def close(self):
         if self._c_archive_p:
-            lib.archive_write_free(self._c_archive_p)
+            lib.archive_read_free(self._c_archive_p)
             self._c_archive_p = None
     #end function
 
@@ -660,32 +661,31 @@ class ArchiveFileReader:
     #end function
 
     def read_data(self, size=0):
-        if size and len(self._buf) < size:
-            self.__resize_buf(size)
+        result = []
 
-        result = b""
-        while True:
-            rval = lib.archive_read_data(self._c_archive_p,
-                    ctypes.addressof(self._buf), len(self._buf))
-            if rval < 0:
-                raise ArchiveError(error_string(self._c_archive_p))
-            elif rval > 0:
-                result += self._buf[0:rval]
-            else:
-                break
-            if size:
-                break
-        #end while
+        if size > 0:
+            result = [self.__read_data(size)]
+        else:
+            while True:
+                buf = self.__read_data(8*1024)
+                if not buf:
+                    break
+                result.append(buf)
+            #end while
+        #end function
 
-        return result
+        return b"".join(result)
     #end function
 
-    def __resize_buf(self, size):
-        if len(self._buf) > size:
-            return
-        ctypes.resize(self._buf, size)
-        self._buf   = (ctypes.c_char*size).from_address(
-                ctypes.addressof(self._buf))
+    def __read_data(self, size):
+        buf = ctypes.create_string_buffer(size)
+
+        rval = lib.archive_read_data(self._c_archive_p,
+                ctypes.addressof(buf), size)
+        if rval < 0:
+            raise ArchiveError(error_string(self._c_archive_p))
+
+        return buf[0:rval]
     #end function
 
 #end class
