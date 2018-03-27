@@ -27,6 +27,7 @@ import os
 import sys
 import hashlib
 import urllib.request
+
 from org.boltlinux.package.progressbar import ProgressBar
 
 class SourceCache:
@@ -38,17 +39,10 @@ class SourceCache:
     #end function
 
     def find_and_retrieve(self, pkg_name, version, filename, sha256sum=None):
-        if self.verbose:
-            sys.stdout.write("Retrieving '%s' (%s): %s\n" %
-                    (pkg_name, version, filename))
-
         pkg = self.fetch_from_cache(pkg_name, version, filename, sha256sum)
+
         if pkg:
-            if self.verbose:
-                msg = "[" + "#" * 26 + " CACHED " + "#" * 26 + "] 100%\n"
-                sys.stdout.write(msg)
             return pkg
-        #end if
 
         return self.fetch_from_repo(pkg_name, version, filename, sha256sum)
     #end function
@@ -72,7 +66,7 @@ class SourceCache:
             h = hashlib.sha256()
 
             while True:
-                buf = fp.read(1024*1024)
+                buf = fp.read(8*1024)
                 if not buf:
                     break
                 h.update(buf)
@@ -88,6 +82,9 @@ class SourceCache:
     #end function
 
     def fetch_from_repo(self, pkg_name, version, filename, sha256sum=None):
+        if self.verbose:
+            sys.stdout.write("Retrieving '%s' ...\n" % filename)
+
         if pkg_name.startswith("lib"):
             first_letter = pkg_name[3]
         else:
@@ -115,9 +112,10 @@ class SourceCache:
                         progress_bar(bytes_read)
 
                     os.makedirs(os.path.dirname(target_url), exist_ok=True)
+
                     with open(target_url, "wb+") as outfile:
                         while True:
-                            buf = response.read(1024*1024)
+                            buf = response.read(8*1024)
                             if not buf:
                                 break
 
@@ -131,14 +129,15 @@ class SourceCache:
                     #end with
                 #end with
             except urllib.error.URLError as e:
-                sys.stderr.write("  Warning: failed to retrieve\n  "
-                    "%s\n  Reason: %s\n" % (source_url, e.reason))
+                sys.stderr.write("Failed to retrieve '%s': %s\n" % 
+                        (source_url, e.reason))
                 continue
             #end try
 
             if sha256sum and sha256sum != h.hexdigest():
                 if self.verbose:
-                    sys.stdout.write("Invalid checksum!\n")
+                    sys.stderr.write("File '%s' has an invalid checksum!\n" %
+                            target_url)
                 continue
             #end if
 
@@ -149,3 +148,4 @@ class SourceCache:
     #end function
 
 #end class
+
