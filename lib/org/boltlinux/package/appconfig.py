@@ -50,7 +50,8 @@ class AppConfig:
         "contrib",
         "non-free"
     ],
-    "distribution": "debian"
+    "distribution": "debian",
+    "refresh-interval": 60
   }
 }
 """
