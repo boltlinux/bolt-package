@@ -60,16 +60,14 @@ class UpstreamRepo:
             if not os.path.isdir(target_dir):
                 os.makedirs(target_dir)
 
-            source_url = self.mirror + "/dists/" + self.release + "/" + \
-                    comp + "/source/Sources.gz"
             target_url = os.path.join(target_dir, "Sources.gz")
 
             try:
-                if not self.__check_if_up2date(source_url, target_url):
-                    self.__download_sources_gz(source_url, target_url)
+                if not self.__check_if_up2date(comp, target_url):
+                    self.__download_sources_gz(comp, target_url)
             except urllib.error.URLError as e:
-                sys.stderr.write("Failed to retrieve '%s': %s\n" % 
-                        (source_url, e.reason))
+                sys.stderr.write("Failed to retrieve '%s' sources: %s\n" %
+                        (comp, e.reason))
                 continue
             #end try
 
@@ -79,7 +77,7 @@ class UpstreamRepo:
 
     # PRIVATE
 
-    def __check_if_up2date(self, source_url, target_url):
+    def __check_if_up2date(self, component, target_url):
         m = hashlib.sha256()
 
         try:
@@ -95,17 +93,24 @@ class UpstreamRepo:
         except FileNotFoundError as e:
             return False
 
-        sha267sum = m.hexdigest()
-        request   = urllib.request.Request(source_url, method="HEAD")
+        source_url = self.mirror + "/dists/" + self.release + "/" + \
+                component + "/source/by-hash/SHA256/" + m.hexdigest()
+        request = urllib.request.Request(source_url, method="HEAD")
 
-        with urllib.request.urlopen(request) as response:
-            if response.status != 200:
-                return False
+        try:
+            with urllib.request.urlopen(request) as response:
+                if response.status != 200:
+                    return False
+        except urllib.error.HTTPError as e:
+            return False
 
         return True
     #end function
 
-    def __download_sources_gz(self, source_url, target_url):
+    def __download_sources_gz(self, component, target_url):
+        source_url = self.mirror + "/dists/" + self.release + "/" + \
+                component + "/source/Sources.gz"
+
         sys.stdout.write("Retrieving '%s' ...\n" % source_url)
 
         with urllib.request.urlopen(source_url) as response:
