@@ -27,6 +27,7 @@ import os
 import pwd
 import copy
 import json
+import base64
 import socket
 import getpass
 
@@ -46,12 +47,20 @@ class AppConfig:
     "mirror": "http://ftp.debian.org/debian/",
     "release": "stable",
     "components": [
-        "main",
-        "contrib",
-        "non-free"
+      "main",
+      "contrib",
+      "non-free"
     ],
     "distribution": "debian",
     "refresh-interval": 60
+  },
+
+  "apps": {
+    "repository": {
+      "DEBUG": false,
+      "APPLICATION_ROOT": null,
+      "JSON_AS_ASCII": false
+    }
   }
 }
 """
@@ -102,6 +111,11 @@ class AppConfig:
             "name":  realname,
             "email": usermail
         }
+
+        default_config["apps"]["repository"].setdefault(
+            "SECRET_KEY",
+            base64.encodestring(os.urandom(32)).decode("utf-8")
+        )
 
         if not os.path.exists(user_config_dir):
             os.mkdir(user_config_dir, 0o0700)
