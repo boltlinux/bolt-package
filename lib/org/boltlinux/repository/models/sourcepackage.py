@@ -30,7 +30,7 @@ class SourcePackage(db.Model):
     id        = db.Column(db.Integer, primary_key=True)
     name      = db.Column(db.String(50), nullable=False)
     version   = db.Column(db.String(50), nullable=False)
-    upstream  = db.Column(db.String(50), nullable=False)
+    upstream  = db.Column(db.String(50), nullable=True)
     files     = db.Column(db.Text)
     xml       = db.Column(db.Text)
 
