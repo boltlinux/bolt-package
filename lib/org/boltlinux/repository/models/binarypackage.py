@@ -32,7 +32,6 @@ class BinaryPackage(db.Model):
     source    = db.Column(db.String(50), nullable=False)
     name      = db.Column(db.String(50), nullable=False)
     version   = db.Column(db.String(50), nullable=False)
-    files     = db.Column(db.Text)
     contents  = db.Column(db.Text)
 
 #end class
