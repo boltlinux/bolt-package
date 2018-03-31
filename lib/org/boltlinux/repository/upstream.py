@@ -24,6 +24,7 @@
 #
 
 import os
+import re
 import sys
 import hashlib
 import urllib.request
@@ -31,6 +32,8 @@ import urllib.request
 from org.boltlinux.package.libarchive import ArchiveFileReader
 from org.boltlinux.package.appconfig import AppConfig
 from org.boltlinux.package.progressbar import ProgressBar
+from org.boltlinux.package.xpkg import BaseXpkg
+from org.boltlinux.repository.repoapp import app, db
 
 class UpstreamRepo:
 
@@ -54,6 +57,8 @@ class UpstreamRepo:
     #end function
 
     def refresh_sources_lists(self):
+        requires_update = []
+
         for comp in self.components:
             target_dir = os.path.join(self.cache_dir, comp)
 
@@ -65,6 +70,8 @@ class UpstreamRepo:
             try:
                 if not self.__check_if_up2date(comp, target_url):
                     self.__download_sources_gz(comp, target_url)
+                    requires_update.append(comp)
+                #end if
             except urllib.error.URLError as e:
                 sys.stderr.write("Failed to retrieve '%s' sources: %s\n" %
                         (comp, e.reason))
@@ -73,9 +80,78 @@ class UpstreamRepo:
 
             self.__unpack_sources_gz(target_url)
         #end for
+
+        return requires_update
+    #end function
+
+    def update_repository_db(self, components):
+        for comp in components:
+            sources_file = os.path.join(self.cache_dir, comp, "Sources")
+
+            pkg_list = self.__parse_sources_file(sources_file)
+
+            import pprint
+            pprint.pprint(pkg_list)
+
+            for pkg in pkg_list:
+                pass
+        #end for
     #end function
 
     # PRIVATE
+
+    def __parse_sources_file(self, filename):
+        if not os.path.isfile(filename):
+            return {}
+
+        pkg_index = {}
+        pkg_info  = {}
+
+        with open(filename, "r", encoding="utf-8") as f:
+            key = None
+
+            for line in f:
+                line = line.rstrip()
+
+                if not line:
+                    if pkg_info:
+                        try:
+                            pkg_name = pkg_info["Package"]
+
+                            if not pkg_name in pkg_index:
+                                pkg_index[pkg_name] = pkg_info
+                            else:
+                                old_version = pkg_index[pkg_name]["Version"]
+                                new_version = pkg_info["Version"]
+
+                                if BaseXpkg.compare_versions(new_version,
+                                        old_version) > 0:
+                                    pkg_index[pkg_name] = pkg_info
+                            #end if
+                        except KeyError:
+                            pass
+                        pkg_info = {}
+                    #end if
+
+                    continue
+                #end if
+
+                if re.match(r"^\s+", line):
+                    if key is not None:
+                        pkg_info[last_item] += " " + line.lstrip()
+                else:
+                    key, value = line.split(":", 1)
+
+                    if key in ["Package", "Version"]:
+                        pkg_info[key] = value.lstrip()
+                    else:
+                        key = None
+                #end if
+            #end for
+        #end with
+
+        return pkg_index
+    #end function
 
     def __check_if_up2date(self, component, target_url):
         m = hashlib.sha256()
@@ -147,7 +223,7 @@ class UpstreamRepo:
             with ArchiveFileReader(full_path, raw=True) as archive:
                 for entry in archive:
                     while True:
-                        buf = archive.read_data(1024)
+                        buf = archive.read_data(8*1024)
                         if not buf:
                             break
                         f.write(buf)
