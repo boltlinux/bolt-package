@@ -43,7 +43,10 @@ if __name__ == "__main__":
     config = AppConfig.instance().load_user_config()
 
     # CONFIGURE APP
-    app_config = config.get("apps", {}).get("repository", {})
+    app_config = config\
+            .get("apps", {})\
+            .get("repository", {})\
+            .get("appconfig", {})
 
     app_config.setdefault("SQLALCHEMY_DATABASE_URI",
             "sqlite:///" + AppConfig.get_config_folder() + os.sep + "repository.db")

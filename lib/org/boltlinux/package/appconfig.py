@@ -52,14 +52,16 @@ class AppConfig:
       "non-free"
     ],
     "distribution": "debian",
-    "refresh-interval": 60
+    "refresh-interval": 3600
   },
 
   "apps": {
     "repository": {
-      "DEBUG": false,
-      "APPLICATION_ROOT": null,
-      "JSON_AS_ASCII": false
+      "appconfig": {
+        "DEBUG": false,
+        "APPLICATION_ROOT": null,
+        "JSON_AS_ASCII": false
+      }
     }
   }
 }
@@ -112,10 +114,12 @@ class AppConfig:
             "email": usermail
         }
 
-        default_config["apps"]["repository"].setdefault(
-            "SECRET_KEY",
-            base64.encodestring(os.urandom(32)).decode("utf-8")
-        )
+        for app in default_config.get("apps", {}).values():
+            secret_key = base64.encodestring(os.urandom(32)).decode("utf-8")
+            app\
+                .setdefault("appconfig", {})\
+                .setdefault("SECRET_KEY", secret_key)
+        #end for
 
         if not os.path.exists(user_config_dir):
             os.mkdir(user_config_dir, 0o0700)
@@ -125,3 +129,4 @@ class AppConfig:
     #end function
 
 #end class
+
