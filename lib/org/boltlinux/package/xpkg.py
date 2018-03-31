@@ -30,6 +30,21 @@ import locale
 
 class BaseXpkg:
 
+    # FOR VERSION COMPARISON
+
+    CHAR_VALUES = {
+        "~": 0,
+        " ": 1,
+        "-": 2,
+        "+": 3,
+        ".": 4
+    }
+
+    for ascii_val in range(ord("A"), ord("Z") + 1):
+        CHAR_VALUES[chr(ascii_val)] = ascii_val
+    for ascii_val in range(ord("a"), ord("z") + 1):
+        CHAR_VALUES[chr(ascii_val)] = ascii_val
+
     def __init__(self):
         # PACKAGE LIST
 
@@ -68,26 +83,13 @@ class BaseXpkg:
             #end if
         #end for
 
-        # FOR VERSION COMPARISON
-
-        self._char_vals = {
-            "~": 0,
-            " ": 1,
-            "-": 2,
-            "+": 3,
-            ".": 4
-        }
-
-        for ascii_val in range(ord("A"), ord("Z") + 1):
-            self._char_vals[chr(ascii_val)] = ascii_val
-        for ascii_val in range(ord("a"), ord("z") + 1):
-            self._char_vals[chr(ascii_val)] = ascii_val
     #end function
 
     def installed_version_of_package(self, package_name):
         return self.packages.get(package_name, None)
 
-    def compare_versions(self, a, b):
+    @classmethod
+    def compare_versions(cls, a, b):
         m = re.match(r"^(?:(\d+):)?([-+:~.a-zA-Z0-9]+?)(?:-([^-]+))?$", a)
         epoch_a, version_a, rev_a = m.groups(default="") if m else ("", "", "")
         m = re.match(r"^(?:(\d+):)?([-+:~.a-zA-Z0-9]+?)(?:-([^-]+))?$", b)
@@ -127,9 +129,9 @@ class BaseXpkg:
                     #end if
 
                     for c_a, c_b in zip(p_a, p_b):
-                        if self._char_vals[c_a] > self._char_vals[c_b]:
+                        if BaseXpkg.CHAR_VALUES[c_a] > BaseXpkg.CHAR_VALUES[c_b]:
                             return +1
-                        if self._char_vals[c_a] < self._char_vals[c_b]:
+                        if BaseXpkg.CHAR_VALUES[c_a] < BaseXpkg.CHAR_VALUES[c_b]:
                             return -1
                     #end for
 
