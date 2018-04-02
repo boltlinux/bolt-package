@@ -2,12 +2,26 @@ Source: bolt-package
 Section: devel
 Priority: optional
 Maintainer: Tobias Koch <tobias.koch@gmail.com>
-Build-Depends: debhelper (>= 9), dh-python, python3-all, python3-setuptools
+Build-Depends:
+ debhelper (>= 9),
+ dh-python,
+ python3-all,
+ python3-setuptools
 Standards-Version: 3.9.8
 
 Package: python3-bolt-package
 Architecture: all
-Depends: ${python3:Depends}, python3-dateutil, python3-lxml, python3-magic,
-    binutils, chrpath, libarchive-dev, autotools-dev, ${misc:Depends}
-Description: The Bolt OS package generator library and scripts (Python 3)
+Depends:
+ ${python3:Depends},
+ python3-dateutil,
+ python3-lxml,
+ python3-magic,
+ python3-flask,
+ python3-flask-sqlalchemy,
+ binutils,
+ chrpath,
+ libarchive-dev,
+ autotools-dev,
+ ${misc:Depends}
+Description: Bolt OS packaging and repository tools (Python 3 only)
 
