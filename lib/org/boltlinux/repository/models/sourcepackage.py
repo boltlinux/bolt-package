@@ -26,13 +26,13 @@
 from org.boltlinux.repository.repoapp import db
 
 class SourcePackage(db.Model):
+    __tablename__ = "source_package"
 
-    id        = db.Column(db.Integer, primary_key=True)
-    name      = db.Column(db.String(50), nullable=False)
-    version   = db.Column(db.String(50), nullable=False)
-    upstream  = db.Column(db.String(50), nullable=True)
-    files     = db.Column(db.Text)
-    xml       = db.Column(db.Text)
+    id               = db.Column(db.Integer, primary_key=True)
+    name             = db.Column(db.String(50), nullable=False)
+    version          = db.Column(db.String(50), nullable=False)
+    upstream_version = db.Column(db.String(50), nullable=True)
+    xml              = db.Column(db.Text)
 
 #end class
 

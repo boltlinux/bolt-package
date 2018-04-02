@@ -26,9 +26,11 @@
 from org.boltlinux.repository.repoapp import db
 
 class BinaryPackage(db.Model):
+    __tablename__ = "binary_package"
 
     id        = db.Column(db.Integer, primary_key=True)
-    source_id = db.Column(db.Integer)
+    source_package_id = db.Column(db.Integer,
+            db.ForeignKey("source_package.id"))
     source    = db.Column(db.String(50), nullable=False)
     name      = db.Column(db.String(50), nullable=False)
     version   = db.Column(db.String(50), nullable=False)

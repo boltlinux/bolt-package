@@ -34,6 +34,7 @@ from org.boltlinux.package.appconfig import AppConfig
 from org.boltlinux.package.progressbar import ProgressBar
 from org.boltlinux.package.xpkg import BaseXpkg
 from org.boltlinux.repository.repoapp import app, db
+from org.boltlinux.repository.models import SourcePackage
 
 class UpstreamRepo:
 
@@ -85,26 +86,38 @@ class UpstreamRepo:
     #end function
 
     def update_repository_db(self, components):
+        pkg_index = {}
+
         for comp in components:
             sources_file = os.path.join(self.cache_dir, comp, "Sources")
-
-            pkg_list = self.__parse_sources_file(sources_file)
-
-            import pprint
-            pprint.pprint(pkg_list)
-
-            for pkg in pkg_list:
-                pass
+            self.__parse_sources_file(sources_file, pkg_index)
         #end for
+
+        with app.app_context():
+            for entry in SourcePackage.query.all():
+                pkg_name = entry.name
+
+                if pkg_name in pkg_index:
+                    old_version = entry.upstream_version
+                    new_version = pkg_index[pkg_name]["Version"]
+
+                    if old_version is None or BaseXpkg.compare_versions(
+                            new_version, old_version):
+                        entry.upstream_version = pkg_index[pkg_name]\
+                                .get("Version", None)
+                    #end if
+            #end for
+
+            db.session.commit();
+        #end with
     #end function
 
     # PRIVATE
 
-    def __parse_sources_file(self, filename):
+    def __parse_sources_file(self, filename, pkg_index):
         if not os.path.isfile(filename):
-            return {}
+            return pkg_index
 
-        pkg_index = {}
         pkg_info  = {}
 
         with open(filename, "r", encoding="utf-8") as f:
