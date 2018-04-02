@@ -50,14 +50,18 @@ if __name__ == "__main__":
 
     app_config.setdefault("SQLALCHEMY_DATABASE_URI",
             "sqlite:///" + AppConfig.get_config_folder() + os.sep + "repository.db")
+
+    # INITIALIZE DATABASE
     app_init(app_config)
+    db.init_app(app)
+
+    with app.app_context():
+        db.create_all()
 
     # UPDATE DEBIAN SOURCES
     upstream = UpstreamRepo(config)
-    upstream.refresh_sources_lists()
-
-    db.init_app(app)
-    app.app_context().push()
-    db.create_all()
+    upstream.update_repository_db(
+        upstream.refresh_sources_lists()
+    )
 #end if
 
