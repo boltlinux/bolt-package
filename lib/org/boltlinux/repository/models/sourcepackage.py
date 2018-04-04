@@ -23,7 +23,7 @@
 # THE SOFTWARE.
 #
 
-from org.boltlinux.repository.repoapp import db
+from org.boltlinux.repository.flaskapp import db
 
 class SourcePackage(db.Model):
     __tablename__ = "source_package"

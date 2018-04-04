@@ -33,18 +33,19 @@ from org.boltlinux.package.libarchive import ArchiveFileReader
 from org.boltlinux.package.appconfig import AppConfig
 from org.boltlinux.package.progressbar import ProgressBar
 from org.boltlinux.package.xpkg import BaseXpkg
-from org.boltlinux.repository.repoapp import app, db
+from org.boltlinux.repository.flaskapp import app, db
 from org.boltlinux.repository.models import SourcePackage
 
 class UpstreamRepo:
 
     def __init__(self, config, verbose=True):
+        self.release = config.get("release", {}).get("upstream", "stable")
+
         config = config.get("upstream", {})
 
-        self.verbose      = verbose
-        self.release      = config.get("release", "stable")
-        self.components   = config.get("components", ["main"])
-        self.mirror       = config.get("mirror",
+        self.verbose    = verbose
+        self.components = config.get("components", ["main"])
+        self.mirror     = config.get("mirror",
                 "http://ftp.debian.org/debian/").rstrip("/")
 
         self.cache_dir = config.get("cache-dir",

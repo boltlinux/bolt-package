@@ -35,23 +35,26 @@ class AppConfig:
 
     DEFAULT_CONFIG = """\
 {
+  "release": {
+    "id": "zeus",
+    "upstream": "stretch"
+  },
 
   "repositories": [
-    {
-      "name": "packages.boltlinux.org",
-      "url":  "http://packages.boltlinux.org/repo/sources"
+    { 
+      "name": "bolt-os",
+      "repo-url": "http://packages.boltlinux.org/repo",
+      "rules": "https://github.com/boltlinux/bolt-pkg-rules.git"
     }
   ],
 
   "upstream": {
     "mirror": "http://ftp.debian.org/debian/",
-    "release": "stable",
     "components": [
       "main",
       "contrib",
       "non-free"
     ],
-    "distribution": "debian",
     "refresh-interval": 3600
   },
 
@@ -81,7 +84,7 @@ class AppConfig:
         return os.path.join(os.path.expanduser("~"), ".bolt")
 
     def load_user_config(self):
-        config = json.loads(AppConfig.DEFAULT_CONFIG)
+        config = None
 
         user_config_file = os.path.join(
                 AppConfig.get_config_folder(), "config.json")
@@ -90,7 +93,7 @@ class AppConfig:
             with open(user_config_file, "r", encoding="utf-8") as fp:
                 config = json.load(fp)
         else:
-            self.create_default_user_config()
+            config = self.create_default_user_config()
 
         return config
     #end function
@@ -126,6 +129,8 @@ class AppConfig:
 
         with open(user_config_file, "w", encoding="utf-8") as fp:
             fp.write(json.dumps(default_config, indent=4))
+
+        return default_config
     #end function
 
 #end class

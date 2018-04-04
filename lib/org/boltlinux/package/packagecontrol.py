@@ -210,12 +210,14 @@ class PackageControl:
             os.path.realpath(AppConfig.get_config_folder() + \
                 os.sep + "cache"))
 
+        release = self.app_config.get("release", {}).get("id", "stable")
+
         directory = self.defines["BOLT_WORK_DIR"]
         if not os.path.exists(directory):
             os.makedirs(directory)
 
         repo_conf    = self.app_config.get("repositories", [])
-        source_cache = SourceCache(cache_dir, repo_conf)
+        source_cache = SourceCache(cache_dir, repo_conf, release=release)
 
         self.src_pkg.unpack(directory, source_cache)
         self.src_pkg.patch(directory)
