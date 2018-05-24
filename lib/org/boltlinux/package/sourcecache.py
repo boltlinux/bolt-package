@@ -83,9 +83,6 @@ class SourceCache:
     #end function
 
     def fetch_from_repo(self, pkg_name, version, filename, sha256sum=None):
-        if self.verbose:
-            sys.stdout.write("Retrieving '%s' ...\n" % filename)
-
         if pkg_name.startswith("lib"):
             first_letter = pkg_name[3]
         else:
@@ -102,6 +99,9 @@ class SourceCache:
 
             try:
                 with urllib.request.urlopen(source_url) as response:
+                    if self.verbose:
+                        sys.stdout.write("Retrieving '%s'.\n" % source_url)
+
                     if response.length:
                         progress_bar = ProgressBar(response.length)
                     else:

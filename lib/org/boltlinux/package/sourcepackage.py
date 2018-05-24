@@ -144,7 +144,7 @@ class SourcePackage(BasePackage):
             #end with
 
             if self.verbose:
-                sys.stdout.write("Upacking '%s' ...\n" % src_name)
+                sys.stdout.write("Unpacking '%s'.\n" % archive_file)
 
             with ArchiveFileReader(archive_file) as archive:
                 progress_bar = ProgressBar(total_size)
