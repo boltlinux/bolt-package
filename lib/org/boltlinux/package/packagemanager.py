@@ -25,7 +25,6 @@
 
 import os
 from org.boltlinux.package.xpkg import Dpkg, Opkg
-from org.boltlinux.package.error import PackageManagerError
 
 class PackageManager:
 
@@ -49,7 +48,7 @@ class PackageManager:
         #end for
 
         msg = "system uses unknown or unsupported package manager."
-        raise PackageManagerError(msg)
+        raise RuntimeError(msg)
     #end function
 
 #end class

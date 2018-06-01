@@ -33,13 +33,12 @@ INSTALL_DIR = os.path.normpath(os.path.dirname(
     os.path.realpath(sys.argv[0])) + os.sep + ".." )
 sys.path.insert(1, INSTALL_DIR + os.sep + 'lib')
 
+from org.boltlinux.error import BoltError, InvocationError
 from org.boltlinux.package.util import switch
-from org.boltlinux.package.error import InvocationError
 from org.boltlinux.package.appconfig import AppConfig
 from org.boltlinux.deb2bolt.sourcepackage import SourcePackage
 from org.boltlinux.package.version import VERSION as BOLT_VERSION
 
-BOLT_VERSION = "1.0.0"
 BOLT_ERR_INVOCATION = 1
 BOLT_ERR_RUNTIME    = 2
 
@@ -125,8 +124,14 @@ if __name__ == "__main__":
         # RUN ACTION
         SourcePackage(args[0], app_config, use_network=options["use_network"])\
                 .to_bolt(**options)
-    except Exception as e:
+    except InvocationError as e:
         sys.stderr.write("deb2bolt: %s\n" % str(e))
-        raise
-        sys.exit(1)
+        sys.exit(BOLT_ERR_INVOCATION)
+    except BoltError as e:
+        sys.stderr.write("deb2bolt: %s\n" % str(e))
+        sys.exit(BOLT_ERR_RUNTIME)
+    except KeyboardInterrupt:
+        sys.stderr.write("Caught keyboard interrupt. Exiting.\n")
+        sys.exit(0)
+    #end try
 #end __main__

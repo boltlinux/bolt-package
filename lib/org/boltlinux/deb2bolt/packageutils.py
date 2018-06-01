@@ -35,8 +35,8 @@ from tempfile import TemporaryDirectory
 import org.boltlinux.package.libarchive as libarchive
 from org.boltlinux.package.progressbar import ProgressBar
 from org.boltlinux.package.libarchive import ArchiveEntry, ArchiveFileReader
-from org.boltlinux.deb2bolt.error import AptCacheNotFoundError, \
-        DebianPackageContentMissing, PackageRetrievalError, Deb2BoltError
+from org.boltlinux.error import NotFound, PackagingError, NetworkError, \
+        BoltValueError
 
 class PackageUtilsMixin:
 
@@ -284,8 +284,8 @@ class PackageUtilsMixin:
                             .decode(locale.getpreferredencoding())\
                             .strip()
         except subprocess.CalledProcessError as e:
-            raise AptCacheNotFoundError("error looking up %s=%s: %s" % \
-                    (pkg_name, pkg_version, str(e)))
+            raise NotFound("error looking up %s=%s: %s" % (pkg_name,
+                pkg_version, str(e)))
         #end try
 
         pool_path = ""
@@ -303,9 +303,8 @@ class PackageUtilsMixin:
         #end for
 
         if not pool_path:
-            raise AptCacheNotFoundError(
-                    "could not find pool location for %s=%s" % \
-                            (pkg_name, pkg_version))
+            raise NotFound("could not find pool location for %s=%s" %
+                    (pkg_name, pkg_version))
 
         pool_url = mirror + pool_path
 
@@ -339,7 +338,7 @@ class PackageUtilsMixin:
                     deb_name = outfile.name
                 #end with
             except urllib.error.URLError as e:
-                raise PackageRetrievalError("error retrieving '%s': %s" % \
+                raise NetworkError("error retrieving '%s': %s" % \
                         (pool_url, str(e)))
 
             contents = self.__binary_deb_list_contents(deb_name, tmpdir)
@@ -379,8 +378,8 @@ class PackageUtilsMixin:
         #end with
 
         if not data_name:
-            raise DebianPackageContentMissing(
-                    "binary package %s contains no data." % data_name)
+            raise PackagingError("binary package %s contains no data." %
+                    data_name)
 
         contents = []
 
@@ -409,7 +408,7 @@ class PackageUtilsMixin:
                 elif entry.is_file or entry.is_hardlink:
                     entry_type = stat.S_IFREG
                 else:
-                    raise Deb2BoltError("type of '%s' unknown '%d'" %
+                    raise BoltValueError("type of '%s' unknown '%d'" %
                             (entry_path, entry_type))
 
                 contents.append([entry_path, entry_type, entry_mode,

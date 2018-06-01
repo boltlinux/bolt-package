@@ -30,8 +30,7 @@ import sys
 
 from org.boltlinux.deb2bolt.basepackage import BasePackageMixin
 from org.boltlinux.deb2bolt.packageutils import PackageUtilsMixin
-from org.boltlinux.deb2bolt.error import ControlFileSyntaxError, \
-        AptCacheNotFoundError
+from org.boltlinux.error import BoltSyntaxError, CacheMiss
 
 BINARY_PKG_XML_TEMPLATE = """\
 <?xml version="1.0" encoding="utf-8"?>
@@ -60,7 +59,7 @@ class BinaryPackage(BasePackageMixin, PackageUtilsMixin):
             self.parse_content(content)
         except:
             msg = "error parsing control file."
-            raise ControlFileSyntaxError(msg)
+            raise BoltSyntaxError(msg)
         #end try
     #end function
 
@@ -75,7 +74,7 @@ class BinaryPackage(BasePackageMixin, PackageUtilsMixin):
             try:
                 self.contents = self.get_content_spec_via_package_pool(
                         pkg_name, pkg_version, mirror=mirror)
-            except AptCacheNotFoundError:
+            except CacheMiss:
                 sys.stderr.write(
                     "Package '%s' not found via apt-cache. "
                         "Applying local fallback logic.\n" % pkg_name)

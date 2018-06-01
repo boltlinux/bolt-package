@@ -29,12 +29,12 @@ import re
 import subprocess
 from lxml import etree
 
+from org.boltlinux.error import PackagingError
 from org.boltlinux.package.libarchive import ArchiveFileReader
 from org.boltlinux.package.packagedesc import PackageDescription
 from org.boltlinux.package.basepackage import BasePackage
 from org.boltlinux.package.platform import Platform
 from org.boltlinux.package.progressbar import ProgressBar
-from org.boltlinux.package.error import SourcePackageError
 
 class SourcePackage(BasePackage):
 
@@ -132,7 +132,7 @@ class SourcePackage(BasePackage):
 
             if not (archive_file and os.path.isfile(archive_file)):
                 msg = "source archive for '%s' not found." % src_name
-                raise SourcePackageError(msg)
+                raise PackagingError(msg)
             #end if
 
             total_size = 0
@@ -189,7 +189,7 @@ class SourcePackage(BasePackage):
                         os.symlink(entry.symlink, full_path)
                     else:
                         msg = "file '%s' has unsupported file type."
-                        raise SourcePackageError(msg)
+                        raise PackagingError(msg)
                     #end if
                 #end for
             #end with
@@ -215,7 +215,7 @@ class SourcePackage(BasePackage):
             try:
                 subprocess.run(cmd, stderr=subprocess.STDOUT, check=True)
             except subprocess.CalledProcessError:
-                raise SourcePackageError("couldn't apply patch.")
+                raise PackagingError("couldn't apply patch.")
         #end for
     #end function
 
@@ -224,7 +224,7 @@ class SourcePackage(BasePackage):
             env = {}
 
         if not action in ["prepare", "build", "install", "clean"]:
-            raise SourcePackageError("invalid package action '%s'." % 
+            raise PackagingError("invalid package action '%s'." % 
                     str(action))
         #end if
 
@@ -240,7 +240,7 @@ class SourcePackage(BasePackage):
                     stderr=subprocess.STDOUT, check=True)
         except subprocess.CalledProcessError:
             msg = "failed to %s the source package." % action
-            raise SourcePackageError(msg)
+            raise PackagingError(msg)
         #end try
     #end function
 

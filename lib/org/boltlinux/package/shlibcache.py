@@ -30,7 +30,6 @@ import subprocess
 from org.boltlinux.package.platform import Platform
 from org.boltlinux.package.filestats import FileStats
 from org.boltlinux.package.packagemanager import PackageManager
-from org.boltlinux.package.error import ShlibCacheError
 
 class ShlibCache:
 
@@ -85,7 +84,7 @@ class ShlibCache:
                 procinfo = subprocess.run([ldconfig, "-p"], stdout=subprocess.PIPE,
                         stderr=subprocess.STDOUT, check=True)
             except subprocess.CalledProcessError as e:
-                raise ShlibCacheError("failed to initialize shlib cache: " + str(e))
+                raise RuntimeError("failed to initialize shlib cache: " + str(e))
 
             output_lines = procinfo\
                     .stdout\

@@ -2,7 +2,7 @@
 #
 # The MIT License (MIT)
 #
-# Copyright (c) 2016 Tobias Koch <tobias.koch@gmail.com>
+# Copyright (c) 2018 Tobias Koch <tobias.koch@gmail.com>
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -23,27 +23,33 @@
 # THE SOFTWARE.
 #
 
-class XPackError(Exception):
+class BoltError(RuntimeError):
     pass
 
-class PackageManagerError(XPackError):
+class InvocationError(BoltError):
     pass
 
-class SourcePackageError(XPackError):
+class BoltSyntaxError(BoltError):
     pass
 
-class SpecfileError(XPackError):
+class MalformedSpecfile(BoltSyntaxError):
     pass
 
-class ShlibCacheError(XPackError):
+class NotFound(BoltError):
     pass
 
-class MissingDependencies(XPackError):
+class UnmetDependency(BoltError):
     pass
 
-class InvocationError(XPackError):
+class CacheMiss(BoltError):
     pass
 
-class DebianPackageError(XPackError):
+class PackagingError(BoltError):
+    pass
+
+class NetworkError(BoltError):
+    pass
+
+class BoltValueError(BoltError):
     pass
 

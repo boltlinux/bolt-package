@@ -31,7 +31,7 @@ import subprocess
 from pathlib import Path
 from collections import OrderedDict
 from lxml import etree
-from org.boltlinux.package.error import XPackError
+from org.boltlinux.error import UnmetDependency, PackagingError
 from org.boltlinux.package.braceexpand import braceexpand
 from org.boltlinux.package.platform import Platform
 from org.boltlinux.package.packagemanager import PackageManager
@@ -131,7 +131,7 @@ class BinaryPackage(BasePackage):
                         tmp_version = pkg_manager\
                                 .installed_version_of_package(dep_name)
                         if not tmp_version:
-                            raise XPackError("cannot resolve dependency '%s'." \
+                            raise UnmetDependency("cannot resolve dependency '%s'." \
                                     % dep_name)
                         pkg_node.attrib["version"] = dep_version[:-1] \
                             + " " + tmp_version
@@ -242,7 +242,7 @@ class BinaryPackage(BasePackage):
         try:
             self.generate_file_list()
         except ValueError as e:
-            raise XPackError("error generating file list: " + str(e))
+            raise PackagingError("error generating file list: " + str(e))
         self.strip_debug_symbols_and_delete_rpath()
     #end function
 
@@ -544,7 +544,7 @@ class BinaryPackage(BasePackage):
         #end if
 
         if not found:
-            raise XPackError("'%s' dependency '%s' not found in any "
+            raise UnmetDependency("'%s' dependency '%s' not found in any "
                 "installed or built package." % (self.name, lib_name))
     #end function
 

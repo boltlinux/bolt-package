@@ -26,7 +26,7 @@
 import os
 import shutil
 from lxml import etree
-from org.boltlinux.package.error import XPackError
+from org.boltlinux.error import UnmetDependency, InvocationError
 from org.boltlinux.package.sourcepackage import SourcePackage
 from org.boltlinux.package.debianpackage import DebianPackage
 from org.boltlinux.package.shlibcache import ShlibCache
@@ -35,7 +35,6 @@ from org.boltlinux.package.changelog import Changelog
 from org.boltlinux.package.sourcecache import SourceCache
 from org.boltlinux.package.platform import Platform
 from org.boltlinux.package.appconfig import AppConfig
-from org.boltlinux.package.error import MissingDependencies
 
 class PackageControl:
 
@@ -137,14 +136,14 @@ class PackageControl:
         if self.parms["enable_packages"]:
             for p in self.parms["enable_packages"]:
                 if not xml_doc.xpath("/control/package[@name='%s']" % p):
-                    raise XPackError("unknown binary package '%s'." % p)
+                    raise InvocationError("unknown binary package '%s'." % p)
             #end for
         #end if
 
         if self.parms["disable_packages"]:
             for p in self.parms["disable_packages"]:
                 if not xml_doc.xpath("/control/package[@name='%s']" % p):
-                    raise XPackError("unknown binary package '%s'." % p)
+                    raise InvocationError("unknown binary package '%s'." % p)
             #end for
         #end if
 
@@ -194,7 +193,7 @@ class PackageControl:
                 dep_spec = self.src_pkg.missing_build_dependencies()
                 if dep_spec.list:
                     msg = "missing dependencies: %s" % str(dep_spec)
-                    raise MissingDependencies(msg)
+                    raise UnmetDependency(msg)
                 #end if
             #end if
         #end if

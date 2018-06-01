@@ -26,7 +26,7 @@
 import os
 import re
 from lxml import etree
-from org.boltlinux.package.error import SpecfileError
+from org.boltlinux.error import InvocationError, MalformedSpecfile
 
 class Specfile:
 
@@ -45,7 +45,7 @@ class Specfile:
 
     def __init__(self, filename):
         if not os.path.exists(filename):
-            raise SpecfileError("no such file '%s'." % filename)
+            raise InvocationError("no such file '%s'." % filename)
 
         parser = etree.XMLParser(encoding="utf-8", load_dtd=True,
                 no_network=True, ns_clean=True, strip_cdata=True,
@@ -55,7 +55,7 @@ class Specfile:
             xml_doc = etree.parse(filename, parser)
             xml_doc.xinclude()
         except (etree.XMLSyntaxError, etree.XIncludeError) as e:
-            raise SpecfileError(str(e))
+            raise MalformedSpecfile(str(e))
 
         self.validate_structure(xml_doc)
         self.validate_format(xml_doc)
@@ -73,7 +73,7 @@ class Specfile:
         #end for
 
         if relaxng is None:
-            raise SpecfileError("RELAX NG ruleset not found.")
+            raise RuntimeError("RELAX NG ruleset not found.")
 
         if not relaxng.validate(xml_doc):
             errors = []
@@ -83,7 +83,7 @@ class Specfile:
                             err.column, err.message))
             #end for
             msg = "RELAX NG validation failed:\n" + "\n".join(errors)
-            raise SpecfileError(msg)
+            raise MalformedSpecfile(msg)
         #end if
 
         return True
@@ -118,7 +118,7 @@ class Specfile:
 
         if errors:
             msg = "format errors:\n" + "\n".join(errors)
-            raise SpecfileError(msg)
+            raise MalformedSpecfile(msg)
         #end if
 
         return True

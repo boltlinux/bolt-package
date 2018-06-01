@@ -38,6 +38,7 @@ from org.boltlinux.deb2bolt.patchseries import PatchSeries
 from org.boltlinux.deb2bolt.binarypackage import BinaryPackage
 from org.boltlinux.deb2bolt.basepackage import BasePackageMixin
 from org.boltlinux.deb2bolt.packageutils import PackageUtilsMixin
+from org.boltlinux.error import BoltSyntaxError, InvocationError
 
 PKG_RULES_XML_TEMPLATE = """\
 <?xml version="1.0" encoding="utf-8"?>
@@ -112,6 +113,9 @@ SOURCE_PKG_XML_TEMPLATE = """\
 class SourcePackage(BasePackageMixin, PackageUtilsMixin):
 
     def __init__(self, filename, app_config, use_network=True):
+        if not os.path.exists(filename):
+            raise InvocationError("no such file '%s'." % filename)
+
         with open(filename, "r", encoding="utf-8") as f:
             content = f.read()
 
@@ -134,7 +138,7 @@ class SourcePackage(BasePackageMixin, PackageUtilsMixin):
             self.parse_content(blocks.pop(0))
         except:
             msg = "error parsing control file."
-            raise ControlFileSyntaxError(msg)
+            raise BoltSyntaxError(msg)
         #end try
 
         self.patches = PatchSeries()

@@ -33,10 +33,16 @@ INSTALL_DIR = os.path.normpath(os.path.dirname(
     os.path.realpath(sys.argv[0])) + os.sep + ".." )
 sys.path.insert(1, INSTALL_DIR + os.sep + 'lib')
 
+from org.boltlinux.error import BoltError, InvocationError
 from org.boltlinux.package.appconfig import AppConfig
 from org.boltlinux.repository.upstream import UpstreamRepo
+from org.boltlinux.repository.packagerules import PackageRules
 from org.boltlinux.repository.flaskapp import app, db, app_init
 from org.boltlinux.repository.models import *
+from org.boltlinux.package.version import VERSION as BOLT_VERSION
+
+BOLT_ERR_INVOCATION = 1
+BOLT_ERR_RUNTIME    = 2
 
 if __name__ == "__main__":
     # LOAD APP CONFIG
@@ -59,9 +65,15 @@ if __name__ == "__main__":
         db.create_all()
 
     # UPDATE DEBIAN SOURCES
-    upstream = UpstreamRepo(config)
-    upstream.update_repository_db(
-        upstream.refresh_sources_lists()
+#    upstream = UpstreamRepo(config)
+#    upstream.update_repository_db(
+#        upstream.refresh_sources_lists()
+#    )
+
+    # UPDATE PACKAGE RULES
+    pkg_rules = PackageRules(config)
+    pkg_rules.update_repository_db(
+#        pkg_rules.refresh_package_rules()
     )
 #end if
 
