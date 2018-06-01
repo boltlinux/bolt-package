@@ -100,12 +100,11 @@ class UpstreamRepo:
 
                 if pkg_name in pkg_index:
                     old_version = entry.upstream_version
-                    new_version = pkg_index[pkg_name]["Version"]
+                    new_version = pkg_index[pkg_name].get("Version")
 
                     if old_version is None or BaseXpkg.compare_versions(
-                            new_version, old_version):
-                        entry.upstream_version = pkg_index[pkg_name]\
-                                .get("Version", None)
+                            new_version, old_version) > 0:
+                        entry.upstream_version = new_version
                     #end if
             #end for
 
