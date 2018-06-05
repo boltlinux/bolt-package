@@ -1,0 +1,153 @@
+#!/usr/bin/env python3
+# -*- encoding: utf-8 -*-
+#
+# The MIT License (MIT)
+#
+# Copyright (c) 2016 Tobias Koch <tobias.koch@gmail.com>
+#
+# Permission is hereby granted, free of charge, to any person obtaining a copy
+# of this software and associated documentation files (the "Software"), to deal
+# in the Software without restriction, including without limitation the rights
+# to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+# copies of the Software, and to permit persons to whom the Software is
+# furnished to do so, subject to the following conditions:
+#
+# The above copyright notice and this permission notice shall be included in
+# all copies or substantial portions of the Software.
+#
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+# AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+# OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+# THE SOFTWARE.
+#
+
+import os
+import sys
+import getopt
+
+# make repo-tool relocatable
+INSTALL_DIR = os.path.normpath(os.path.dirname(
+    os.path.realpath(sys.argv[0])) + os.sep + ".." )
+sys.path.insert(1, INSTALL_DIR + os.sep + 'lib')
+
+from org.boltlinux.error import BoltError, InvocationError
+from org.boltlinux.package.util import switch
+from org.boltlinux.package.appconfig import AppConfig
+from org.boltlinux.repository.upstream import UpstreamRepo
+from org.boltlinux.repository.packagerules import PackageRules
+from org.boltlinux.repository.flaskapp import app, db, app_init
+from org.boltlinux.repository.models import *
+from org.boltlinux.package.version import VERSION as BOLT_VERSION
+
+BOLT_ERR_INVOCATION = 1
+BOLT_ERR_RUNTIME    = 2
+
+def print_usage():
+    print(
+        "Bolt OS package repository tool, version %s                                    \n"
+        "Copyright (C) 2018 Tobias Koch <tobias.koch@gmail.com>                         \n"
+        "                                                                               \n"
+        "USAGE:                                                                         \n"
+        "                                                                               \n"
+        "  repo-tool [OPTIONS]                                                          \n"
+        "                                                                               \n"
+        "OPTIONS:                                                                       \n"
+        "                                                                               \n"
+        "  -h --help        Print this help message.                                    \n"
+        "                                                                               \n"
+        "  --skip <steps>   A comma-separated list of steps to skip:                    \n"
+        "                                                                               \n"
+        "                   * 'upstream':     Download Debian source package listings.  \n"
+        "                   * 'fetch-rules':  Refresh local checkout(s) of Bolt package \n"
+        "                                     rules.                                    \n"
+        "                   * 'scan-rules':   Scan Bolt package rules for changes.      \n"
+        "                   * 'scan-repo':    Search package repo for related binary    \n"
+        "                                     packages.                                 \n"
+        "                                                                               \n"
+        "  --no-diffs       Disable differential updates.                               \n"
+        "                                                                               \n"
+        % BOLT_VERSION
+    )
+#end function
+
+def parse_cmd_line():
+    # define default configuration
+    config = {
+        "skip_steps": [],
+        "do_diffs":   True,
+    }
+
+    try:
+        opts, args = getopt.getopt(sys.argv[1:], "h", ["help", "skip=",
+            "no-diffs"])
+    except getopt.GetoptError as e:
+        raise InvocationError("Error parsing command line: %s" % str(e))
+
+    for o, v in opts:
+        for case in switch(o):
+            if case("--help", "-h"):
+                print_usage()
+                sys.exit(0)
+                break
+            if case("--skip"):
+                config["gen_patches"] = True
+                break
+            if case("--no-diffs"):
+                config["do_diffs"] = False
+                break
+        #end switch
+    #end for
+
+    return config, args
+#end function
+
+if __name__ == "__main__":
+    try:
+        # LOAD APP CONFIG
+        config = AppConfig.instance().load_user_config()
+
+        # CONFIGURE APP
+        app_config = config\
+                .get("apps", {})\
+                .get("repository", {})\
+                .get("appconfig", {})
+
+        app_config.setdefault("SQLALCHEMY_DATABASE_URI",
+                "sqlite:///" + AppConfig.get_config_folder() + os.sep +
+                    "repository.db")
+
+        # PARSE CMD LINE
+        options, args = parse_cmd_line()
+
+        # INITIALIZE DATABASE
+        app_init(app_config)
+        db.init_app(app)
+
+        with app.app_context():
+            db.create_all()
+
+        # UPDATE DEBIAN SOURCES
+        upstream = UpstreamRepo(config)
+
+        upstream.refresh_sources_lists()
+        upstream.update_repository_db()
+
+        # UPDATE PACKAGE RULES
+#        pkg_rules = PackageRules(config)
+#        pkg_rules.update_repository_db(
+#            pkg_rules.refresh_package_rules()
+#        )
+    except InvocationError as e:
+        sys.stderr.write("deb2bolt: %s\n" % str(e))
+        sys.exit(BOLT_ERR_INVOCATION)
+    except BoltError as e:
+        sys.stderr.write("deb2bolt: %s\n" % str(e))
+        sys.exit(BOLT_ERR_RUNTIME)
+    except KeyboardInterrupt:
+        sys.stderr.write("Caught keyboard interrupt. Exiting.\n")
+        sys.exit(0)
+    #end try
+#end __main__

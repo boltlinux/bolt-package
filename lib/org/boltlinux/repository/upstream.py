@@ -34,7 +34,7 @@ from org.boltlinux.package.appconfig import AppConfig
 from org.boltlinux.package.progressbar import ProgressBar
 from org.boltlinux.package.xpkg import BaseXpkg
 from org.boltlinux.repository.flaskapp import app, db
-from org.boltlinux.repository.models import SourcePackage
+from org.boltlinux.repository.models import UpstreamSource
 
 class UpstreamRepo:
 
@@ -63,52 +63,60 @@ class UpstreamRepo:
 
         for comp in self.components:
             target_dir = os.path.join(self.cache_dir, comp)
+            target_url = os.path.join(target_dir, "Sources.gz")
 
             if not os.path.isdir(target_dir):
                 os.makedirs(target_dir)
 
-            target_url = os.path.join(target_dir, "Sources.gz")
-
             try:
                 if not self.__check_if_up2date(comp, target_url):
-                    self.__download_sources_gz(comp, target_url)
                     requires_update.append(comp)
+
+                    self.__download_sources_gz(comp, target_url)
+                    self.__unpack_sources_gz(target_url)
                 #end if
             except urllib.error.URLError as e:
                 sys.stderr.write("Failed to retrieve '%s' sources: %s\n" %
                         (comp, e.reason))
                 continue
             #end try
-
-            self.__unpack_sources_gz(target_url)
         #end for
 
         return requires_update
     #end function
 
-    def update_repository_db(self, components):
+    def update_repository_db(self):
         pkg_index = {}
 
-        for comp in components:
+        for comp in self.components:
             sources_file = os.path.join(self.cache_dir, comp, "Sources")
             self.__parse_sources_file(sources_file, pkg_index)
         #end for
 
         with app.app_context():
-            for entry in SourcePackage.query.all():
-                pkg_name = entry.name
+            stored_pkg_index = dict([(obj.name, obj) for obj in
+                    UpstreamSource.query.all()])
 
-                if pkg_name in pkg_index:
-                    old_version = entry.upstream_version
-                    new_version = pkg_index[pkg_name].get("Version")
+            for pkg_name in sorted(pkg_index):
+                pkg_info = pkg_index[pkg_name]
 
-                    if old_version is None or BaseXpkg.compare_versions(
-                            new_version, old_version) > 0:
-                        entry.upstream_version = new_version
-                    #end if
+                if not pkg_name in stored_pkg_index:
+                    source_pkg = UpstreamSource(name=pkg_name,
+                            version=pkg_info["Version"])
+                    db.session.add(source_pkg)
+                    stored_pkg_index[pkg_name] = source_pkg
+                else:
+                    source_pkg = stored_pkg_index[pkg_name]
+
+                    old_version = source_pkg.version
+                    new_version = pkg_info["Version"]
+
+                    if BaseXpkg.compare_versions(new_version, old_version) > 0:
+                        source_pkg.version = new_version
+                #end if
             #end for
 
-            db.session.commit();
+            db.session.commit()
         #end with
     #end function
 
@@ -118,40 +126,17 @@ class UpstreamRepo:
         if not os.path.isfile(filename):
             return pkg_index
 
-        pkg_info  = {}
-
         with open(filename, "r", encoding="utf-8") as f:
-            key = None
+            buf = f.read().strip()
 
-            for line in f:
-                line = line.rstrip()
+        for pkg_txt in re.split(r"\n\n+", buf):
+            pkg_info = {}
+            key      = None
 
-                if not line:
-                    if pkg_info:
-                        try:
-                            pkg_name = pkg_info["Package"]
-
-                            if not pkg_name in pkg_index:
-                                pkg_index[pkg_name] = pkg_info
-                            else:
-                                old_version = pkg_index[pkg_name]["Version"]
-                                new_version = pkg_info["Version"]
-
-                                if BaseXpkg.compare_versions(new_version,
-                                        old_version) > 0:
-                                    pkg_index[pkg_name] = pkg_info
-                            #end if
-                        except KeyError:
-                            pass
-                        pkg_info = {}
-                    #end if
-
-                    continue
-                #end if
-
+            for line in pkg_txt.splitlines():
                 if re.match(r"^\s+", line):
                     if key is not None:
-                        pkg_info[last_item] += " " + line.lstrip()
+                        pkg_info[key] += " " + line.lstrip()
                 else:
                     key, value = line.split(":", 1)
 
@@ -161,7 +146,23 @@ class UpstreamRepo:
                         key = None
                 #end if
             #end for
-        #end with
+
+            try:
+                pkg_name    = pkg_info["Package"]
+                new_version = pkg_info["Version"]
+
+                if not pkg_name in pkg_index:
+                    pkg_index[pkg_name] = pkg_info
+                else:
+                    old_version = pkg_index[pkg_name]["Version"]
+
+                    if BaseXpkg.compare_versions(new_version,
+                            old_version) > 0:
+                        pkg_index[pkg_name] = pkg_info
+                #end if
+            except KeyError:
+                pass
+        #end for
 
         return pkg_index
     #end function

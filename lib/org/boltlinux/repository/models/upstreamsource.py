@@ -25,14 +25,11 @@
 
 from org.boltlinux.repository.flaskapp import db
 
-class BinaryPackage(db.Model):
-    __tablename__ = "binary_package"
+class UpstreamSource(db.Model):
+    __tablename__ = "upstream_source"
 
-    id       = db.Column(db.Integer, primary_key=True)
-    source_package_id = db.Column(db.Integer,
-            db.ForeignKey("source_package.id"), nullable=False)
-    name     = db.Column(db.String(50), nullable=False)
-    version  = db.Column(db.String(50), nullable=False)
-    contents = db.Column(db.Text)
+    id        = db.Column(db.Integer, primary_key=True)
+    name      = db.Column(db.String(50), nullable=False)
+    version   = db.Column(db.String(50), nullable=False)
 #end class
 
