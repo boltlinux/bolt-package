@@ -27,6 +27,7 @@
 import os
 import sys
 import getopt
+import logging
 
 # make repo-tool relocatable
 INSTALL_DIR = os.path.normpath(os.path.dirname(
@@ -106,6 +107,10 @@ def parse_cmd_line():
 
 if __name__ == "__main__":
     try:
+        # CONFIGURE LOGGING
+        logging.basicConfig(level=logging.INFO,
+                format="[%(levelname)-8s] %(message)s")
+
         # LOAD APP CONFIG
         config = AppConfig.instance().load_user_config()
 
@@ -136,7 +141,10 @@ if __name__ == "__main__":
         upstream.update_repository_db()
 
         # UPDATE PACKAGE RULES
-#        pkg_rules = PackageRules(config)
+        pkg_rules = PackageRules(config)
+
+        pkg_rules.refresh_package_rules()
+
 #        pkg_rules.update_repository_db(
 #            pkg_rules.refresh_package_rules()
 #        )

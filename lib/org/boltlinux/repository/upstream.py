@@ -28,10 +28,10 @@ import re
 import sys
 import hashlib
 import urllib.request
+import logging
 
 from org.boltlinux.package.libarchive import ArchiveFileReader
 from org.boltlinux.package.appconfig import AppConfig
-from org.boltlinux.package.progressbar import ProgressBar
 from org.boltlinux.package.xpkg import BaseXpkg
 from org.boltlinux.repository.flaskapp import app, db
 from org.boltlinux.repository.models import UpstreamSource
@@ -56,6 +56,8 @@ class UpstreamRepo:
                 )
             )
         )
+
+        self.log = logging.getLogger("org.boltlinux.repository")
     #end function
 
     def refresh_sources_lists(self):
@@ -76,7 +78,7 @@ class UpstreamRepo:
                     self.__unpack_sources_gz(target_url)
                 #end if
             except urllib.error.URLError as e:
-                sys.stderr.write("Failed to retrieve '%s' sources: %s\n" %
+                self.log.error("Failed to retrieve '%s' sources: %s" %
                         (comp, e.reason))
                 continue
             #end try
@@ -201,30 +203,15 @@ class UpstreamRepo:
         source_url = self.mirror + "/dists/" + self.release + "/" + \
                 component + "/source/Sources.gz"
 
-        sys.stdout.write("Retrieving '%s' ...\n" % source_url)
+        self.log.info("Retrieving '%s' ..." % source_url)
 
         with urllib.request.urlopen(source_url) as response:
-            if response.length:
-                progress_bar = ProgressBar(response.length)
-            else:
-                progress_bar = None
-            #end if
-
-            bytes_read = 0
-            if self.verbose and progress_bar:
-                progress_bar(bytes_read)
-
             with open(target_url, "wb+") as outfile:
                 while True:
                     buf = response.read(8*1024)
                     if not buf:
                         break
-
-                    bytes_read += len(buf)
                     outfile.write(buf)
-
-                    if self.verbose and progress_bar:
-                        progress_bar(bytes_read)
                 #end while
             #end with
         #end with
