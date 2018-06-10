@@ -71,11 +71,19 @@ class UpstreamRepo:
                 os.makedirs(target_dir)
 
             try:
-                if not self.__check_if_up2date(comp, target_url):
-                    requires_update.append(comp)
+                up_to_date = self.__check_if_up2date(comp, target_url)
+
+                if up_to_date:
+                    self.log.info("upstream sources index for component '%s' "
+                        "is up to date." % comp)
+                else:
+                    self.log.info("upstream sources index for component '%s' "
+                        "requires update." % comp)
 
                     self.__download_sources_gz(comp, target_url)
                     self.__unpack_sources_gz(target_url)
+
+                    requires_update.append(comp)
                 #end if
             except urllib.error.URLError as e:
                 self.log.error("Failed to retrieve '%s' sources: %s" %
