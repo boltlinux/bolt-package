@@ -124,4 +124,19 @@ class Specfile:
         return True
     #end function
 
+    def source_name(self):
+        return self.xml_doc.xpath("/control/source/@name")[0]
+
+    def latest_version(self):
+        return self.xml_doc.xpath("/control/changelog/release[1]/@version")[0]
+
+    def binary_packages(self):
+        pkg_names = []
+
+        for pkg_node in self.xml_doc.xpath("/control/package"):
+            pkg_names.append(pkg_node.attrib["name"])
+
+        return pkg_names
+    #end function
+
 #end class
