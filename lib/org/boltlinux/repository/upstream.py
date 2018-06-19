@@ -96,38 +96,42 @@ class UpstreamRepo:
     #end function
 
     def update_repository_db(self):
-        pkg_index = {}
+        self.log.info("Updating repository DB...")
 
         for comp in self.components:
+            pkg_index    = {}
             sources_file = os.path.join(self.cache_dir, comp, "Sources")
+
             self.__parse_sources_file(sources_file, pkg_index)
-        #end for
 
-        with app.app_context():
-            stored_pkg_index = dict([(obj.name, obj) for obj in
-                    UpstreamSource.query.all()])
+            with app.app_context():
+                stored_pkg_index = dict([(obj.name, obj) for obj in
+                        UpstreamSource.query.all()])
 
-            for pkg_name in sorted(pkg_index):
-                pkg_info = pkg_index[pkg_name]
+                for pkg_name in sorted(pkg_index):
+                    pkg_info = pkg_index[pkg_name]
 
-                if not pkg_name in stored_pkg_index:
-                    source_pkg = UpstreamSource(name=pkg_name,
-                            version=pkg_info["Version"])
-                    db.session.add(source_pkg)
-                    stored_pkg_index[pkg_name] = source_pkg
-                else:
-                    source_pkg = stored_pkg_index[pkg_name]
+                    if not pkg_name in stored_pkg_index:
+                        source_pkg = UpstreamSource(
+                            name      = pkg_name,
+                            version   = pkg_info["Version"],
+                            component = comp
+                        )
+                        db.session.add(source_pkg)
+                        stored_pkg_index[pkg_name] = source_pkg
+                    else:
+                        source_pkg  = stored_pkg_index[pkg_name]
+                        old_version = source_pkg.version
+                        new_version = pkg_info["Version"]
 
-                    old_version = source_pkg.version
-                    new_version = pkg_info["Version"]
+                        if BaseXpkg.compare_versions(
+                                new_version, old_version) > 0:
+                            source_pkg.version = new_version
+                    #end if
+                #end for
 
-                    if BaseXpkg.compare_versions(new_version, old_version) > 0:
-                        source_pkg.version = new_version
-                #end if
-            #end for
-
-            db.session.commit()
-        #end with
+                db.session.commit()
+            #end with
     #end function
 
     # PRIVATE
