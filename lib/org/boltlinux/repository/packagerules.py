@@ -26,145 +26,74 @@
 import os
 import sys
 import subprocess
-import logging
 
-from lxml import etree
-from org.boltlinux.package.appconfig import AppConfig
-from org.boltlinux.package.specfile import Specfile
-from org.boltlinux.repository.flaskapp import app, db
-from org.boltlinux.repository.models import SourcePackage
-from org.boltlinux.error import MalformedSpecfile
+from org.boltlinux.error import RepositoryError
 
 class PackageRules:
 
-    def __init__(self, config):
-        self.repositories = config.get("repositories", [])
+    def __init__(self, repo_name, rules_url, branch="master", cache_dir=None):
+        self._repo_name = repo_name
+        self._rules_url = rules_url
+        self._branch    = branch
 
-        self.cache_dir = config.get("cache-dir",
-            os.path.realpath(
-                os.path.join(
-                    AppConfig.get_config_folder(),
-                    "cache", "pkg-rules"
-                )
+        self._cache_dir = cache_dir or os.path.realpath(
+            os.path.join(
+                AppConfig.get_config_folder(),
+                "cache", "upstream"
             )
         )
-
-        self.log = logging.getLogger("org.boltlinux.repository")
     #end function
 
-    def refresh_package_rules(self):
-        for repo_info in self.repositories:
-            repo_name  = repo_info["name"]
-            repo_url   = repo_info["repo-url"]
-            repo_rules = repo_info["rules"]
+    def clone(self, verbose=False):
+        if os.path.exists(os.path.join(self.rules_dir, ".git")):
+            return
 
-            checkout_dir = self.cache_dir + os.sep + repo_name
+        stdout = sys.stdout if verbose else subprocess.PIPE
+        stderr = sys.stderr if verbose else subprocess.PIPE
 
+        git_clone = ["git", "clone", self._rules_url, self.rules_dir]
+
+        try:
+            proc = subprocess.run(git_clone, timeout=300, check=True,
+                    stdout=stdout, stderr=stderr)
+        except subprocess.CalledProcessError as e:
+            raise RepositoryError("failed to clone '%s': %s" %
+                    (self._rules_url, str(e)))
+        #end try
+    #end function
+
+    def refresh(self, verbose=False):
+        if not os.path.exists(os.path.join(self.rules_dir, ".git")):
+            self.clone(verbose=verbose)
+
+        stdout = sys.stdout if verbose else subprocess.PIPE
+        stderr = sys.stderr if verbose else subprocess.PIPE
+
+        git_fetch_origin = ["git", "-C", self.rules_dir, "fetch", "origin"]
+        git_reset_hard   = ["git", "-C", self.rules_dir, "reset", "--hard",
+                "origin/" + self._branch]
+
+        for command in [git_fetch_origin, git_reset_hard]:
             try:
-                if not os.path.exists(checkout_dir):
-                    self.__clone_git_repo(repo_rules, checkout_dir)
-            except (subprocess.TimeoutExpired,
-                    subprocess.CalledProcessError) as e:
-                self.log.error("Failed to clone repo %s: %s" %
-                        (repo_name, str(e)))
-            #end try
-
-            try:
-                self.__update_git_checkout(checkout_dir)
-            except (subprocess.TimeoutExpired,
-                    subprocess.CalledProcessError) as e:
-                self.log.error("Failed to update repo %s: %s" %
-                        (repo_name, str(e)))
+                proc = subprocess.run(command, timeout=300, check=True,
+                        stdout=stdout, stderr=stderr)
+            except subprocess.CalledProcessError as e:
+                raise RepositoryError("failed to refresh '%s': %s" %
+                        (self.rules_dir, str(e)))
             #end try
         #end for
     #end function
 
-    def update_repository_db(self):
-        source_pkg_index = {}
-
-        with app.app_context():
-            for obj in SourcePackage.query.all():
-                source_pkg_index \
-                        .setdefault(obj.name, {}) \
-                        .setdefault(obj.version, obj)
-            #end for
-
-            for repo_info in self.repositories:
-                repo_name  = repo_info["name"]
-                repo_url   = repo_info["repo-url"]
-                repo_rules = repo_info["rules"]
-
-                checkout_dir = self.cache_dir + os.sep + repo_name
-
-                for specfile in self.__next_specfile(checkout_dir):
-                    source_name = specfile.source_name()
-                    version     = specfile.latest_version()
-                    packages    = specfile.binary_packages()
-
-                    xml = etree.tostring(specfile.xml_doc,
-                            pretty_print=True, encoding="unicode")
-
-                    ref_obj = source_pkg_index \
-                            .get(source_name, {})\
-                            .get(version)
-
-                    if ref_obj is None:
-                        source_pkg = SourcePackage(
-                            name    = source_name,
-                            version = version,
-                            xml     = xml
-                        )
-                        db.session.add(source_pkg)
-
-                        source_pkg_index \
-                                .setdefault(source_name, {})\
-                                .setdefault(version, source_pkg)
-                    #end if
-                #end for
-            #end for
-
-            db.session.commit()
-        #end with
-    #end function
-
-    # PRIVATE
-
-    def __next_specfile(self, rules_dir):
-        for path, dirs, files in os.walk(rules_dir):
+    def __iter__(self):
+        for path, dirs, files in os.walk(self.rules_dir):
             if "package.xml" in files:
-                try:
-                    yield Specfile(os.path.join(path, "package.xml"))
-                except MalformedSpecfile as e:
-                    self.log.error("malformed specfile: %s" % str(e))
-                #end try
-            #end if
+                yield os.path.join(path, "package.xml")
         #end for
     #end function
 
-    def __clone_git_repo(self, url, checkout_dir):
-        encoding = sys.getdefaultencoding()
-
-        self.log.info("Cloning %s ..." % url)
-
-        cmd  = ["git", "clone", url, checkout_dir]
-        proc = subprocess.run(cmd, timeout=300, check=True,
-                stderr=subprocess.PIPE, stdout=subprocess.PIPE)
-    #end function
-
-    def __update_git_checkout(self, checkout_dir, branch="master"):
-        encoding = sys.getdefaultencoding()
-
-        self.log.info("Running 'git fetch origin' in %s ..." % checkout_dir)
-        cmd = ["git", "-C", checkout_dir, "fetch", "origin"]
-        subprocess.run(cmd, check=True, stderr=subprocess.PIPE,
-                stdout=subprocess.PIPE)
-
-        self.log.info("Running 'git reset --hard origin/%s' in %s ..." %
-                (branch, checkout_dir))
-        cmd = ["git", "-C", checkout_dir, "reset", "--hard", "origin/" + branch]
-        subprocess.run(cmd, check=True, stderr=subprocess.PIPE,
-                stdout=subprocess.PIPE)
-    #end function
+    @property
+    def rules_dir(self):
+        return os.path.join(self._cache_dir, self._repo_name)
 
 #end class
 

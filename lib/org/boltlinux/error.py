@@ -53,3 +53,6 @@ class NetworkError(BoltError):
 class BoltValueError(BoltError):
     pass
 
+class RepositoryError(BoltError):
+    pass
+
