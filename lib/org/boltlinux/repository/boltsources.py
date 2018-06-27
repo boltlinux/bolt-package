@@ -34,7 +34,7 @@ from org.boltlinux.package.specfile import Specfile
 from org.boltlinux.repository.flaskapp import app, db
 from org.boltlinux.repository.models import SourcePackage
 from org.boltlinux.repository.packagerules import PackageRules
-from org.boltlinux.error import MalformedSpecfile
+from org.boltlinux.error import MalformedSpecfile, RepositoryError
 
 class BoltSources:
 
@@ -61,13 +61,16 @@ class BoltSources:
             repo_url   = repo_info["repo-url"]
             repo_rules = repo_info["rules"]
 
+            if "@" in repo_rules:
+                repo_rules, repo_branch = repo_rules.rsplit("@", 1)
+            else:
+                repo_branch = "master"
+
             if self._verbose:
                 self.log.info(
                     "Refreshing Bolt package rules for repository '%s'..."
                         % repo_name)
             #end if
-
-            repo_branch = repo_info.get("branch", "master")
 
             rules = PackageRules(repo_name, repo_rules, branch=repo_branch,
                     cache_dir=self._cache_dir)
@@ -75,7 +78,7 @@ class BoltSources:
             try:
                 rules.refresh()
             except RepositoryError as e:
-                self.log.error("Error updating packages rules for '%s': %s"
+                self.log.error("Error refreshing packages rules for '%s': %s"
                         % (repo_name, str(e)))
             #end try
         #end for
@@ -96,13 +99,16 @@ class BoltSources:
                 repo_url   = repo_info["repo-url"]
                 repo_rules = repo_info["rules"]
 
+                if "@" in repo_rules:
+                    repo_rules, repo_branch = repo_rules.rsplit("@", 1)
+                else:
+                    repo_branch = "master"
+
                 if self._verbose:
                     self.log.info(
                         "Updating DB entries for Bolt repository '%s'..."
                             % repo_name)
                 #end if
-
-                repo_branch = repo_info.get("branch", "master")
 
                 rules = PackageRules(repo_name, repo_rules, branch=repo_branch,
                         cache_dir=self._cache_dir)
