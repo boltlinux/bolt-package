@@ -110,7 +110,7 @@ class SourcesList:
                     #end while
                 #end with
             #end with
-        except urllib.error.URLError as e:
+        except (OSError, urllib.error.URLError) as e:
             raise RepositoryError("failed to download '%s': %s" %
                     (self.sources_url, str(e)))
     #end function
