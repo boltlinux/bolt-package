@@ -68,7 +68,7 @@ class BoltSources:
 
             if self._verbose:
                 self.log.info(
-                    "Refreshing Bolt package rules for repository '%s'..."
+                    "Refreshing Bolt package rules for repository '%s'."
                         % repo_name)
             #end if
 
@@ -106,7 +106,7 @@ class BoltSources:
 
                 if self._verbose:
                     self.log.info(
-                        "Updating DB entries for Bolt repository '%s'..."
+                        "Updating DB entries for Bolt repository '%s'."
                             % repo_name)
                 #end if
 

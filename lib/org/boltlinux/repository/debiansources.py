@@ -65,7 +65,7 @@ class DebianSources:
         for component in self._components:
             if self._verbose:
                 self.log.info(
-                    "Refreshing Debian sources list for component '%s'..."
+                    "Refreshing Debian sources list for component '%s'."
                         % component)
             #end if
 
@@ -94,7 +94,7 @@ class DebianSources:
             for component in self._components:
                 if self._verbose:
                     self.log.info(
-                        "Updating package DB entries for component '%s'..."
+                        "Updating package DB entries for component '%s'."
                             % component)
                 #end if
 

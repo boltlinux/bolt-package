@@ -109,7 +109,7 @@ if __name__ == "__main__":
     try:
         # CONFIGURE LOGGING
         logging.basicConfig(level=logging.INFO,
-                format="[%(levelname)-8s] %(message)s")
+                format="[%(levelname)-8s] %(asctime)s: %(message)s")
 
         # LOAD APP CONFIG
         config = AppConfig.instance().load_user_config()
