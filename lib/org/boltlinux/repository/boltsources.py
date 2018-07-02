@@ -57,29 +57,20 @@ class BoltSources:
 
     def refresh(self):
         for repo_info in self._repositories:
-            repo_name  = repo_info["name"]
-            repo_url   = repo_info["repo-url"]
-            repo_rules = repo_info["rules"]
-
-            if "@" in repo_rules:
-                repo_rules, repo_branch = repo_rules.rsplit("@", 1)
-            else:
-                repo_branch = "master"
-
             if self._verbose:
                 self.log.info(
                     "Refreshing Bolt package rules for repository '%s'."
-                        % repo_name)
+                        % repo_info["name"])
             #end if
 
-            rules = PackageRules(repo_name, repo_rules, branch=repo_branch,
+            rules = PackageRules(repo_info["name"], repo_info["rules"],
                     cache_dir=self._cache_dir)
 
             try:
                 rules.refresh()
             except RepositoryError as e:
                 self.log.error("Error refreshing packages rules for '%s': %s"
-                        % (repo_name, str(e)))
+                        % (repo_info["name"], str(e)))
             #end try
         #end for
     #end function
@@ -95,61 +86,62 @@ class BoltSources:
             #end for
 
             for repo_info in self._repositories:
-                repo_name  = repo_info["name"]
-                repo_url   = repo_info["repo-url"]
-                repo_rules = repo_info["rules"]
-
-                if "@" in repo_rules:
-                    repo_rules, repo_branch = repo_rules.rsplit("@", 1)
-                else:
-                    repo_branch = "master"
-
                 if self._verbose:
                     self.log.info(
                         "Updating DB entries for Bolt repository '%s'."
-                            % repo_name)
+                            % repo_info["name"])
                 #end if
 
-                rules = PackageRules(repo_name, repo_rules, branch=repo_branch,
+                rules = PackageRules(repo_info["name"], repo_info["rules"],
                         cache_dir=self._cache_dir)
 
-                for package_xml in rules:
-                    try:
-                        specfile = Specfile(package_xml)
-                    except MalformedSpecfile as e:
-                        self.log.error("Found malformed specfile '%s'."
-                                % package_xml)
-                        continue
-                    #end try
-
-                    source_name = specfile.source_name()
-                    version     = specfile.latest_version()
-                    packages    = specfile.binary_packages()
-
-                    xml = etree.tostring(specfile.xml_doc,
-                            pretty_print=True, encoding="unicode")
-
-                    ref_obj = source_pkg_index \
-                            .get(source_name, {})\
-                            .get(version)
-
-                    if ref_obj is None:
-                        source_pkg = SourcePackage(
-                            name    = source_name,
-                            version = version,
-                            xml     = xml
-                        )
-                        db.session.add(source_pkg)
-
-                        source_pkg_index \
-                                .setdefault(source_name, {})\
-                                .setdefault(version, source_pkg)
-                    #end if
-                #end for
+                self._parse_revisions(rules, source_pkg_index)
             #end for
 
             db.session.commit()
         #end with
+    #end function
+
+    # PRIVATE
+
+    def _parse_revisions(self, rules, source_pkg_index):
+        for revision in rules.revisions():
+            revision.checkout()
+
+            for package_xml in revision.rules():
+                try:
+                    specfile = Specfile(package_xml)
+                except MalformedSpecfile as e:
+                    self.log.error("Found malformed specfile '%s'."
+                            % package_xml)
+                    continue
+                #end try
+
+                source_name = specfile.source_name()
+                version     = specfile.latest_version()
+                packages    = specfile.binary_packages()
+
+                xml = etree.tostring(specfile.xml_doc,
+                        pretty_print=True, encoding="unicode")
+
+                ref_obj = source_pkg_index \
+                        .get(source_name, {})\
+                        .get(version)
+
+                if ref_obj is None:
+                    source_pkg = SourcePackage(
+                        name    = source_name,
+                        version = version,
+                        xml     = xml
+                    )
+                    db.session.add(source_pkg)
+
+                    source_pkg_index \
+                            .setdefault(source_name, {})\
+                            .setdefault(version, source_pkg)
+                #end if
+            #end for
+        #end for
     #end function
 
 #end class
