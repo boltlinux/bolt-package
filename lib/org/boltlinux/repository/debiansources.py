@@ -105,33 +105,39 @@ class DebianSources:
                     cache_dir = self._cache_dir
                 )
 
-                for pkg_info in sources_list:
-                    pkg_name    = pkg_info["Package"]
-                    pkg_version = pkg_info["Version"]
-
-                    if not pkg_name in stored_pkg_index:
-                        source_pkg = UpstreamSource(
-                            name      = pkg_name,
-                            version   = pkg_version,
-                            component = component
-                        )
-                        db.session.add(source_pkg)
-                        stored_pkg_index[pkg_name] = source_pkg
-                    else:
-                        source_pkg = stored_pkg_index[pkg_name]
-
-                        old_version = source_pkg.version
-                        new_version = pkg_info["Version"]
-
-                        if BaseXpkg.compare_versions(
-                                new_version, old_version) > 0:
-                            source_pkg.version = new_version
-                    #end if
-                #end for
-
-                db.session.commit()
+                self._parse_revisions(component, sources_list, stored_pkg_index)
             #end for
+
+            db.session.commit()
         #end with
+    #end function
+
+    # PRIVATE
+
+    def _parse_revisions(self, component, sources_list, stored_pkg_index):
+        for pkg_info in sources_list:
+            pkg_name    = pkg_info["Package"]
+            pkg_version = pkg_info["Version"]
+
+            if not pkg_name in stored_pkg_index:
+                source_pkg = UpstreamSource(
+                    name      = pkg_name,
+                    version   = pkg_version,
+                    component = component
+                )
+                db.session.add(source_pkg)
+                stored_pkg_index[pkg_name] = source_pkg
+            else:
+                source_pkg = stored_pkg_index[pkg_name]
+
+                old_version = source_pkg.version
+                new_version = pkg_info["Version"]
+
+                if BaseXpkg.compare_versions(
+                        new_version, old_version) > 0:
+                    source_pkg.version = new_version
+            #end if
+        #end for
     #end function
 
 #end class
