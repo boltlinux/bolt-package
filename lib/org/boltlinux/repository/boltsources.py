@@ -128,7 +128,11 @@ class BoltSources:
                         .get(source_name, {})\
                         .get(version)
 
-                if ref_obj is None:
+                if ref_obj is not None:
+                    self.log.warning("Package '%s' modified without version "
+                            "bump at revision: %s" % (source_name, revision._commit_id))
+                    ref_obj.xml = xml
+                else:
                     source_pkg = SourcePackage(
                         name    = source_name,
                         version = version,
