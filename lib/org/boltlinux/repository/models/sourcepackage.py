@@ -28,11 +28,14 @@ from org.boltlinux.repository.flaskapp import db
 class SourcePackage(db.Model):
     __tablename__ = "source_package"
 
-    id      = db.Column(db.Integer, primary_key=True)
+    id      = db.Column(db.Integer, primary_key=True, index=True)
     upstream_source_id = db.Column(db.Integer,
-            db.ForeignKey("source_package.id"), nullable=True)
-    name    = db.Column(db.String(50), nullable=False)
+            db.ForeignKey("source_package.id"), nullable=True, index=True)
+    name    = db.Column(db.String(50), nullable=False, index=True)
     version = db.Column(db.String(50), nullable=False)
     xml     = db.Column(db.Text)
+
+    __table_args__ = (db.Index("ix_source_package_name_version",
+        "name", "version"), )
 #end class
 

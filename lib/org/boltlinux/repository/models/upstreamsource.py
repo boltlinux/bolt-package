@@ -28,9 +28,12 @@ from org.boltlinux.repository.flaskapp import db
 class UpstreamSource(db.Model):
     __tablename__ = "upstream_source"
 
-    id        = db.Column(db.Integer, primary_key=True)
-    name      = db.Column(db.String(50), nullable=False)
+    id        = db.Column(db.Integer, primary_key=True, index=True)
+    name      = db.Column(db.String(50), nullable=False, index=True)
     version   = db.Column(db.String(50), nullable=False)
     component = db.Column(db.String(10), nullable=False)
+
+    __table_args__ = (db.Index("ix_upstream_source_name_version",
+        "name", "version"), )
 #end class
 
