@@ -112,8 +112,9 @@ class BoltSources:
                 try:
                     specfile = Specfile(package_xml)
                 except MalformedSpecfile as e:
-                    self.log.error("Found malformed specfile '%s'."
-                            % package_xml)
+                    short_path = package_xml[len(rules._cache_dir):]\
+                            .lstrip("/")
+                    self.log.warning("Malformed specfile '%s'." % short_path)
                     continue
                 #end try
 
@@ -129,8 +130,10 @@ class BoltSources:
                         .get(version)
 
                 if ref_obj is not None:
-                    self.log.warning("Package '%s' modified without version "
-                            "bump at revision: %s" % (source_name, revision._commit_id))
+                    self.log.warning(
+                        "Package '%s' at '%.8s' in '%s' modified without version bump." %
+                            (source_name, revision._commit_id, rules._repo_name)
+                    )
                     ref_obj.xml = xml
                 else:
                     source_pkg = SourcePackage(
