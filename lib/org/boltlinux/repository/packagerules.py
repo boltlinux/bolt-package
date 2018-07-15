@@ -77,8 +77,7 @@ class PackageRules:
 
         git_fetch_origin = git_base_cmd + ["fetch",    "origin"    ]
         git_checkout     = git_base_cmd + ["checkout", self._branch]
-        git_reset_hard   = git_base_cmd + ["reset", "--hard", "origin/" +
-                self._branch]
+        git_reset_hard   = git_base_cmd + ["reset", "--hard", "origin/" + self._branch]
         git_clean_xfd    = git_base_cmd + ["clean",    "-xfd"      ]
 
         git_commands_to_run = [
@@ -107,7 +106,13 @@ class PackageRules:
         if start_rev is not None:
             git_rev_list += [start_rev + ".." + self._branch]
         else:
-            git_rev_list += [self._branch]
+            if self._branch == "master":
+                git_rev_list += [self._branch]
+            else:
+                # history since we branched off of master
+                git_rev_list += ["master" + ".." + self._branch]
+            #end if
+        #end if
 
         try:
             git_rev_list_result = subprocess.run(git_rev_list, timeout=300,
@@ -123,6 +128,9 @@ class PackageRules:
                 .strip()\
                 .splitlines()
 
+        if len(revision_list) == 0:
+            revision_list.insert(0, self._get_head_hash(verbose=verbose))
+
         prev_revision = None
 
         for commit_id in revision_list:
@@ -137,6 +145,29 @@ class PackageRules:
     @property
     def rules_dir(self):
         return os.path.join(self._cache_dir, self._repo_name)
+
+    # PRIVATE
+
+    def _get_head_hash(self, verbose=False):
+        git_rev_parse = ["git", "-C", self.rules_dir, "rev-parse", "HEAD"]
+
+        stderr = sys.stderr if verbose else subprocess.PIPE
+
+        try:
+            git_rev_parse_result = subprocess.run(git_rev_parse, timeout=300,
+                    check=True, stdout=subprocess.PIPE, stderr=stderr)
+        except subprocess.CalledProcessError as e:
+            raise RepositoryError("error retrieving hash for HEAD: %s" % str(e))
+
+        preferred_encoding = locale.getpreferredencoding()
+
+        revision = git_rev_parse_result\
+                .stdout\
+                .decode(preferred_encoding)\
+                .strip()
+
+        return revision
+    #end function
 
 #end class
 
@@ -209,5 +240,9 @@ class Revision:
             #end for
         #end if
     #end function
+
+    @property
+    def commit_id(self):
+        return self._commit_id
 
 #end class
