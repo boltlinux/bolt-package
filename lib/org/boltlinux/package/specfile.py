@@ -124,12 +124,38 @@ class Specfile:
         return True
     #end function
 
+    @property
     def source_name(self):
         return self.xml_doc.xpath("/control/source/@name")[0]
 
+    @property
     def latest_version(self):
-        return self.xml_doc.xpath("/control/changelog/release[1]/@version")[0]
+        epoch   = ""
+        version = ""
+        rev     = ""
 
+        try:
+            epoch = self.xml_doc\
+                .xpath("/control/changelog/release[1]/@epoch")[0]
+        except IndexError: pass
+
+        version = self.xml_doc\
+            .xpath("/control/changelog/release[1]/@version")[0]
+
+        try:
+            rev = self.xml_doc\
+                .xpath("/control/changelog/release[1]/@revision")[0]
+        except IndexError: pass
+
+        if epoch:
+            version = epoch + ":" + version
+        if rev:
+            version = version + "-" + rev
+
+        return version
+    #end function
+
+    @property
     def binary_packages(self):
         pkg_names = []
 
@@ -137,6 +163,15 @@ class Specfile:
             pkg_names.append(pkg_node.attrib["name"])
 
         return pkg_names
+    #end function
+
+    @property
+    def upstream_version(self):
+        try:
+            return self.xml_doc.xpath(
+                "/control/changelog/release[1]/@upstream-version")[0]
+        except IndexError:
+            return None
     #end function
 
 #end class
