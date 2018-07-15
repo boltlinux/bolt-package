@@ -194,12 +194,6 @@ class BaseXpkg:
         return False
     #end function
 
-    # PRIVATE
-
-    def __which_package_provides(self, cmd, abspath):
-        result  = None
-    #end function
-
 #end class
 
 class Dpkg(BaseXpkg):
