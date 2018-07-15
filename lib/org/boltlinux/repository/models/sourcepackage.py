@@ -39,9 +39,11 @@ class SourcePackage(db.Model):
     name = db.Column(db.String(50), nullable=False, index=True)
     version = db.Column(db.String(50), nullable=False)
     upstream_version = db.Column(db.String(50), nullable=True)
+    git_hash = db.Column(db.String(8), nullable=True)
+    xml = db.Column(db.Text)
+    sortkey = db.Column(db.Integer, nullable=False)
     status = db.Column(db.Integer, nullable=False, default=STATUS_UNKNOWN,
             index=True)
-    xml = db.Column(db.Text)
 
     __table_args__ = (db.Index("ix_source_package_name_version",
         "name", "version"), )
