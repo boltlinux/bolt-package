@@ -33,7 +33,8 @@ from lxml import etree
 from org.boltlinux.package.appconfig import AppConfig
 from org.boltlinux.package.specfile import Specfile
 from org.boltlinux.repository.flaskapp import app, db
-from org.boltlinux.repository.models import SourcePackage, UpstreamSource
+from org.boltlinux.repository.models import SourcePackage, UpstreamSource, \
+        Setting
 from org.boltlinux.repository.packagerules import PackageRules
 from org.boltlinux.error import MalformedSpecfile, RepositoryError
 from org.boltlinux.package.xpkg import BaseXpkg
@@ -89,11 +90,28 @@ class BoltSources:
                             % repo_info["name"])
                 #end if
 
-                rules = PackageRules(repo_info["name"], repo_info["rules"],
+                repo_name = repo_info["name"]
+
+                start_rev = Setting.query\
+                        .filter_by(name = "last_processed_revision@" + repo_name)\
+                        .one_or_none()
+
+                rules = PackageRules(repo_name, repo_info["rules"],
                         cache_dir=self._cache_dir)
 
-                self._parse_revisions(rules, source_pkg_index,
-                        upstream_src_index)
+                self._parse_revisions(rules, source_pkg_index, upstream_src_index,
+                        start_revision=start_rev and start_rev.value)
+
+                if start_rev is not None:
+                    start_rev.value = rules.get_head_hash()
+                else:
+                    start_rev = Setting(
+                        name  = "last_processed_revision@" + repo_name,
+                        value = rules.get_head_hash()
+                    )
+
+                    db.session.add(start_rev)
+                #end function
             #end for
 
             # calculate the sortkeys for packages of same name
@@ -154,8 +172,9 @@ class BoltSources:
         return upstream_src_index
     #end function
 
-    def _parse_revisions(self, rules, source_pkg_index, upstream_src_index):
-        for revision in rules.revisions():
+    def _parse_revisions(self, rules, source_pkg_index, upstream_src_index,
+            start_revision=None):
+        for revision in rules.revisions(start_rev=start_revision):
             revision.checkout()
 
             commit_id = revision.commit_id[:8]

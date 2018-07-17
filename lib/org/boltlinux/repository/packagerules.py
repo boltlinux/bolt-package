@@ -128,10 +128,10 @@ class PackageRules:
                 .strip()\
                 .splitlines()
 
-        if len(revision_list) == 0:
-            revision_list.insert(0, self._get_head_hash(verbose=verbose))
+        prev_revision = start_rev
 
-        prev_revision = None
+        if prev_revision is None and len(revision_list) == 0:
+            revision_list.insert(0, self.get_head_hash(verbose=verbose))
 
         for commit_id in revision_list:
             if not commit_id.strip():
@@ -146,10 +146,8 @@ class PackageRules:
     def rules_dir(self):
         return os.path.join(self._cache_dir, self._repo_name)
 
-    # PRIVATE
-
-    def _get_head_hash(self, verbose=False):
-        git_rev_parse = ["git", "-C", self.rules_dir, "rev-parse", "HEAD"]
+    def get_head_hash(self, verbose=False):
+        git_rev_parse = ["git", "-C", self.rules_dir, "rev-parse", self._branch]
 
         stderr = sys.stderr if verbose else subprocess.PIPE
 
@@ -246,3 +244,4 @@ class Revision:
         return self._commit_id
 
 #end class
+
