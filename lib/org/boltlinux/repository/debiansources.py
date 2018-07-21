@@ -80,7 +80,7 @@ class DebianSources:
                 if not sources_list.is_up2date():
                     sources_list.refresh()
             except RepositoryError as e:
-                msg = "Failed to refresh sources list for component '%s': %s"
+                msg = "Failed to refresh Debian sources list for component '%s': %s"
                 self.log.error(msg % (component, str(e)))
             #end try
         #end for
@@ -94,7 +94,7 @@ class DebianSources:
             for component in self._components:
                 if self._verbose:
                     self.log.info(
-                        "Updating package DB entries for component '%s'."
+                        "Updating DB entries for Debian component '%s'."
                             % component)
                 #end if
 
