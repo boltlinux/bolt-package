@@ -28,7 +28,7 @@ import os
 import sys
 import getopt
 
-# make bolt-pack relocatable
+# make relocatable
 INSTALL_DIR = os.path.normpath(os.path.dirname(
     os.path.realpath(sys.argv[0])) + os.sep + ".." )
 sys.path.insert(1, INSTALL_DIR + os.sep + 'lib')
@@ -44,7 +44,7 @@ BOLT_ERR_RUNTIME    = 2
 
 def print_usage():
     print(
-        "Bolt OS Package Generator, version %s                                          \n"
+        "Bolt OS package generator, tools collection %s                                 \n"
         "Copyright (C) 2016-2018 Tobias Koch <tobias.koch@gmail.com>                    \n"
         "                                                                               \n"
         "USAGE:                                                                         \n"
