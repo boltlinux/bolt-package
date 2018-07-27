@@ -30,88 +30,7 @@ import hashlib
 from tempfile import TemporaryDirectory
 from org.boltlinux.package.libarchive import ArchiveFileReader
 from org.boltlinux.error import BoltSyntaxError
-
-class PackageMetaData:
-
-    def __init__(self, string):
-        self._fields = self.__parse_meta_data(string)
-
-    def __getitem__(self, key):
-        return self._fields[key]
-
-    def __setitem__(self, key, value):
-        self._fields[key] = value
-
-    def as_string(self):
-        rval = ""
-
-        keys = [
-            "Package",
-            "Source",
-            "Version",
-            "Maintainer",
-            "Architecture",
-            "Depends",
-            "Pre-Depends",
-            "Recommends",
-            "Suggests",
-            "Breaks",
-            "Conflicts",
-            "Provides",
-            "Replaces",
-            "Enhances",
-            "Description",
-            "Section",
-            "Filename",
-            "Size",
-            "SHA256"
-        ]
-
-        for k in keys:
-            if k in self._fields:
-                rval += "{key}: {value}\n"\
-                            .format(key=k, value=self._fields[k])
-            #end if
-        #end for
-
-        return rval
-    #end function
-
-    # PRIVATE
-
-    def __parse_meta_data(self, string):
-        fields = {}
-
-        key = None
-        val = None
-
-        for line in string.strip().splitlines():
-            if re.match(r"^\s+.*?$", line):
-                if key is None:
-                    raise BoltSyntaxError("invalid control file syntax.")
-
-                val.append(line.strip())
-            else:
-                if not ":" in line:
-                    raise BoltSyntaxError("invalid control file syntax.")
-
-                if key is not None:
-                    fields[key] = "\n  ".join(val)
-
-                k, v = [item.strip() for item in line.split(":", 1)]
-
-                key = k
-                val = [v,]
-            #end if
-        #end for
-
-        if key is not None:
-            fields[key] = "\n  ".join(val)
-
-        return fields
-    #end function
-
-#end class
+from org.boltlinux.package.metadata import PackageMetaData
 
 class RepoIndexer:
 
@@ -129,8 +48,8 @@ class RepoIndexer:
 
                 try:
                     control_data = self.extract_control_data(abs_path)
-                except BoltSyntaxError:
-                    pass
+                except BoltSyntaxError as e:
+                    continue
 
                 print(control_data.as_string())
             #end for
@@ -189,7 +108,7 @@ class RepoIndexer:
                     .decode("utf-8")
 
                 meta_data = \
-                    re.sub(r"^\s+.*$", "", meta_data, flags=re.MULTILINE)
+                    re.sub(r"^\s+.*?$\n?", "", meta_data, flags=re.MULTILINE)
 
                 return meta_data.strip()
             #end for

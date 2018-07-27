@@ -35,6 +35,7 @@ from org.boltlinux.package.libarchive import ArchiveEntry, ArchiveFileWriter
 from org.boltlinux.package.filestats import FileStats
 from org.boltlinux.package.binarypackage import BinaryPackage
 from org.boltlinux.package.util import switch
+from org.boltlinux.package.metadata import PackageMetaData
 
 class DebianPackage(BinaryPackage):
 
@@ -111,10 +112,13 @@ class DebianPackage(BinaryPackage):
 
     def assemble_parts(self, meta_data, pkg_contents, pkg_filename):
         with TemporaryDirectory(prefix="bolt-") as tmpdir:
+            installed_size = self.write_data_part(pkg_contents,
+                    os.path.join(tmpdir, "data.tar.gz"))
+
+            meta_data["Installed-Size"] = "{}".format(installed_size)
+
             self.write_control_part(meta_data, pkg_contents,
                     os.path.join(tmpdir, "control.tar.gz"))
-            self.write_data_part(pkg_contents,
-                    os.path.join(tmpdir, "data.tar.gz"))
 
             with open(os.path.join(tmpdir, "debian-binary"), "w+",
                     encoding="utf-8") as fp:
@@ -157,7 +161,7 @@ class DebianPackage(BinaryPackage):
         with ArchiveFileWriter(ctrl_abspath, libarchive.FORMAT_TAR_USTAR,
                 libarchive.COMPRESSION_GZIP) as archive:
 
-            control_contents = [("control", meta_data, 0o644)]
+            control_contents = [("control", meta_data.as_string(), 0o644)]
 
             for script_name, script_content in self.maintainer_scripts.items():
                 control_contents.append([script_name, script_content, 0o754])
@@ -190,6 +194,8 @@ class DebianPackage(BinaryPackage):
     #end function
 
     def write_data_part(self, pkg_contents, data_abspath):
+        installed_size = 0
+
         with ArchiveFileWriter(data_abspath, libarchive.FORMAT_TAR_USTAR,
                 libarchive.COMPRESSION_GZIP) as archive:
 
@@ -232,11 +238,16 @@ class DebianPackage(BinaryPackage):
                                 if not buf:
                                     break
                                 archive.write_data(buf)
+
+                                installed_size += len(buf)
                             #end while
                         #end with
                     #end if
                 #end for
             #end with
+        #end with
+
+        return installed_size
     #end function
 
     def meta_data(self, debug_pkg=False):
@@ -247,24 +258,21 @@ class DebianPackage(BinaryPackage):
             "replaces":  "Replaces: "
         }
 
-        if debug_pkg:
-            meta = "Package: %s-dbg\n" % self.name
-        else:
-            meta = "Package: %s\n" % self.name
-        #end if
+        meta = PackageMetaData()
 
-        meta += "Version: %s\n"      % self.version
-        meta += "Source: %s\n"       % self.source
-        meta += "Architecture: %s\n" % self.architecture
-        meta += "Maintainer: %s\n"   % self.maintainer
+        meta["Package"]      = self.name + "-dbg" if debug_pkg else self.name
+        meta["Version"]      = self.version
+        meta["Source"]       = self.source
+        meta["Architecture"] = self.architecture
+        meta["Maintainer"]   = self.maintainer
 
         if debug_pkg:
-            meta += "Section: debug\n"
-            meta += "Depends: %s (= %s)\n" % (self.name, self.version)
-            meta += "Description: debug symbols for ELF binaries in "\
-                    "package '%s'\n" % self.name
+            meta["Section"]     = "debug"
+            meta["Depends"]     = "%s (= %s)" % (self.name, self.version)
+            meta["Description"] = "debug symbols for ELF binaries in "\
+                    "package '%s'" % self.name
         else:
-            meta += "Section: %s\n"  % self.section
+            meta["Section"] = self.section
 
             for dep_type in ["requires", "provides", "conflicts", "replaces"]:
                 relations = self.relations.get(dep_type)
@@ -272,14 +280,14 @@ class DebianPackage(BinaryPackage):
                 if not (relations and relations.list):
                     continue
 
-                meta += dep_type_2_str[dep_type] + str(relations) + "\n"
+                meta[dep_type_2_str[dep_type]] = str(relations)
             #end for
 
-            meta += "Description: " + self.description.summary() + "\n"
+            meta["Description"] = self.description.summary()
 
             full_description = self.description.full_description()
             if full_description:
-                meta += full_description + "\n"
+                meta["Description"] += "\n" + full_description
         #end if
 
         return meta
