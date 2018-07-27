@@ -228,8 +228,8 @@ class SourcePackage(BasePackage):
                     str(action))
         #end if
 
-        env    = self.__update_env(env)
-        script = self.__load_helpers() + "\n" + self.rules[action]
+        env    = self._update_env(env)
+        script = self._load_helpers() + "\n" + self.rules[action]
         cmd    = ["/bin/sh", "-e", "-x", "-s"]
 
         sys.stdout.flush()
@@ -246,7 +246,7 @@ class SourcePackage(BasePackage):
 
     # PRIVATE
 
-    def __load_helpers(self):
+    def _load_helpers(self):
         result = []
 
         for script in ["arch.sh", "python.sh"]:
@@ -263,7 +263,7 @@ class SourcePackage(BasePackage):
         return "\n".join(result)
     #end function
 
-    def __update_env(self, env):
+    def _update_env(self, env):
         env.update(Platform.build_flags())
 
         num_parallel_jobs = str(int(Platform.num_cpus() * 1.5))

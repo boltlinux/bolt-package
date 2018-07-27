@@ -45,11 +45,11 @@ class Change:
 class ChangeSet:
 
     def __init__(self, content, contributor=None):
-        self.__parse_content(content)
+        self._parse_content(content)
         self.contributor = contributor
     #end function
 
-    def __parse_content(self, content):
+    def _parse_content(self, content):
         changes = []
         lines   = []
 
@@ -97,7 +97,7 @@ class Release:
         if not self.revision:
             self.revision = "0"
 
-        self.__parse_content(content)
+        self._parse_content(content)
 
         self.upstream_version = version
         self.maintainer = maintainer
@@ -105,7 +105,7 @@ class Release:
         self.date = date
     #end function
 
-    def __parse_content(self, content):
+    def _parse_content(self, content):
         contributor = None
         changesets  = []
         tmp_content = ""

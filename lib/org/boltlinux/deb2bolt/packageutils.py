@@ -341,7 +341,7 @@ class PackageUtilsMixin:
                 raise NetworkError("error retrieving '%s': %s" % \
                         (pool_url, str(e)))
 
-            contents = self.__binary_deb_list_contents(deb_name, tmpdir)
+            contents = self._binary_deb_list_contents(deb_name, tmpdir)
         #end with
 
         return contents
@@ -350,11 +350,11 @@ class PackageUtilsMixin:
     def binary_deb_list_contents(self, filename):
         contents = []
         with TemporaryDirectory() as tmpdir:
-            contents = self.__binary_deb_list_contents(filename, tmpdir)
+            contents = self._binary_deb_list_contents(filename, tmpdir)
         return contents
     #end function
 
-    def __binary_deb_list_contents(self, filename, tmpdir):
+    def _binary_deb_list_contents(self, filename, tmpdir):
         # extract data file from deb
         with ArchiveFileReader(filename) as archive:
             data_name = None

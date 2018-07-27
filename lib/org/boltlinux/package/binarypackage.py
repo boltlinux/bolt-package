@@ -464,7 +464,7 @@ class BinaryPackage(BasePackage):
                     fallback = "/usr"
                 #end if
 
-                self.__find_and_register_dependency(link_target, shlib_cache,
+                self._find_and_register_dependency(link_target, shlib_cache,
                         bin_pkgs, hard_relation=True, fallback=fallback)
                 continue
 
@@ -486,7 +486,7 @@ class BinaryPackage(BasePackage):
                     if not m:
                         continue
                     lib_name = m.group(1)
-                    self.__find_and_register_dependency(lib_name, shlib_cache,
+                    self._find_and_register_dependency(lib_name, shlib_cache,
                             bin_pkgs, word_size=word_size)
                 #end for
             #end with
@@ -495,7 +495,7 @@ class BinaryPackage(BasePackage):
 
     # PRIVATE
 
-    def __find_and_register_dependency(self, lib_name, shlib_cache,
+    def _find_and_register_dependency(self, lib_name, shlib_cache,
             bin_pkgs, word_size=None, hard_relation=False, fallback=None):
         found  = False
         relation = "=" if hard_relation else ">="

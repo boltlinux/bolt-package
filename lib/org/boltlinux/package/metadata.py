@@ -29,7 +29,7 @@ from org.boltlinux.error import BoltSyntaxError
 class PackageMetaData:
 
     def __init__(self, string=""):
-        self._fields = self.__parse_meta_data(string)
+        self._fields = self._parse_meta_data(string)
 
     def __getitem__(self, key):
         return self._fields[key]
@@ -75,7 +75,7 @@ class PackageMetaData:
 
     # PRIVATE
 
-    def __parse_meta_data(self, string):
+    def _parse_meta_data(self, string):
         fields = {}
 
         key = None

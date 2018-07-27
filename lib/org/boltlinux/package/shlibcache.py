@@ -123,12 +123,12 @@ class ShlibCache:
                 return self.map[lib_name]
             else:
                 if lib_path:
-                    for shared_obj in self.__find_object(lib_name, fallback):
+                    for shared_obj in self._find_object(lib_name, fallback):
                         if shared_obj.lib_path == lib_path:
                             return [shared_obj]
                 else:
                     return self.map.get(lib_name) or \
-                            self.__find_object(lib_name)
+                            self._find_object(lib_name)
         except KeyError:
             pass
         
@@ -182,7 +182,7 @@ class ShlibCache:
 
     # PRIVATE
 
-    def __find_object(self, lib_name, fallback=None):
+    def _find_object(self, lib_name, fallback=None):
         lib_path = [p + os.sep + "lib" for p in self.prefixes]
 
         if fallback and not fallback in self.prefixes:

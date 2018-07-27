@@ -199,7 +199,7 @@ class BaseXpkg:
 class Dpkg(BaseXpkg):
     STATUS_FILE = '/var/lib/dpkg/status'
 
-    def __init(self):
+    def __init__(self):
         super(BaseXpkg, self).__init__()
 
     def which_package_provides(self, filename):
@@ -224,7 +224,7 @@ class Dpkg(BaseXpkg):
 class Opkg(BaseXpkg):
     STATUS_FILE = '/var/lib/opkg/status'
 
-    def __init(self):
+    def __init__(self):
         super(BaseXpkg, self).__init__()
 
     def which_package_provides(self, filename):

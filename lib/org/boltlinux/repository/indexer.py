@@ -80,7 +80,7 @@ class RepoIndexer:
                             "", filename)
 
                     meta_data = PackageMetaData(
-                        self.__extract_control_data(data_file))
+                        self._extract_control_data(data_file))
 
                     meta_data["Filename"] = pool_path
 
@@ -89,7 +89,7 @@ class RepoIndexer:
             #end with
         #end with
 
-        meta_data["SHA256"] = self.__compute_sha256_sum(filename)
+        meta_data["SHA256"] = self._compute_sha256_sum(filename)
         meta_data[ "Size" ] = os.path.getsize(filename)
 
         return meta_data
@@ -97,7 +97,7 @@ class RepoIndexer:
 
     # PRIVATE
 
-    def __extract_control_data(self, filename):
+    def _extract_control_data(self, filename):
         with ArchiveFileReader(filename) as archive:
             for entry in archive:
                 if not entry.pathname == "control":
@@ -115,7 +115,7 @@ class RepoIndexer:
         #end with
     #end function
 
-    def __compute_sha256_sum(self, filename):
+    def _compute_sha256_sum(self, filename):
         sha256 = hashlib.sha256()
 
         with open(filename, "rb") as f:

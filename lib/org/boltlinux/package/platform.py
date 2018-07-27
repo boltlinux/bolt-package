@@ -38,7 +38,7 @@ class Platform:
 
         if "linux" in Platform.kernel_name().lower() and \
                 os.path.exists("/etc/debian_version"):
-            return Platform.__dpkg_build_flags()
+            return Platform._dpkg_build_flags()
         #end if
 
         if Platform.find_executable("gcc"):
@@ -113,7 +113,7 @@ class Platform:
 
     @staticmethod
     def target_machine():
-        result = Platform.__target_attribute("TARGET_MACHINE")
+        result = Platform._target_attribute("TARGET_MACHINE")
         if not result:
             return Platform.config_guess().split("-")[0]
         return result
@@ -121,7 +121,7 @@ class Platform:
 
     @staticmethod
     def target_type():
-        result = Platform.__target_attribute("TARGET_TYPE")
+        result = Platform._target_attribute("TARGET_TYPE")
         if not result:
             return Platform.config_guess()
         return result
@@ -129,7 +129,7 @@ class Platform:
 
     @staticmethod
     def tools_type():
-        result = Platform.__target_attribute("TOOLS_TYPE")
+        result = Platform._target_attribute("TOOLS_TYPE")
         if not result:
             return "x86_64-tools-linux-musl"
         return result
@@ -152,7 +152,7 @@ class Platform:
     # HIDDEN
 
     @staticmethod
-    def __dpkg_build_flags():
+    def _dpkg_build_flags():
         build_flags = {}
         dpkg_buildflags = Platform.find_executable("dpkg-buildflags")
 
@@ -181,7 +181,7 @@ class Platform:
     #end function
 
     @staticmethod
-    def __target_attribute(attr_name):
+    def _target_attribute(attr_name):
         if os.path.exists("/etc/target"):
             with open("/etc/target", "r", encoding="utf-8") as fp:
                 for line in fp:
