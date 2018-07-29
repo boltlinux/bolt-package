@@ -33,6 +33,7 @@ INSTALL_DIR = os.path.normpath(os.path.dirname(
     os.path.realpath(sys.argv[0])) + os.sep + ".." )
 sys.path.insert(1, INSTALL_DIR + os.sep + 'lib')
 
+from org.boltlinux.package.util import switch
 from org.boltlinux.package.appconfig import AppConfig
 from org.boltlinux.package.version import VERSION as BOLT_VERSION
 from org.boltlinux.repository.indexer import RepoIndexer
@@ -51,7 +52,9 @@ def print_usage():
         "                                                                               \n"
         "OPTIONS:                                                                       \n"
         "                                                                               \n"
-        "  -h --help         Print this help message.                                   \n"
+        "  -h --help             Print this help message.                               \n"
+        "                                                                               \n"
+        "  --force-full          Force a full update ignoring existing Packages files.  \n"
         "                                                                               \n"
         % BOLT_VERSION
     )
@@ -60,10 +63,11 @@ def print_usage():
 def parse_cmd_line():
     # define default configuration
     config = {
+       "force_full": False
     }
 
     try:
-        opts, args = getopt.getopt(sys.argv[1:], "h", ["help"])
+        opts, args = getopt.getopt(sys.argv[1:], "h", ["help", "force-full"])
     except getopt.GetoptError as e:
         raise InvocationError("Error parsing command line: %s" % str(e))
 
@@ -72,6 +76,9 @@ def parse_cmd_line():
             if case("--help", "-h"):
                 print_usage()
                 sys.exit(0)
+                break
+            if case("--force-full"):
+                config["force_full"] = True
                 break
         #end switch
     #end for
@@ -90,6 +97,6 @@ if __name__ == "__main__":
 
         repo_dir = args[0]
 
-        indexer = RepoIndexer(repo_dir)
-        indexer.scan()
+        indexer = RepoIndexer(repo_dir, force_full=options["force_full"])
+        indexer.update_package_index()
 #end __main__

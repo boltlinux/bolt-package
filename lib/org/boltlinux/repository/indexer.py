@@ -25,23 +25,140 @@
 
 import os
 import re
+import stat
 import hashlib
+import functools
 
-from tempfile import TemporaryDirectory
-from org.boltlinux.package.libarchive import ArchiveFileReader
+import org.boltlinux.package.libarchive as libarchive
+
+from tempfile import TemporaryDirectory, NamedTemporaryFile
+from org.boltlinux.package.libarchive import ArchiveFileReader, \
+        ArchiveFileWriter, ArchiveEntry
 from org.boltlinux.error import BoltSyntaxError
+from org.boltlinux.package.xpkg import BaseXpkg
 from org.boltlinux.package.metadata import PackageMetaData
 
 class RepoIndexer:
 
-    def __init__(self, repo_dir):
-        self._repo_dir = repo_dir
+    def __init__(self, repo_dir, force_full=False):
+        self._force_full = force_full
+        self._repo_dir   = repo_dir
+    #end function
 
-    def scan(self):
+    def update_package_index(self):
+        index = {} if self._force_full else self.load_package_index()
+
+        for meta_data in self.scan(index=index):
+            name    = meta_data["Package"]
+            version = meta_data["Version"]
+
+            index\
+                .setdefault(name, {})\
+                .setdefault(version, meta_data)
+        #end for
+
+        self.prune_package_index(index)
+        self.store_package_index(index)
+    #end function
+
+    def load_package_index(self):
+        packages_file = os.path.join(self._repo_dir, "Packages.gz")
+
+        if not os.path.exists(packages_file):
+            return {}
+
+        buf = ""
+
+        with ArchiveFileReader(packages_file, raw=True) as archive:
+            for entry in archive:
+                buf = archive\
+                    .read_data()\
+                    .decode("utf-8")
+        #end with
+
+        index = {}
+
+        for entry in re.split(r"\n\n+", buf, flags=re.MULTILINE):
+            meta_data = PackageMetaData(entry)
+
+            try:
+                name    = meta_data["Package"]
+                version = meta_data["Version"]
+            except KeyError:
+                continue
+
+            index.setdefault(name, {})[version] = meta_data
+        #end for
+
+        return index
+    #end function
+
+    def prune_package_index(self, index):
+        for name in list(index.keys()):
+            for version, meta_data in list(index[name].items()):
+                abspath  = os.path.join(self._repo_dir, meta_data["Filename"])
+
+                if not os.path.exists(abspath):
+                    del index[name][version]
+            #end for
+        #end for
+    #end function
+
+    def store_package_index(self, index):
+        packages_file = os.path.join(self._repo_dir, "Packages.gz")
+
+        meta_data_list = []
+
+        for name in sorted(index.keys()):
+            for version in sorted(index[name].keys(), key=functools.cmp_to_key(
+                    BaseXpkg.compare_versions)):
+                meta_data_list.append(index[name][version])
+            #end for
+        #end for
+
+        if not meta_data_list:
+            return
+
+        output = "\n".join([entry.as_string() for entry in meta_data_list])
+        output = output.encode("utf-8")
+
+        with NamedTemporaryFile(dir=self._repo_dir, delete=False) as tempfile:
+            pass
+
+        try:
+            with ArchiveFileWriter(tempfile.name, libarchive.FORMAT_RAW,
+                    libarchive.COMPRESSION_GZIP) as archive:
+                with ArchiveEntry() as archive_entry:
+                    archive_entry.filetype = stat.S_IFREG
+                    archive.write_entry(archive_entry)
+                    archive.write_data(output)
+                #end with
+            #end with
+
+            os.rename(tempfile.name, packages_file)
+        finally:
+            if os.path.exists(tempfile.name):
+                os.unlink(tempfile.name)
+        #end try
+    #end function
+
+    def scan(self, index=None):
+        if index is None:
+            index = {}
+
         for path, dirs, files in os.walk(self._repo_dir, followlinks=True):
-
             for filename in files:
                 if not filename.endswith(".bolt"):
+                    continue
+
+                try:
+                    name, version, arch = filename[:-5].rsplit("_")
+                except ValueError:
+                    continue
+
+                entry = index.get(name, {}).get(version, None)
+
+                if entry is not None:
                     continue
 
                 abs_path = os.path.join(path, filename)
@@ -51,7 +168,7 @@ class RepoIndexer:
                 except BoltSyntaxError as e:
                     continue
 
-                print(control_data.as_string())
+                yield control_data
             #end for
         #end for
     #end function
