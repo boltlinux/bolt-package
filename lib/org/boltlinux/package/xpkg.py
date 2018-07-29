@@ -200,7 +200,7 @@ class Dpkg(BaseXpkg):
     STATUS_FILE = '/var/lib/dpkg/status'
 
     def __init__(self):
-        super(BaseXpkg, self).__init__()
+        super().__init__()
 
     def which_package_provides(self, filename):
         abspath = os.path.abspath(filename)
@@ -225,7 +225,7 @@ class Opkg(BaseXpkg):
     STATUS_FILE = '/var/lib/opkg/status'
 
     def __init__(self):
-        super(BaseXpkg, self).__init__()
+        super().__init__()
 
     def which_package_provides(self, filename):
         abspath = os.path.abspath(filename)
