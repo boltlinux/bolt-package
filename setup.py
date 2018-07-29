@@ -18,9 +18,17 @@ setup(
     packages=['org.boltlinux', 'org.boltlinux.package', 'org.boltlinux.deb2bolt'],
     package_dir={'': 'lib'},
     data_files=[
-        ('bin', ['bin/bolt-pack', 'bin/deb2bolt']),
+        ('bin', [
+            'bin/bolt-pack',
+            'bin/deb2bolt',
+            'bin/bolt-repo-index',
+            'bin/bolt-pkg-dbd'
+        ]),
         ('share/bolt-pack/relaxng', ['relaxng/package.rng.xml']),
-        ('share/bolt-pack/helpers', ['helpers/arch.sh', 'helpers/python.sh'])
+        ('share/bolt-pack/helpers', [
+            'helpers/arch.sh',
+            'helpers/python.sh'
+        ])
     ],
     platforms=['Linux'],
 
