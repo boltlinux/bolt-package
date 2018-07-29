@@ -46,6 +46,7 @@ FORMAT_TAR_PAX_RESTRICTED = 10
 FORMAT_TAR_USTAR = 11
 FORMAT_TAR_OLDTAR = 12
 FORMAT_ZIP = 13
+FORMAT_RAW = 14
 
 COMPRESSION_BZIP2 = 14
 COMPRESSION_COMPRESS = 15
@@ -71,7 +72,8 @@ _format_functions = {
     FORMAT_TAR_PAX_INTERCHANGE: "archive_write_set_format_pax",
     FORMAT_TAR_PAX_RESTRICTED: "archive_write_set_format_pax_restricted",
     FORMAT_TAR_USTAR: "archive_write_set_format_ustar",
-    FORMAT_ZIP: "archive_write_set_format_zip"
+    FORMAT_ZIP: "archive_write_set_format_zip",
+    FORMAT_RAW: "archive_write_set_format_raw",
 }
 
 for func_name in _format_functions.values():
