@@ -2,7 +2,7 @@
 
 PYTHON=python3
 VERSION=$(shell $(PYTHON) ./bin/bolt-pack | head -n1 | \
-	sed 's/Bolt OS Package Generator, version //g' | sed 's/[[:space:]]//g')
+	sed 's/Bolt OS package generator, tools collection //g' | sed 's/[[:space:]]//g')
 DESTDIR=install
 BRANCH=$(shell git rev-parse --abbrev-ref HEAD)
 SITE_PACKAGES=$(shell python3 -c "from distutils import sysconfig; print(sysconfig.get_python_lib())")
