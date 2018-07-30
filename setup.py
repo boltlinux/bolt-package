@@ -15,7 +15,12 @@ setup(
     author='Tobias Koch',
     author_email='tobias.koch@gmail.com',
     license='MIT',
-    packages=['org.boltlinux', 'org.boltlinux.package', 'org.boltlinux.deb2bolt'],
+    packages=[
+        'org.boltlinux',
+        'org.boltlinux.package',
+        'org.boltlinux.deb2bolt',
+        'org.boltlinux.repository'
+    ],
     package_dir={'': 'lib'},
     data_files=[
         ('bin', [
