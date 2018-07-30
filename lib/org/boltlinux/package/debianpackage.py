@@ -252,10 +252,10 @@ class DebianPackage(BinaryPackage):
 
     def meta_data(self, debug_pkg=False):
         dep_type_2_str = {
-            "requires":  "Depends: ",
-            "provides":  "Provides: ",
-            "conflicts": "Conflicts: ",
-            "replaces":  "Replaces: "
+            "requires":  "Depends",
+            "provides":  "Provides",
+            "conflicts": "Conflicts",
+            "replaces":  "Replaces"
         }
 
         meta = PackageMetaData()
