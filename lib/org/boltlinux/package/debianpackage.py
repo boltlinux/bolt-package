@@ -115,6 +115,9 @@ class DebianPackage(BinaryPackage):
             installed_size = self.write_data_part(pkg_contents,
                     os.path.join(tmpdir, "data.tar.gz"))
 
+            # According to Debian Policy Manual Installed-Size is in KB
+            installed_size = int(installed_size / 1024 + 0.5)
+
             meta_data["Installed-Size"] = "{}".format(installed_size)
 
             self.write_control_part(meta_data, pkg_contents,
@@ -238,11 +241,15 @@ class DebianPackage(BinaryPackage):
                                 if not buf:
                                     break
                                 archive.write_data(buf)
-
-                                installed_size += len(buf)
                             #end while
                         #end with
                     #end if
+
+                    # imitate behavior of dpkg-gencontrol
+                    if attr.stats.is_file or attr.stats.is_symbolic_link:
+                        installed_size += attr.stats.st_size
+                    else:
+                        installed_size += 1024
                 #end for
             #end with
         #end with
