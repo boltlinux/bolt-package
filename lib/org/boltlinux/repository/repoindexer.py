@@ -35,13 +35,17 @@ import org.boltlinux.package.libarchive as libarchive
 from tempfile import TemporaryDirectory, NamedTemporaryFile
 from org.boltlinux.package.libarchive import ArchiveFileReader, \
         ArchiveFileWriter, ArchiveEntry
-from org.boltlinux.error import BoltSyntaxError
+from org.boltlinux.error import NotFound, BoltSyntaxError
 from org.boltlinux.package.xpkg import BaseXpkg
 from org.boltlinux.package.metadata import PackageMetaData
 
 class RepoIndexer:
 
     def __init__(self, repo_dir, force_full=False):
+        if not os.path.isdir(repo_dir):
+            raise NotFound("path '%s' does not exists or is not a directory."
+                    % repo_dir)
+
         self._force_full = force_full
         self._repo_dir   = repo_dir
     #end function
@@ -157,6 +161,9 @@ class RepoIndexer:
 
     def make_hash_links(self):
         packages_file = os.path.join(self._repo_dir, "Packages.gz")
+
+        if not os.path.exists(packages_file):
+            return
 
         sha256sum = self._compute_sha256_sum(packages_file)
         sha256dir = os.path.join(self._repo_dir, "by-hash", "SHA256")

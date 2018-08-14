@@ -33,6 +33,7 @@ INSTALL_DIR = os.path.normpath(os.path.dirname(
     os.path.realpath(sys.argv[0])) + os.sep + ".." )
 sys.path.insert(1, INSTALL_DIR + os.sep + 'lib')
 
+from org.boltlinux.error import BoltError, InvocationError
 from org.boltlinux.package.util import switch
 from org.boltlinux.package.appconfig import AppConfig
 from org.boltlinux.package.version import VERSION as BOLT_VERSION
@@ -87,16 +88,21 @@ def parse_cmd_line():
 #end function
 
 if __name__ == "__main__":
-        # PARSE CMD LINE
-        options, args = parse_cmd_line()
+    # PARSE CMD LINE
+    options, args = parse_cmd_line()
 
-        if len(args) != 1:
-            print_usage()
-            sys.exit(BOLT_ERR_INVOCATION)
-        #end if
+    if len(args) != 1:
+        print_usage()
+        sys.exit(BOLT_ERR_INVOCATION)
+    #end if
 
-        repo_dir = args[0]
+    repo_dir = args[0]
 
+    try:
         indexer = RepoIndexer(repo_dir, force_full=options["force_full"])
         indexer.update_package_index()
+    except BoltError as e:
+        sys.stderr.write("bolt-repo-index: %s\n" % str(e))
+        sys.exit(BOLT_ERR_RUNTIME)
+    #end try
 #end __main__
