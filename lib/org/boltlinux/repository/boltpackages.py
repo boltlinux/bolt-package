@@ -166,16 +166,18 @@ class BoltPackages:
             pkg_source  = pkg_info["Source"]
             arch_indep  = pkg_info["Architecture"] == "all"
 
-            source_ref_obj = source_pkg_index \
+            if pkg_source is not None:
+                source_ref_obj = source_pkg_index \
                     .get(pkg_source, {}) \
                     .get(pkg_version)
 
-            if source_ref_obj is None:
-                self.log.error(
-                    "Source '%s' not found for package '%s' on for %s on %s" %
-                        (pkg_source, pkg_name, packages_list.libc,
-                            packages_list.arch))
-                continue
+                if source_ref_obj is None:
+                    self.log.error(
+                        "Source '%s' not found for package '%s' on for %s on %s" %
+                            (pkg_source, pkg_name, packages_list.libc,
+                                packages_list.arch))
+                    continue
+                #end if
             #end if
 
             if not binary_pkg_index.get(pkg_name, {}).get(pkg_version):
