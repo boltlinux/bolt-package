@@ -24,17 +24,13 @@
 #
 
 import os
-import re
-import sys
-import hashlib
-import urllib.request
 import logging
 
 from org.boltlinux.package.appconfig import AppConfig
 from org.boltlinux.package.xpkg import BaseXpkg
 from org.boltlinux.repository.flaskapp import app, db
 from org.boltlinux.repository.models import UpstreamSource
-from org.boltlinux.repository.sourceslist import SourcesList
+from org.boltlinux.repository.debiansourceslist import DebianSourcesList
 from org.boltlinux.error import RepositoryError
 
 class DebianSources:
@@ -69,7 +65,7 @@ class DebianSources:
                         % component)
             #end if
 
-            sources_list = SourcesList(
+            sources_list = DebianSourcesList(
                 release   = self._release,
                 component = component,
                 mirror    = self._mirror,
@@ -98,7 +94,7 @@ class DebianSources:
                             % component)
                 #end if
 
-                sources_list = SourcesList(
+                sources_list = DebianSourcesList(
                     release   = self._release,
                     component = component,
                     mirror    = self._mirror,
