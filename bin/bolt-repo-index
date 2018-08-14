@@ -36,7 +36,7 @@ sys.path.insert(1, INSTALL_DIR + os.sep + 'lib')
 from org.boltlinux.package.util import switch
 from org.boltlinux.package.appconfig import AppConfig
 from org.boltlinux.package.version import VERSION as BOLT_VERSION
-from org.boltlinux.repository.indexer import RepoIndexer
+from org.boltlinux.repository.repoindexer import RepoIndexer
 
 BOLT_ERR_INVOCATION = 1
 BOLT_ERR_RUNTIME    = 2

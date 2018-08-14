@@ -28,6 +28,7 @@ import re
 import stat
 import hashlib
 import functools
+import tempfile
 
 import org.boltlinux.package.libarchive as libarchive
 
@@ -59,6 +60,8 @@ class RepoIndexer:
 
         self.prune_package_index(index)
         self.store_package_index(index)
+
+        self.make_hash_links()
     #end function
 
     def load_package_index(self):
@@ -126,8 +129,11 @@ class RepoIndexer:
             pass
 
         try:
+            options = [("gzip", "timestamp", None)]
+
             with ArchiveFileWriter(tempfile.name, libarchive.FORMAT_RAW,
-                    libarchive.COMPRESSION_GZIP) as archive:
+                    libarchive.COMPRESSION_GZIP, options=options) as archive:
+
                 with ArchiveEntry() as archive_entry:
                     archive_entry.filetype = stat.S_IFREG
                     archive.write_entry(archive_entry)
@@ -135,11 +141,40 @@ class RepoIndexer:
                 #end with
             #end with
 
+            os.chmod(tempfile.name,
+                stat.S_IRUSR |
+                stat.S_IWUSR |
+                stat.S_IRGRP |
+                stat.S_IROTH
+            )
+
             os.rename(tempfile.name, packages_file)
         finally:
             if os.path.exists(tempfile.name):
                 os.unlink(tempfile.name)
         #end try
+    #end function
+
+    def make_hash_links(self):
+        packages_file = os.path.join(self._repo_dir, "Packages.gz")
+
+        sha256sum = self._compute_sha256_sum(packages_file)
+        sha256dir = os.path.join(self._repo_dir, "by-hash", "SHA256")
+        linkname  = os.path.join(sha256dir, sha256sum)
+
+        if os.path.exists(linkname):
+            return
+
+        if not os.path.isdir(sha256dir):
+            os.makedirs(sha256dir)
+        else:
+            for entry in os.scandir(path=sha256dir):
+                if entry.is_symlink():
+                    os.unlink(os.path.join(sha256dir, entry.name))
+            #end for
+        #end if
+
+        os.symlink("../../Packages.gz", linkname)
     #end function
 
     def scan(self, index=None):
