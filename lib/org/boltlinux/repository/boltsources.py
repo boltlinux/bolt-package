@@ -24,8 +24,6 @@
 #
 
 import os
-import sys
-import subprocess
 import logging
 import functools
 
@@ -35,7 +33,7 @@ from org.boltlinux.package.specfile import Specfile
 from org.boltlinux.repository.flaskapp import app, db
 from org.boltlinux.repository.models import SourcePackage, UpstreamSource, \
         Setting
-from org.boltlinux.repository.packagerules import PackageRules
+from org.boltlinux.repository.boltpackagerules import BoltPackageRules
 from org.boltlinux.error import MalformedSpecfile, RepositoryError
 from org.boltlinux.package.xpkg import BaseXpkg
 
@@ -66,7 +64,7 @@ class BoltSources:
                         % repo_info["name"])
             #end if
 
-            rules = PackageRules(repo_info["name"], repo_info["rules"],
+            rules = BoltPackageRules(repo_info["name"], repo_info["rules"],
                     cache_dir=self._cache_dir)
 
             try:
@@ -96,7 +94,7 @@ class BoltSources:
                         .filter_by(name = "last_processed_revision@" + repo_name)\
                         .one_or_none()
 
-                rules = PackageRules(repo_name, repo_info["rules"],
+                rules = BoltPackageRules(repo_name, repo_info["rules"],
                         cache_dir=self._cache_dir)
 
                 self._parse_revisions(rules, source_pkg_index, upstream_src_index,

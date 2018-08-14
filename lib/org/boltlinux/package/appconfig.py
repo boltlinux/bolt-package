@@ -37,14 +37,28 @@ class AppConfig:
 {
   "release": {
     "id": "zeus",
-    "upstream": "stretch"
+    "upstream": "stretch",
+    "supported-architectures": {
+      "musl": [
+        "aarch64",
+        "armv4t",
+        "armv6",
+        "armv7a",
+        "i686",
+        "mipsel",
+        "mips64el",
+        "powerpc",
+        "powerpc64le",
+        "x86_64"
+      ]
+    }
   },
 
   "repositories": [
     { 
       "name": "bolt-os",
       "repo-url": "http://packages.boltlinux.org/repo",
-      "rules": "https://github.com/boltlinux/bolt-pkg-rules.git"
+      "rules": "https://github.com/boltlinux/bolt-pkg-rules.git@release/zeus"
     }
   ],
 

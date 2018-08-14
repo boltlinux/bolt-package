@@ -39,6 +39,7 @@ from org.boltlinux.package.util import switch
 from org.boltlinux.package.appconfig import AppConfig
 from org.boltlinux.repository.debiansources import DebianSources
 from org.boltlinux.repository.boltsources import BoltSources
+from org.boltlinux.repository.boltpackages import BoltPackages
 from org.boltlinux.repository.flaskapp import app, db, app_init
 from org.boltlinux.repository.models import *
 from org.boltlinux.package.version import VERSION as BOLT_VERSION
@@ -116,15 +117,18 @@ if __name__ == "__main__":
 
         # UPDATE DEBIAN SOURCES
         debian_sources = DebianSources(config)
-
         debian_sources.refresh()
         debian_sources.update_db()
 
         # UPDATE PACKAGE RULES
         bolt_sources = BoltSources(config)
-
         bolt_sources.refresh()
         bolt_sources.update_db()
+
+        # UPDATE BINARY PACKAGE INDEX
+        bolt_packages = BoltPackages(config)
+        bolt_packages.refresh()
+        bolt_packages.update_db()
 
     except InvocationError as e:
         sys.stderr.write("deb2bolt: %s\n" % str(e))

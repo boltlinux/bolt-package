@@ -30,7 +30,7 @@ import locale
 
 from org.boltlinux.error import RepositoryError
 
-class PackageRules:
+class BoltPackageRules:
 
     def __init__(self, name, rules_url, cache_dir=None):
         self._repo_name = name
