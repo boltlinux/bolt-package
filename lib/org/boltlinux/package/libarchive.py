@@ -222,6 +222,9 @@ lib.archive_read_support_format_all.restype = ctypes.c_int
 lib.archive_read_support_format_raw.argtypes = [ctypes.c_void_p]
 lib.archive_read_support_format_raw.restype = ctypes.c_int
 
+lib.archive_write_set_option.argtypes = [ctypes.c_void_p, ctypes.c_char_p, ctypes.c_char_p, ctypes.c_char_p]
+lib.archive_write_set_option.restype = ctypes.c_int
+
 ############################### IMPLEMENTATION #################################
 
 def error_string(c_archive_p):
@@ -503,7 +506,8 @@ class ArchiveEntry:
 
 class ArchiveFileWriter:
 
-    def __init__(self, filename, archive_format, compression=None):
+    def __init__(self, filename, archive_format, compression=None,
+            options=None):
         self._c_archive_p = lib.archive_write_new()
         self._hardlinks = {}
 
@@ -522,6 +526,11 @@ class ArchiveFileWriter:
             self.close()
             raise ArchiveError("invalid or unsupported archive format.")
         #end try
+
+        if options is not None:
+            for mod, key, val in options:
+                self.__set_filter_option(mod, key, val)
+        #end if
 
         if lib.archive_write_open_filename(
                 self._c_archive_p, filename.encode("utf-8")) != STATUS_OK:
@@ -576,6 +585,22 @@ class ArchiveFileWriter:
         if bytes_written < 0:
             raise ArchiveError(error_string(self._c_archive_p))
         return bytes_written
+    #end function
+
+    def __set_filter_option(self, mod, key, val):
+        m = mod.encode("utf-8") if mod is not None else None
+        k = key.encode("utf-8") if key is not None else None
+        v = val.encode("utf-8") if val is not None else None
+
+        if self._c_archive_p:
+            rval = lib.archive_write_set_option(
+                    self._c_archive_p, m, k, v)
+
+            if rval != STATUS_OK:
+                msg = error_string(self._c_archive_p)
+                raise ArchiveError(msg)
+            #end if
+        #end if
     #end function
 
 #end class
