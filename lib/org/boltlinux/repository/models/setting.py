@@ -23,7 +23,7 @@
 # THE SOFTWARE.
 #
 
-from org.boltlinux.repository.flaskapp import db
+from org.boltlinux.repository.flaskinit import db
 
 class Setting(db.Model):
     __tablename__ = "setting"

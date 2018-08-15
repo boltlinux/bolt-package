@@ -28,7 +28,7 @@ import logging
 
 from org.boltlinux.package.appconfig import AppConfig
 from org.boltlinux.package.xpkg import BaseXpkg
-from org.boltlinux.repository.flaskapp import app, db
+from org.boltlinux.repository.flaskinit import app, db
 from org.boltlinux.repository.models import UpstreamSource
 from org.boltlinux.repository.debiansourceslist import DebianSourcesList
 from org.boltlinux.error import RepositoryError

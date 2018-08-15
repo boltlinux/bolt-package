@@ -30,7 +30,7 @@ import functools
 from lxml import etree
 from org.boltlinux.package.appconfig import AppConfig
 from org.boltlinux.package.specfile import Specfile
-from org.boltlinux.repository.flaskapp import app, db
+from org.boltlinux.repository.flaskinit import app, db
 from org.boltlinux.repository.models import SourcePackage, UpstreamSource, \
         Setting
 from org.boltlinux.repository.boltpackagerules import BoltPackageRules

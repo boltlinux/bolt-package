@@ -23,29 +23,24 @@
 # THE SOFTWARE.
 #
 
-from org.boltlinux.repository.flaskinit import db
+from flask_restful import Resource, fields, marshal_with
+from org.boltlinux.repository.flaskinit import app
+from org.boltlinux.repository.models import SourcePackage as SourcePackageModel
 
-class SourcePackage(db.Model):
-    __tablename__ = "source_package"
+class SourcePackage(Resource):
 
-    STATUS_UNKNOWN = 0
-    STATUS_BEHIND  = 1
-    STATUS_CURRENT = 2
-    STATUS_AHEAD   = 3
+    RESOURCE_FIELDS = {
+        "name": fields.String
+    }
 
-    id_ = db.Column(db.Integer, primary_key=True, index=True)
-    upstream_source_id = db.Column(db.Integer,
-            db.ForeignKey("upstream_source.id_"), nullable=True, index=True)
-    name = db.Column(db.String(50), nullable=False, index=True)
-    version = db.Column(db.String(50), nullable=False)
-    upstream_version = db.Column(db.String(50), nullable=True)
-    git_hash = db.Column(db.String(8), nullable=True)
-    xml = db.Column(db.Text)
-    sortkey = db.Column(db.Integer, nullable=False)
-    status = db.Column(db.Integer, nullable=False, default=STATUS_UNKNOWN,
-            index=True)
+    @marshal_with(RESOURCE_FIELDS)
+    def get(self, id_=None):
+        if id_ is not None:
+            return SourcePackageModel.query.filter_by(id_=id_).first()
 
-    __table_args__ = (db.Index("ix_source_package_name_version",
-        "name", "version"), )
+        with app.app_context():
+            return SourcePackageModel.query.all()
+    #end function
+
 #end class
 

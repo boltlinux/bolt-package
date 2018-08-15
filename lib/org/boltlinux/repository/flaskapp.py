@@ -24,32 +24,48 @@
 #
 
 import os
-import base64
 
-from flask import Flask
-from flask_sqlalchemy import SQLAlchemy
+from org.boltlinux.repository.flaskinit import app, api, db, app_init
 from org.boltlinux.package.appconfig import AppConfig
 
-app = Flask(__name__)
-db  = SQLAlchemy()
+###############################################################################
+#
+# App configuration
+#
+###############################################################################
 
-def app_init(config):
-    settings = {
-        "SQLALCHEMY_TRACK_MODIFICATIONS": False
-    }
+config = AppConfig.instance().load_user_config()
 
-    settings.update(config)
-    secret_key = settings.get("SECRET_KEY", None)
+app_config = config\
+        .get("apps", {})\
+        .get("repository", {})\
+        .get("appconfig", {})
 
-    if isinstance(secret_key, str):
-        try:
-            settings["SECRET_KEY"] = \
-                    base64.decodestring(secret_key.encode("utf-8"))
-        except Exception:
-            pass
-    else:
-        settings["SECRET_KEY"] = os.urandom(32)
+app_config.setdefault("SQLALCHEMY_DATABASE_URI",
+        "sqlite:///" + AppConfig.get_config_folder() + os.sep +
+            "repository.db")
 
-    app.config.update(settings)
-#end function
+app_init(app_config)
+
+###############################################################################
+#
+# DB setup
+#
+###############################################################################
+
+db.init_app(app)
+
+with app.app_context():
+    db.create_all()
+
+###############################################################################
+#
+# API initialization
+#
+###############################################################################
+import org.boltlinux.repository.api as api_v1
+
+api.add_resource(api_v1.SourcePackage,
+        "/v1/bolt/source",
+        "/v1/bolt/source/<int:id_>")
 

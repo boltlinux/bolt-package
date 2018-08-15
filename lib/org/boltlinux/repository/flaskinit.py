@@ -23,29 +23,34 @@
 # THE SOFTWARE.
 #
 
-from org.boltlinux.repository.flaskinit import db
+import os
+import base64
 
-class SourcePackage(db.Model):
-    __tablename__ = "source_package"
+from flask import Flask
+from flask_restful import Api
+from flask_sqlalchemy import SQLAlchemy
 
-    STATUS_UNKNOWN = 0
-    STATUS_BEHIND  = 1
-    STATUS_CURRENT = 2
-    STATUS_AHEAD   = 3
+app = Flask(__name__)
+api = Api(app)
+db  = SQLAlchemy()
 
-    id_ = db.Column(db.Integer, primary_key=True, index=True)
-    upstream_source_id = db.Column(db.Integer,
-            db.ForeignKey("upstream_source.id_"), nullable=True, index=True)
-    name = db.Column(db.String(50), nullable=False, index=True)
-    version = db.Column(db.String(50), nullable=False)
-    upstream_version = db.Column(db.String(50), nullable=True)
-    git_hash = db.Column(db.String(8), nullable=True)
-    xml = db.Column(db.Text)
-    sortkey = db.Column(db.Integer, nullable=False)
-    status = db.Column(db.Integer, nullable=False, default=STATUS_UNKNOWN,
-            index=True)
+def app_init(config):
+    settings = {
+        "SQLALCHEMY_TRACK_MODIFICATIONS": False
+    }
 
-    __table_args__ = (db.Index("ix_source_package_name_version",
-        "name", "version"), )
-#end class
+    settings.update(config)
+    secret_key = settings.get("SECRET_KEY", None)
+
+    if isinstance(secret_key, str):
+        try:
+            settings["SECRET_KEY"] = \
+                    base64.decodestring(secret_key.encode("utf-8"))
+        except Exception:
+            pass
+    else:
+        settings["SECRET_KEY"] = os.urandom(32)
+
+    app.config.update(settings)
+#end function
 

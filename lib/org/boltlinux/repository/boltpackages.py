@@ -27,7 +27,7 @@ import os
 import logging
 
 from org.boltlinux.package.appconfig import AppConfig
-from org.boltlinux.repository.flaskapp import app, db
+from org.boltlinux.repository.flaskinit import app, db
 from org.boltlinux.repository.models import SourcePackage, BinaryPackage
 from org.boltlinux.repository.boltpackageslist import BoltPackagesList
 from org.boltlinux.error import RepositoryError

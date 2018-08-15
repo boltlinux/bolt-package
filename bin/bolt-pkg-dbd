@@ -40,7 +40,7 @@ from org.boltlinux.package.appconfig import AppConfig
 from org.boltlinux.repository.debiansources import DebianSources
 from org.boltlinux.repository.boltsources import BoltSources
 from org.boltlinux.repository.boltpackages import BoltPackages
-from org.boltlinux.repository.flaskapp import app, db, app_init
+from org.boltlinux.repository.flaskinit import app, db, app_init
 from org.boltlinux.repository.models import *
 from org.boltlinux.package.version import VERSION as BOLT_VERSION
 
