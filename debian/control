@@ -18,6 +18,7 @@ Depends:
  python3-magic,
  python3-flask,
  python3-flask-sqlalchemy,
+ python3-flask-restful,
  binutils,
  chrpath,
  libarchive-dev,
