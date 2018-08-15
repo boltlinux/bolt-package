@@ -152,7 +152,11 @@ class BoltSources:
     def _generate_source_pkg_index(self):
         source_pkg_index = {}
 
-        for obj in SourcePackage.query.all():
+        query = SourcePackage.query\
+                .options(db.defer("xml"))\
+                .all()
+
+        for obj in query:
             source_pkg_index \
                     .setdefault(obj.name, {}) \
                     .setdefault(obj.version, obj)
