@@ -64,7 +64,7 @@ class BoltPackages:
 
                     if self._verbose:
                         self.log.info(
-                            "Refreshing Bolt packages list for "\
+                            "Refreshing Bolt binary package list for "\
                                     "repo '%s', libc '%s', arch '%s'." %
                                         (repo_name, libc, arch))
                     #end if
@@ -103,7 +103,7 @@ class BoltPackages:
                     for arch in archlist:
                         if self._verbose:
                             self.log.info(
-                                "Updating Bolt package DB entries for "\
+                                "Updating Bolt binary package DB entries for "\
                                     "repo '%s', libc '%s', arch '%s'." %
                                         (repo_name, libc, arch))
                         #end if

@@ -60,7 +60,7 @@ class BoltSources:
         for repo_info in self._repositories:
             if self._verbose:
                 self.log.info(
-                    "Refreshing Bolt package rules for repository '%s'."
+                    "Refreshing Bolt source package rules for origin '%s'."
                         % repo_info["name"])
             #end if
 
@@ -70,8 +70,8 @@ class BoltSources:
             try:
                 rules.refresh()
             except RepositoryError as e:
-                self.log.error("Error refreshing packages rules for '%s': %s"
-                        % (repo_info["name"], str(e)))
+                msg = "Error refreshing Bolt source packages rules for origin '%s': %s"
+                self.log.error(msg % (repo_info["name"], str(e)))
             #end try
         #end for
     #end function
@@ -84,7 +84,7 @@ class BoltSources:
             for repo_info in self._repositories:
                 if self._verbose:
                     self.log.info(
-                        "Updating DB entries for Bolt repository '%s'."
+                        "Updating Bolt source package DB entries for origin '%s'."
                             % repo_info["name"])
                 #end if
 
