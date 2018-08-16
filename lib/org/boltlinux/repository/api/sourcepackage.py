@@ -24,22 +24,38 @@
 #
 
 from flask_restful import Resource, fields, marshal_with
-from org.boltlinux.repository.flaskinit import app
+from org.boltlinux.repository.flaskinit import app, db
 from org.boltlinux.repository.models import SourcePackage as SourcePackageModel
 
 class SourcePackage(Resource):
 
     RESOURCE_FIELDS = {
-        "name": fields.String
+        "name":             fields.String,
+        "version":          fields.String,
+        "upstream_version": fields.String,
+        "status":           fields.Integer
     }
 
     @marshal_with(RESOURCE_FIELDS)
     def get(self, id_=None):
         if id_ is not None:
-            return SourcePackageModel.query.filter_by(id_=id_).first()
+            return SourcePackageModel.query\
+                .filter_by(id_=id_)\
+                .first()
 
         with app.app_context():
-            return SourcePackageModel.query.all()
+            s1 = db.aliased(SourcePackageModel)
+            s2 = db.aliased(SourcePackageModel)
+
+            subquery = db.session.query(db.func.max(s1.sortkey))\
+                    .filter_by(name = s2.name)
+
+            query = db.session.query(s2)\
+                    .options(db.defer("xml"))\
+                    .filter_by(sortkey=subquery)\
+                    .order_by(s2.name)
+
+            return query.all()
     #end function
 
 #end class
