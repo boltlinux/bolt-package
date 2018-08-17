@@ -23,7 +23,9 @@
 # THE SOFTWARE.
 #
 
-from flask_restful import Resource, fields, marshal_with
+from sqlalchemy.orm import exc as sql_exc
+from werkzeug import exceptions as http_exc
+from flask_restful import Resource, fields, marshal_with, abort
 from org.boltlinux.repository.flaskinit import app, db
 from org.boltlinux.repository.models import SourcePackage as SourcePackageModel
 
@@ -39,9 +41,13 @@ class SourcePackage(Resource):
     @marshal_with(RESOURCE_FIELDS)
     def get(self, id_=None):
         if id_ is not None:
-            return SourcePackageModel.query\
-                .filter_by(id_=id_)\
-                .first()
+            try:
+                return SourcePackageModel.query\
+                    .filter_by(id_=id_)\
+                    .one()
+            except sql_exc.NoResultFound:
+                raise http_exc.NotFound()
+        #end if
 
         with app.app_context():
             s1 = db.aliased(SourcePackageModel)
@@ -56,6 +62,7 @@ class SourcePackage(Resource):
                     .order_by(s2.name)
 
             return query.all()
+        #end with
     #end function
 
 #end class
