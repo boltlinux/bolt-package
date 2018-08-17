@@ -36,7 +36,8 @@ db  = SQLAlchemy()
 
 def app_init(config):
     settings = {
-        "SQLALCHEMY_TRACK_MODIFICATIONS": False
+        "SQLALCHEMY_TRACK_MODIFICATIONS": False,
+        "ERROR_404_HELP":  False
     }
 
     settings.update(config)
