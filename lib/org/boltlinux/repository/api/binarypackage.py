@@ -29,16 +29,18 @@ from werkzeug import exceptions as http_exc
 from flask_restful import Resource, fields, marshal_with
 
 from org.boltlinux.repository.flaskinit import app, db
-from org.boltlinux.repository.models import SourcePackage as SourcePackageModel
+from org.boltlinux.repository.models import BinaryPackage as BinaryPackageModel
 from org.boltlinux.repository.api.schema import RequestArgsSchema
 
-class SourcePackage(Resource):
+class BinaryPackage(Resource):
 
     RESOURCE_FIELDS = {
-        "name":             fields.String,
-        "version":          fields.String,
-        "upstream_version": fields.String,
-        "status":           fields.Integer
+        "name":       fields.String,
+        "version":    fields.String,
+        "component":  fields.String,
+        "arch":       fields.String,
+        "libc":       fields.String,
+        "arch_indep": fields.Boolean
     }
 
     @marshal_with(RESOURCE_FIELDS)
@@ -52,17 +54,17 @@ class SourcePackage(Resource):
 
     def _get_one(self, id_, version):
         if isinstance(id_, int):
-            query = SourcePackageModel.query\
+            query = BinaryPackageModel.query\
                 .filter_by(id_=id_)
         else:
-            query = SourcePackageModel.query\
-                .filter_by(name=id_)
+            query = BinaryPackageModel.query\
+                .filter_by(name=id_)\
 
             if version:
                 query = query.filter_by(version=version)
 
             query = query\
-                .order_by(SourcePackageModel.sortkey.desc())\
+                .order_by(BinaryPackageModel.sortkey.desc())\
                 .limit(1)
         #end if
 
@@ -80,17 +82,16 @@ class SourcePackage(Resource):
         offkey = req_args.get("offkey", "")
         items  = req_args.get("items",  10)
         search = req_args.get("search", None)
+        libc   = req_args.get("libc",   "musl")
+        arch   = req_args.get("arch", "x86_64")
 
-        s1 = db.aliased(SourcePackageModel)
-        s2 = db.aliased(SourcePackageModel)
-
-        subquery = db.session.query(db.func.max(s1.sortkey))\
-                .filter_by(name = s2.name)
+        s1 = db.aliased(BinaryPackageModel)
+        s2 = db.aliased(BinaryPackageModel)
 
         query = db.session.query(s2)\
-                .options(db.defer("xml"))\
                 .filter(s2.name > offkey)\
-                .filter_by(sortkey=subquery)\
+                .filter_by(libc=libc)\
+                .filter_by(arch=arch)\
                 .order_by(s2.name)
 
         if search:

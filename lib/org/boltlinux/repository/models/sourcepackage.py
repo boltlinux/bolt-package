@@ -34,16 +34,19 @@ class SourcePackage(db.Model):
     STATUS_AHEAD   = 3
 
     id_ = db.Column(db.Integer, primary_key=True, index=True)
+
     upstream_source_id = db.Column(db.Integer,
             db.ForeignKey("upstream_source.id_"), nullable=True, index=True)
-    name = db.Column(db.String(50), nullable=False, index=True)
-    version = db.Column(db.String(50), nullable=False)
+
+    name             = db.Column(db.String(50), nullable=False, index=True)
+    version          = db.Column(db.String(50), nullable=False)
     upstream_version = db.Column(db.String(50), nullable=True)
-    git_hash = db.Column(db.String(8), nullable=True)
+    git_hash         = db.Column(db.String(8),  nullable=True)
+    sortkey          = db.Column(db.Integer,    nullable=False, default=0)
+    status           = db.Column(db.Integer,    nullable=False,
+                            default=STATUS_UNKNOWN, index=True)
+
     xml = db.Column(db.Text)
-    sortkey = db.Column(db.Integer, nullable=False)
-    status = db.Column(db.Integer, nullable=False, default=STATUS_UNKNOWN,
-            index=True)
 
     __table_args__ = (db.Index("ix_source_package_name_version",
         "name", "version"), )

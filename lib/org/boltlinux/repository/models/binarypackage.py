@@ -29,14 +29,17 @@ class BinaryPackage(db.Model):
     __tablename__ = "binary_package"
 
     id_ = db.Column(db.Integer, primary_key=True, index=True)
+
     source_package_id = db.Column(db.Integer, db.ForeignKey("source_package.id_"),
             nullable=False, index=True)
-    libc = db.Column(db.String(10), nullable=False, index=True)
-    arch = db.Column(db.String(10), nullable=False, index=True)
-    name = db.Column(db.String(50), nullable=False, index=True)
-    version = db.Column(db.String(50), nullable=False)
-    component = db.Column(db.String(10), nullable=False)
-    arch_indep = db.Column(db.Boolean(), nullable=False, default=False)
+
+    libc       = db.Column(db.String(10), nullable=False, index=True)
+    arch       = db.Column(db.String(10), nullable=False, index=True)
+    name       = db.Column(db.String(50), nullable=False, index=True)
+    version    = db.Column(db.String(50), nullable=False)
+    component  = db.Column(db.String(10), nullable=False)
+    arch_indep = db.Column(db.Boolean(),  nullable=False, default=False)
+    sortkey    = db.Column(db.Integer,    nullable=False, default=0)
 
     __table_args__ = (
         db.Index("ix_binary_package_name_version", "name", "version"),
