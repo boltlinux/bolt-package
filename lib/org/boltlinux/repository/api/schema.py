@@ -41,7 +41,7 @@ class RequestArgsSchema(Schema):
 
     @validates("search")
     def validate_search(self, search):
-        if re.match(r"^[-a-zA-Z]*$", search) is None:
+        if re.match(r"^[-a-zA-Z0-9]*$", search) is None:
             raise ValidationError("Invalid characters in search term.")
         if len(search) < 2:
             raise ValidationError("Search term is too short.")
@@ -53,7 +53,7 @@ class RequestArgsSchema(Schema):
 
     @validates("offkey")
     def validate_offkey(self, offkey):
-        if re.match(r"^[-a-zA-Z]+$", offkey) is None:
+        if re.match(r"^[-a-zA-Z0-9]+$", offkey) is None:
             raise ValidationError("Invalid key offset.")
 
     @validates("items")
