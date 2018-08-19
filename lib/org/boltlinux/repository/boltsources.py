@@ -113,7 +113,7 @@ class BoltSources:
             #end for
 
             # calculate the sortkeys for packages of same name
-            self._sort_source_packages(source_pkg_index)
+            self._sort_packages(source_pkg_index)
 
             # make sure all packages have their upstream ref set
             self._fix_upstream_refs(source_pkg_index, upstream_src_index)
@@ -130,7 +130,7 @@ class BoltSources:
             source_pkg_index = self._generate_source_pkg_index()
 
             # calculate the sortkeys for packages of same name
-            self._sort_source_packages(source_pkg_index)
+            self._sort_packages(source_pkg_index)
 
             db.session.commit()
         #end with
@@ -249,7 +249,7 @@ class BoltSources:
         #end for
     #end function
 
-    def _sort_source_packages(self, source_pkg_index):
+    def _sort_packages(self, source_pkg_index):
         for source_name, entries in source_pkg_index.items():
             versions = list(entries.keys())
             versions.sort(key=functools.cmp_to_key(BaseXpkg.compare_versions))

@@ -25,12 +25,14 @@
 
 import os
 import logging
+import functools
 
 from org.boltlinux.package.appconfig import AppConfig
 from org.boltlinux.repository.flaskinit import app, db
 from org.boltlinux.repository.models import SourcePackage, BinaryPackage
 from org.boltlinux.repository.boltpackageslist import BoltPackagesList
 from org.boltlinux.error import RepositoryError
+from org.boltlinux.package.xpkg import BaseXpkg
 
 class BoltPackages:
 
@@ -123,11 +125,14 @@ class BoltPackages:
 
                         self._parse_revisions(packages_list, source_pkg_index,
                                 binary_pkg_subindex)
-
-                        db.session.commit()
                     #end for
                 #end for
             #end for
+
+            # calculate the sortkeys for packages of same name
+            self._sort_packages(binary_pkg_index)
+
+            db.session.commit()
         #end with
     #end function
 
@@ -199,6 +204,20 @@ class BoltPackages:
                 binary_pkg_index.setdefault(pkg_name, {})[pkg_version] = \
                         binary_pkg
             #end if
+        #end for
+    #end function
+
+    def _sort_packages(self, binary_pkg_index):
+        for libc, arch_list in binary_pkg_index.items():
+            for arch in arch_list:
+                for pkg_name, entries in binary_pkg_index[libc][arch].items():
+                    versions = list(entries.keys())
+                    versions.sort(key=functools.cmp_to_key(BaseXpkg.compare_versions))
+
+                    for i, v in enumerate(versions, start=1):
+                        entries[v].sortkey = i
+                #end for
+            #end for
         #end for
     #end function
 

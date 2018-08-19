@@ -88,10 +88,14 @@ class BinaryPackage(Resource):
         s1 = db.aliased(BinaryPackageModel)
         s2 = db.aliased(BinaryPackageModel)
 
+        subquery = db.session.query(db.func.max(s1.sortkey))\
+                .filter_by(name = s2.name)
+
         query = db.session.query(s2)\
                 .filter(s2.name > offkey)\
                 .filter_by(libc=libc)\
                 .filter_by(arch=arch)\
+                .filter_by(sortkey=subquery)\
                 .order_by(s2.name)
 
         if search:
