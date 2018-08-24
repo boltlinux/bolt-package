@@ -35,6 +35,7 @@ from org.boltlinux.repository.api.schema import RequestArgsSchema
 class BinaryPackage(Resource):
 
     RESOURCE_FIELDS = {
+        "id_":        fields.Integer,
         "name":       fields.String,
         "version":    fields.String,
         "component":  fields.String,
@@ -44,29 +45,30 @@ class BinaryPackage(Resource):
     }
 
     @marshal_with(RESOURCE_FIELDS)
-    def get(self, id_=None, version=None):
-        if id_ is not None:
-            return self._get_one(id_, version)
+    def get(self, id_=None, libc="musl", arch="x86_64", name=None,
+            version=None):
+        if id_ is not None or (name and version):
+            return self._get_one(id_, libc, arch, name, version)
         else:
-            return self._get_many()
+            return self._get_many(libc, arch, name)
         #end if
     #end function
 
-    def _get_one(self, id_, version):
-        if isinstance(id_, int):
+    def _get_one(self, id_, libc, arch, name, version):
+        if id_ is not None:
             query = BinaryPackageModel.query\
                 .filter_by(id_=id_)
-        else:
+        elif name and version:
+            libc = libc if libc else req_args.get("libc")
+            arch = arch if arch else req_args.get("arch")
+
             query = BinaryPackageModel.query\
-                .filter_by(name=id_)\
-
-            if version:
-                query = query.filter_by(version=version)
-
-            query = query\
-                .order_by(BinaryPackageModel.sortkey.desc())\
-                .limit(1)
-        #end if
+                .filter_by(libc=libc)\
+                .filter_by(arch=arch)\
+                .filter_by(name=name)\
+                .filter_by(version=version)
+        else:
+            return None
 
         try:
             return query.one()
@@ -74,16 +76,16 @@ class BinaryPackage(Resource):
             raise http_exc.NotFound()
     #end function
 
-    def _get_many(self):
+    def _get_many(self, libc, arch, name):
         req_args, errors = RequestArgsSchema().load(request.args)
         if errors:
             raise http_exc.BadRequest(errors)
 
         offkey = req_args.get("offkey", "")
-        items  = req_args.get("items",  10)
+        items  = req_args.get("items",  20)
         search = req_args.get("search", None)
-        libc   = req_args.get("libc",   "musl")
-        arch   = req_args.get("arch", "x86_64")
+        libc   = req_args.get("libc",   libc)
+        arch   = req_args.get("arch",   arch)
 
         s1 = db.aliased(BinaryPackageModel)
         s2 = db.aliased(BinaryPackageModel)
@@ -95,11 +97,17 @@ class BinaryPackage(Resource):
                 .filter(s2.name > offkey)\
                 .filter_by(libc=libc)\
                 .filter_by(arch=arch)\
-                .filter_by(sortkey=subquery)\
                 .order_by(s2.name)
 
         if search:
             query = query.filter(s2.name.like("%"+search+"%"))
+
+        if name:
+            query = query\
+                .filter_by(name=name)\
+                .order_by(s2.sortkey)
+        else:
+            query = query.filter_by(sortkey=subquery)
 
         query = query.limit(items)
 

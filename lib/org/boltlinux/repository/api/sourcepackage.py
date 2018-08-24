@@ -34,37 +34,41 @@ from org.boltlinux.repository.api.schema import RequestArgsSchema
 
 class SourcePackage(Resource):
 
-    RESOURCE_FIELDS = {
+    RESOURCE_FIELDS_ONE = {
+        "id_":              fields.Integer,
+        "name":             fields.String,
+        "version":          fields.String,
+        "upstream_version": fields.String,
+        "status":           fields.Integer,
+        "xml":              fields.String
+    }
+
+    RESOURCE_FIELDS_MANY = {
+        "id_":              fields.Integer,
         "name":             fields.String,
         "version":          fields.String,
         "upstream_version": fields.String,
         "status":           fields.Integer
     }
 
-    @marshal_with(RESOURCE_FIELDS)
-    def get(self, id_=None, version=None):
-        if id_ is not None:
-            return self._get_one(id_, version)
+    def get(self, id_=None, name=None, version=None):
+        if id_ is not None or (name and version):
+            return self._get_one(id_, name, version)
         else:
-            return self._get_many()
-        #end if
+            return self._get_many(name)
     #end function
 
-    def _get_one(self, id_, version):
-        if isinstance(id_, int):
-            query = SourcePackageModel.query\
+    @marshal_with(RESOURCE_FIELDS_ONE)
+    def _get_one(self, id_, name, version):
+        if id_ is not None:
+            query = SourcePackagemodel.query\
                 .filter_by(id_=id_)
-        else:
+        elif name and version:
             query = SourcePackageModel.query\
-                .filter_by(name=id_)
-
-            if version:
-                query = query.filter_by(version=version)
-
-            query = query\
-                .order_by(SourcePackageModel.sortkey.desc())\
-                .limit(1)
-        #end if
+                    .filter_by(name=name)\
+                    .filter_by(version=version)
+        else:
+            return None
 
         try:
             return query.one()
@@ -72,7 +76,8 @@ class SourcePackage(Resource):
             raise http_exc.NotFound()
     #end function
 
-    def _get_many(self):
+    @marshal_with(RESOURCE_FIELDS_MANY)
+    def _get_many(self, name=None):
         req_args, errors = RequestArgsSchema().load(request.args)
         if errors:
             raise http_exc.BadRequest(errors)
@@ -90,11 +95,17 @@ class SourcePackage(Resource):
         query = db.session.query(s2)\
                 .options(db.defer("xml"))\
                 .filter(s2.name > offkey)\
-                .filter_by(sortkey=subquery)\
                 .order_by(s2.name)
 
         if search:
             query = query.filter(s2.name.like("%"+search+"%"))
+
+        if name:
+            query = query\
+                .filter_by(name=name)\
+                .order_by(s2.sortkey)
+        else:
+            query = query.filter_by(sortkey=subquery)
 
         query = query.limit(items)
 

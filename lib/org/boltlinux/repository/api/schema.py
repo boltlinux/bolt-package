@@ -63,8 +63,6 @@ class RequestArgsSchema(Schema):
 
     @post_load
     def setdefaults(self, data):
-        data.setdefault("libc",  "musl")
-        data.setdefault("arch",  "x86_64")
         data.setdefault("items", 10)
 
         for key in ["offkey", "search"]:

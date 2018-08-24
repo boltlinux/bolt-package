@@ -68,14 +68,15 @@ import org.boltlinux.repository.api as api_v1
 api.add_resource(api_v1.SourcePackage,
     "/v1/bolt/source",
     "/v1/bolt/source/<int:id_>",
-    "/v1/bolt/source/by-name/<string:id_>",
-    "/v1/bolt/source/by-name/<string:id_>/by-version/<string:version>"
+    "/v1/bolt/source/by-name/<string:name>",
+    "/v1/bolt/source/by-name/<string:name>/by-version/<string:version>"
 )
 
 api.add_resource(api_v1.BinaryPackage,
     "/v1/bolt/package",
     "/v1/bolt/package/<int:id_>",
-    "/v1/bolt/package/by-name/<string:id_>",
-    "/v1/bolt/package/by-name/<string:id_>/by-version/<string:version>",
+    "/v1/bolt/package/by-libc/<string:libc>/by-arch/<string:arch>",
+    "/v1/bolt/package/by-libc/<string:libc>/by-arch/<string:arch>/by-name/<string:name>",
+    "/v1/bolt/package/by-libc/<string:libc>/by-arch/<string:arch>/by-name/<string:name>/by-version/<string:version>",
 )
 
