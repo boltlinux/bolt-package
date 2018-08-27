@@ -142,7 +142,7 @@ class BoltPackages:
         source_pkg_index = {}
 
         query = SourcePackage.query\
-                .options(db.defer("xml"))\
+                .options(db.defer("json"))\
                 .all()
 
         for obj in query:

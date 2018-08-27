@@ -23,10 +23,12 @@
 # THE SOFTWARE.
 #
 
+import json
+
 from flask import request
 from sqlalchemy.orm import exc as sql_exc
 from werkzeug import exceptions as http_exc
-from flask_restful import Resource, fields, marshal_with
+from flask_restful import Resource, fields, marshal_with, marshal
 
 from org.boltlinux.repository.flaskinit import app, db
 from org.boltlinux.repository.models import SourcePackage as SourcePackageModel
@@ -34,21 +36,12 @@ from org.boltlinux.repository.api.schema import RequestArgsSchema
 
 class SourcePackage(Resource):
 
-    RESOURCE_FIELDS_ONE = {
+    RESOURCE_FIELDS = {
         "id_":              fields.Integer,
         "name":             fields.String,
         "version":          fields.String,
         "upstream_version": fields.String,
         "status":           fields.Integer,
-        "xml":              fields.String
-    }
-
-    RESOURCE_FIELDS_MANY = {
-        "id_":              fields.Integer,
-        "name":             fields.String,
-        "version":          fields.String,
-        "upstream_version": fields.String,
-        "status":           fields.Integer
     }
 
     def get(self, id_=None, name=None, version=None):
@@ -58,7 +51,6 @@ class SourcePackage(Resource):
             return self._get_many(name)
     #end function
 
-    @marshal_with(RESOURCE_FIELDS_ONE)
     def _get_one(self, id_, name, version):
         if id_ is not None:
             query = SourcePackagemodel.query\
@@ -71,12 +63,17 @@ class SourcePackage(Resource):
             return None
 
         try:
-            return query.one()
+            result = query.one()
         except sql_exc.NoResultFound:
             raise http_exc.NotFound()
+
+        obj = marshal(result, self.RESOURCE_FIELDS)
+        obj["data"] = json.loads(result.json)
+
+        return obj
     #end function
 
-    @marshal_with(RESOURCE_FIELDS_MANY)
+    @marshal_with(RESOURCE_FIELDS)
     def _get_many(self, name=None):
         req_args, errors = RequestArgsSchema().load(request.args)
         if errors:
@@ -93,7 +90,7 @@ class SourcePackage(Resource):
                 .filter_by(name = s2.name)
 
         query = db.session.query(s2)\
-                .options(db.defer("xml"))\
+                .options(db.defer("json"))\
                 .filter(s2.name > offkey)\
                 .order_by(s2.name)
 

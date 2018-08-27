@@ -76,6 +76,9 @@ class SpecfileSerializer:
         element = {}
 
         for child in node:
+            if not isinstance(child.tag, str):
+                continue
+
             try:
                 method = getattr(self, "_" + child.tag)
                 result = method(child)

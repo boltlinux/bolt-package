@@ -27,6 +27,7 @@ import os
 import re
 from lxml import etree
 from org.boltlinux.error import InvocationError, MalformedSpecfile
+from org.boltlinux.package.serialize import SpecfileSerializer
 
 class Specfile:
 
@@ -57,13 +58,13 @@ class Specfile:
         except (etree.XMLSyntaxError, etree.XIncludeError) as e:
             raise MalformedSpecfile(str(e))
 
-        self.validate_structure(xml_doc)
-        self.validate_format(xml_doc)
-
         self.xml_doc = xml_doc
+
+        self.validate_structure()
+        self.validate_format()
     #end function
 
-    def validate_structure(self, xml_doc):
+    def validate_structure(self):
         relaxng = None
 
         for path in Specfile.RELAXNG_SCHEMA_SEARCH_PATH:
@@ -75,7 +76,7 @@ class Specfile:
         if relaxng is None:
             raise RuntimeError("RELAX NG ruleset not found.")
 
-        if not relaxng.validate(xml_doc):
+        if not relaxng.validate(self.xml_doc):
             errors = []
             for err in relaxng.error_log:
                 errors.append("* %s on line %d, column %d: %s" % 
@@ -89,7 +90,7 @@ class Specfile:
         return True
     #end function
 
-    def validate_format(self, xml_doc):
+    def validate_format(self):
         errors = []
 
         specification = [
@@ -106,7 +107,7 @@ class Specfile:
         ]
 
         for xpath, regexp in specification:
-            for attr in xml_doc.xpath(xpath):
+            for attr in self.xml_doc.xpath(xpath):
                 if not re.match(regexp, attr):
                     path = attr.getparent().tag + "/@" + attr.attrname
                     line = attr.getparent().sourceline
@@ -123,6 +124,9 @@ class Specfile:
 
         return True
     #end function
+
+    def serialize(self):
+        return SpecfileSerializer(self.xml_doc).serialize()
 
     @property
     def source_name(self):

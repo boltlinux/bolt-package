@@ -46,7 +46,7 @@ class SourcePackage(db.Model):
     status           = db.Column(db.Integer,    nullable=False,
                             default=STATUS_UNKNOWN, index=True)
 
-    xml = db.Column(db.Text)
+    json = db.Column(db.Text)
 
     __table_args__ = (db.Index("ix_source_package_name_version",
         "name", "version"), )

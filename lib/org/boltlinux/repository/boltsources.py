@@ -26,6 +26,7 @@
 import os
 import logging
 import functools
+import json
 
 from lxml import etree
 from org.boltlinux.package.appconfig import AppConfig
@@ -153,7 +154,7 @@ class BoltSources:
         source_pkg_index = {}
 
         query = SourcePackage.query\
-                .options(db.defer("xml"))\
+                .options(db.defer("json"))\
                 .all()
 
         for obj in query:
@@ -194,9 +195,7 @@ class BoltSources:
                 source_name      = specfile.source_name
                 version          = specfile.latest_version
                 upstream_version = specfile.upstream_version
-
-                xml = etree.tostring(specfile.xml_doc,
-                        pretty_print=True, encoding="unicode")
+                json_data        = json.dumps(specfile.serialize())
 
                 ref_obj = source_pkg_index \
                         .get(source_name, {})\
@@ -208,7 +207,7 @@ class BoltSources:
                             "Package '%s' at '%.8s' in '%s' modified without version bump." %
                                 (source_name, revision._commit_id, rules._repo_name)
                         )
-                        ref_obj.xml              = xml
+                        ref_obj.json             = json_data
                         ref_obj.upstream_version = upstream_version
                         ref_obj.git_hash         = commit_id
                     #end if
@@ -219,7 +218,7 @@ class BoltSources:
                         version          = version,
                         upstream_version = upstream_version,
                         git_hash         = commit_id,
-                        xml              = xml,
+                        json             = json_data,
                     )
                     db.session.add(ref_obj)
 
