@@ -35,12 +35,15 @@ from org.boltlinux.repository.flaskinit import app, db
 from org.boltlinux.repository.models import SourcePackage, UpstreamSource, \
         Setting
 from org.boltlinux.repository.boltpackagerules import BoltPackageRules
+from org.boltlinux.repository.repotask import RepoTask
 from org.boltlinux.error import MalformedSpecfile, RepositoryError
 from org.boltlinux.package.xpkg import BaseXpkg
 
-class BoltSources:
+class BoltSources(RepoTask):
 
     def __init__(self, config, verbose=True):
+        super().__init__()
+
         self._verbose      = verbose
         self._repositories = config.get("repositories", [])
 
@@ -59,6 +62,9 @@ class BoltSources:
 
     def refresh(self):
         for repo_info in self._repositories:
+            if self.is_stopped():
+                break
+
             if self._verbose:
                 self.log.info(
                     "Refreshing Bolt source package rules for origin '%s'."
@@ -83,6 +89,9 @@ class BoltSources:
             upstream_src_index = self._generate_upstream_src_index()
 
             for repo_info in self._repositories:
+                if self.is_stopped():
+                    break
+
                 if self._verbose:
                     self.log.info(
                         "Updating Bolt source package DB entries for origin '%s'."
@@ -183,6 +192,9 @@ class BoltSources:
             commit_id = revision.commit_id[:8]
 
             for package_xml in revision.rules():
+                if self.is_stopped():
+                    return
+
                 try:
                     specfile = Specfile(package_xml)
                 except MalformedSpecfile as e:
@@ -250,6 +262,9 @@ class BoltSources:
 
     def _sort_packages(self, source_pkg_index):
         for source_name, entries in source_pkg_index.items():
+            if self.is_stopped():
+                break
+
             versions = list(entries.keys())
             versions.sort(key=functools.cmp_to_key(BaseXpkg.compare_versions))
 
@@ -260,6 +275,9 @@ class BoltSources:
 
     def _fix_upstream_refs(self, source_pkg_index, upstream_src_index):
         for source_name, entries in source_pkg_index.items():
+            if self.is_stopped():
+                break
+
             upstream_ref_obj = upstream_src_index.get(source_name)
 
             if upstream_ref_obj is None:
@@ -274,6 +292,9 @@ class BoltSources:
 
     def _determine_recentness(self, source_pkg_index, upstream_src_index):
         for source_name, entries in source_pkg_index.items():
+            if self.is_stopped():
+                break
+
             upstream_ref_obj = upstream_src_index.get(source_name)
 
             if upstream_ref_obj is None:

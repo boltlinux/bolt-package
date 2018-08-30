@@ -31,11 +31,14 @@ from org.boltlinux.package.xpkg import BaseXpkg
 from org.boltlinux.repository.flaskinit import app, db
 from org.boltlinux.repository.models import UpstreamSource
 from org.boltlinux.repository.debiansourceslist import DebianSourcesList
+from org.boltlinux.repository.repotask import RepoTask
 from org.boltlinux.error import RepositoryError
 
-class DebianSources:
+class DebianSources(RepoTask):
 
     def __init__(self, config, verbose=True):
+        super().__init__()
+
         self._release = config.get("release", {}).get("upstream", "stable")
 
         config = config.get("upstream", {})
@@ -59,6 +62,9 @@ class DebianSources:
 
     def refresh(self):
         for component in self._components:
+            if self.is_stopped():
+                break
+
             if self._verbose:
                 self.log.info(
                     "Refreshing Debian source package list for component '%s'."
@@ -88,6 +94,9 @@ class DebianSources:
                 dict([(obj.name, obj) for obj in UpstreamSource.query.all()])
 
             for component in self._components:
+                if self.is_stopped():
+                    break
+
                 if self._verbose:
                     self.log.info(
                         "Updating Debian source package DB entries for component '%s'."
@@ -112,6 +121,9 @@ class DebianSources:
 
     def _parse_revisions(self, component, sources_list, stored_pkg_index):
         for pkg_info in sources_list:
+            if self.is_stopped():
+                break
+
             pkg_name    = pkg_info["Package"]
             pkg_version = pkg_info["Version"]
 

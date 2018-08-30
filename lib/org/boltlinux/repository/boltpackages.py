@@ -31,12 +31,15 @@ from org.boltlinux.package.appconfig import AppConfig
 from org.boltlinux.repository.flaskinit import app, db
 from org.boltlinux.repository.models import SourcePackage, BinaryPackage
 from org.boltlinux.repository.boltpackageslist import BoltPackagesList
+from org.boltlinux.repository.repotask import RepoTask
 from org.boltlinux.error import RepositoryError
 from org.boltlinux.package.xpkg import BaseXpkg
 
-class BoltPackages:
+class BoltPackages(RepoTask):
 
     def __init__(self, config, verbose=True):
+        super().__init__()
+
         release = config.get("release", {})
 
         self._verbose       = verbose
@@ -61,6 +64,9 @@ class BoltPackages:
         for repo_info in self._repositories:
             for libc, archlist in self._architectures.items():
                 for arch in archlist:
+                    if self.is_stopped():
+                        return
+
                     repo_name = repo_info["name"]
                     repo_url  = repo_info["repo-url"]
 
@@ -103,6 +109,9 @@ class BoltPackages:
 
                 for libc, archlist in self._architectures.items():
                     for arch in archlist:
+                        if self.is_stopped():
+                            return
+
                         if self._verbose:
                             self.log.info(
                                 "Updating Bolt binary package DB entries for "\
@@ -170,6 +179,9 @@ class BoltPackages:
     def _parse_revisions(self, packages_list, source_pkg_index,
             binary_pkg_index):
         for pkg_info in packages_list:
+            if self.is_stopped():
+                break
+
             pkg_name    = pkg_info["Package"]
             pkg_version = pkg_info["Version"]
             pkg_source  = pkg_info["Source"]
@@ -211,6 +223,9 @@ class BoltPackages:
         for libc, arch_list in binary_pkg_index.items():
             for arch in arch_list:
                 for pkg_name, entries in binary_pkg_index[libc][arch].items():
+                    if self.is_stopped():
+                        return
+
                     versions = list(entries.keys())
                     versions.sort(key=functools.cmp_to_key(BaseXpkg.compare_versions))
 

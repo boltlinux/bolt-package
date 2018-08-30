@@ -115,20 +115,22 @@ if __name__ == "__main__":
         with app.app_context():
             db.create_all()
 
-        # UPDATE DEBIAN SOURCES
-        debian_sources = DebianSources(config)
-        debian_sources.refresh()
-        debian_sources.update_db()
+        tasks = [
+            DebianSources(config),
+            BoltSources(config),
+            BoltPackages(config)
+        ]
 
-        # UPDATE PACKAGE RULES
-        bolt_sources = BoltSources(config)
-        bolt_sources.refresh()
-        bolt_sources.update_db()
+        for t in tasks:
+            t.start()
+            t.activate()
+            t.wait_until_done()
+        #end for
 
-        # UPDATE BINARY PACKAGE INDEX
-        bolt_packages = BoltPackages(config)
-        bolt_packages.refresh()
-        bolt_packages.update_db()
+        for t in tasks:
+            t.stop()
+        for t in tasks:
+            t.join()
 
     except InvocationError as e:
         sys.stderr.write("deb2bolt: %s\n" % str(e))
