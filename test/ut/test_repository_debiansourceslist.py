@@ -11,13 +11,13 @@ SOURCES_DIR = os.path.normpath(os.path.join(
 
 sys.path.insert(1, SOURCES_DIR + os.sep + 'lib')
 
-from org.boltlinux.repository.sourceslist import SourcesList
+from org.boltlinux.repository.debiansourceslist import DebianSourcesList
 
 class UTTestRepositorySourcesList(unittest.TestCase):
 
     def test_download_and_iter(self):
         with tempfile.TemporaryDirectory() as tmpdir:
-            sources_list = SourcesList(cache_dir=tmpdir)
+            sources_list = DebianSourcesList(cache_dir=tmpdir)
 
             sources = list(sources_list)
             self.assertTrue(len(sources) == 0)
