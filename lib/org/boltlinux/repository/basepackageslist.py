@@ -25,6 +25,8 @@
 
 import os
 import re
+import string
+import random
 import hashlib
 import urllib.request
 
@@ -34,31 +36,18 @@ from org.boltlinux.error import RepositoryError
 class BasePackagesListMixin:
 
     def is_up2date(self):
-        m = hashlib.sha256()
-
-        try:
-            with open(self.filename_gzipped, "rb") as infile:
-                while True:
-                    buf = infile.read(8*1024)
-                    if not buf:
-                        break
-                    m.update(buf)
-                #end while
-            #end with
-        except FileNotFoundError as e:
+        if not os.path.exists(self.filename_gzipped):
             return False
 
-        hash_url_sha256 = self.by_hash_url + "/SHA256/" + m.hexdigest()
-        request = urllib.request.Request(hash_url_sha256, method="HEAD")
-
+        old_etag = os.path.basename(os.readlink(self.filename_gzipped))
         try:
+            request = urllib.request.Request(self.url, method="HEAD")
             with urllib.request.urlopen(request) as response:
-                if response.status != 200:
-                    return False
+                new_etag = self._etag_from_http_response(response)
         except urllib.error.URLError as e:
             return False
 
-        return True
+        return old_etag == new_etag
     #end function
 
     def refresh(self):
@@ -66,15 +55,24 @@ class BasePackagesListMixin:
         self.unpack()
     #end function
 
-    def download(self):
+    def download(self, remove_old=True):
         target_dir = os.path.dirname(self.filename_gzipped)
 
         if not os.path.isdir(target_dir):
             os.makedirs(target_dir)
 
+        filename_etag = None
+
         try:
             with urllib.request.urlopen(self.url) as response:
-                with open(self.filename_gzipped, "wb+") as outfile:
+                etag = self._etag_from_http_response(response)
+
+                filename_etag = os.path.join(
+                    os.path.dirname(self.filename_gzipped),
+                    etag
+                )
+
+                with open(filename_etag, "wb+") as outfile:
                     while True:
                         buf = response.read(8*1024)
                         if not buf:
@@ -82,10 +80,27 @@ class BasePackagesListMixin:
                         outfile.write(buf)
                     #end while
                 #end with
+
+                if remove_old and os.path.lexists(self.filename_gzipped):
+                    if os.path.exists(self.filename_gzipped):
+                        filename_etag_old = os.path.join(
+                            os.path.dirname(self.filename_gzipped),
+                            os.readlink(self.filename_gzipped)
+                        )
+                        os.unlink(filename_etag_old)
+                    #end if
+
+                    os.unlink(self.filename_gzipped)
+                #end if
+
+                os.symlink(etag, self.filename_gzipped)
             #end with
         except (OSError, urllib.error.URLError) as e:
+            if filename_etag and os.path.exists(filename_etag):
+                os.unlink(filename_etag)
             raise RepositoryError("failed to download '%s': %s" %
                     (self.url, str(e)))
+        #end try
     #end function
 
     def unpack(self):
@@ -131,6 +146,25 @@ class BasePackagesListMixin:
 
             yield pkg_info
         #end for
+    #end function
+
+    # SEMI PRIVATE
+
+    def _etag_from_http_response(self, response):
+        alphabet = \
+            string.ascii_uppercase + \
+            string.ascii_lowercase + \
+            string.digits
+
+        identifier1 = response.getheader("ETag", "")
+        identifier2 = response.getheader("Last-Modified",
+            "".join(random.choices(alphabet, k=16)))
+
+        sha256 = hashlib.sha256()
+        sha256.update(identifier1.encode("utf-8"))
+        sha256.update(identifier2.encode("utf-8"))
+
+        return sha256.hexdigest()[:16]
     #end function
 
 #end class
