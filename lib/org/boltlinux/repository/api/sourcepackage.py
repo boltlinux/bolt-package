@@ -53,7 +53,7 @@ class SourcePackage(Resource):
 
     def _get_one(self, id_, name, version):
         if id_ is not None:
-            query = SourcePackagemodel.query\
+            query = SourcePackageModel.query\
                 .filter_by(id_=id_)
         elif name and version:
             query = SourcePackageModel.query\

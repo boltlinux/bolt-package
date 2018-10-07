@@ -29,7 +29,12 @@ class Setting(db.Model):
     __tablename__ = "setting"
 
     id_   = db.Column(db.Integer, primary_key=True, index=True)
-    name  = db.Column(db.String(50), nullable=False, index=True)
+    name  = db.Column(db.String(50), nullable=False)
     value = db.Column(db.String(50), nullable=False)
+
+    __table_args__ = (
+        db.Index("ix_setting_name_value", "name", "value"),
+        db.UniqueConstraint("name", "value")
+    )
 #end class
 

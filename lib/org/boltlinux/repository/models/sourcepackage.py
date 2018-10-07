@@ -38,7 +38,7 @@ class SourcePackage(db.Model):
     upstream_source_id = db.Column(db.Integer,
             db.ForeignKey("upstream_source.id_"), nullable=True, index=True)
 
-    name             = db.Column(db.String(50), nullable=False, index=True)
+    name             = db.Column(db.String(50), nullable=False)
     version          = db.Column(db.String(50), nullable=False)
     upstream_version = db.Column(db.String(50), nullable=True)
     git_hash         = db.Column(db.String(8),  nullable=True)
@@ -48,7 +48,9 @@ class SourcePackage(db.Model):
 
     json = db.Column(db.Text)
 
-    __table_args__ = (db.Index("ix_source_package_name_version",
-        "name", "version"), )
+    __table_args__ = (
+        db.Index("ix_source_package_name_version", "name", "version"),
+        db.UniqueConstraint("name", "version")
+    )
 #end class
 
