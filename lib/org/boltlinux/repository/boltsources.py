@@ -77,7 +77,7 @@ class BoltSources(RepoTask):
             try:
                 rules.refresh()
             except RepositoryError as e:
-                msg = "Error refreshing Bolt source packages rules for origin '%s': %s"
+                msg = "Error refreshing Bolt source package rules for origin '%s': %s"
                 self.log.error(msg % (repo_info["name"], str(e)))
             #end try
         #end for

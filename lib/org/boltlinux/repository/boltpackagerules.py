@@ -76,7 +76,7 @@ class BoltPackageRules:
         git_base_cmd = ["git", "-C", self.rules_dir]
 
         git_fetch_origin = git_base_cmd + ["fetch",    "origin"    ]
-        git_checkout     = git_base_cmd + ["checkout", self._branch]
+        git_checkout     = git_base_cmd + ["checkout", "--force", self._branch]
         git_reset_hard   = git_base_cmd + ["reset", "--hard", "origin/" + self._branch]
         git_clean_xfd    = git_base_cmd + ["clean",    "-xfd"      ]
 
@@ -205,8 +205,8 @@ class Revision:
         else:
             git_diff_tree = [
                 "git", "-C", self._rules_dir,
-                "diff-tree", "--no-commit-id", "--name-only",  "-r",
-                self._prev_rev + ".." + self._commit_id
+                    "diff-tree", "--no-commit-id", "--name-only",  "-r",
+                        self._prev_rev + ".." + self._commit_id
             ]
 
             try:
