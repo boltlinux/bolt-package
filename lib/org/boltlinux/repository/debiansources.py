@@ -46,6 +46,8 @@ class DebianSources(RepoTask):
         self._verbose    = verbose
         self._components = config.get("components", ["main"])
         self._mirror     = config.get("mirror", "http://ftp.debian.org/debian/")
+        self._security   = config.get("security",
+                "http://security.debian.org/debian-security/")
 
         self._cache_dir  = \
             config.get("cache-dir",
@@ -61,56 +63,74 @@ class DebianSources(RepoTask):
     #end function
 
     def refresh(self):
+        mirror_list = [
+            (self._mirror, False),
+            (self._security, True)
+        ]
+
         for component in self._components:
-            if self.is_stopped():
-                break
+            for mirror, is_security in mirror_list:
+                if self.is_stopped():
+                    break
 
-            if self._verbose:
-                self.log.info(
-                    "Refreshing Debian source package list for component '%s'."
-                        % component)
-            #end if
+                if self._verbose:
+                    msg = "Refreshing Debian source package list for" \
+                            " component '%s%s'."
+                    self.log.info(msg % (component,
+                        " (security)" if is_security else ""))
+                #end if
 
-            sources_list = DebianSourcesList(
-                release   = self._release,
-                component = component,
-                mirror    = self._mirror,
-                cache_dir = self._cache_dir
-            )
+                sources_list = DebianSourcesList(
+                    release     = self._release,
+                    component   = component,
+                    mirror      = mirror,
+                    cache_dir   = self._cache_dir,
+                    is_security = is_security
+                )
 
-            try:
-                if not sources_list.is_up2date():
-                    sources_list.refresh()
-            except RepositoryError as e:
-                msg = "Failed to refresh Debian source package list for component '%s': %s"
-                self.log.error(msg % (component, str(e)))
-            #end try
+                try:
+                    if not sources_list.is_up2date():
+                        sources_list.refresh()
+                except RepositoryError as e:
+                    msg = "Failed to refresh Debian source package list for" \
+                            " component '%s': %s"
+                    self.log.error(msg % (component, str(e)))
+                #end try
+            #end for
         #end for
     #end function
 
     def update_db(self):
+        mirror_list = [
+            (self._mirror, False),
+            (self._security, True)
+        ]
+
         with app.app_context():
             stored_pkg_index = \
                 dict([(obj.name, obj) for obj in UpstreamSource.query.all()])
 
             for component in self._components:
-                if self.is_stopped():
-                    break
+                for mirror, is_security in mirror_list:
+                    if self.is_stopped():
+                        break
 
-                if self._verbose:
-                    self.log.info(
-                        "Updating Debian source package DB entries for component '%s'."
-                            % component)
+                    if self._verbose:
+                        self.log.info(
+                            "Updating Debian source package DB entries for component '%s%s'."
+                                % (component, " (security)" if is_security else ""))
+                    #end if
+
+                    sources_list = DebianSourcesList(
+                        release     = self._release,
+                        component   = component,
+                        mirror      = mirror,
+                        cache_dir   = self._cache_dir,
+                        is_security = is_security
+                    )
+
+                    self._parse_revisions(component, sources_list, stored_pkg_index)
                 #end if
-
-                sources_list = DebianSourcesList(
-                    release   = self._release,
-                    component = component,
-                    mirror    = self._mirror,
-                    cache_dir = self._cache_dir
-                )
-
-                self._parse_revisions(component, sources_list, stored_pkg_index)
             #end for
 
             db.session.commit()

@@ -33,11 +33,18 @@ from org.boltlinux.error import RepositoryError
 class DebianSourcesList(BasePackagesListMixin):
 
     def __init__(self, release="stable", component="main", mirror=None,
-            cache_dir=None):
-        self._release   = release
-        self._component = component
-        self._mirror    = mirror if mirror is not None else \
-            "http://ftp.debian.org/debian/"
+            cache_dir=None, is_security=False):
+        self._release     = release
+        self._component   = component
+        self._is_security = is_security
+
+        if mirror is not None:
+            self._mirror = mirror
+        else:
+            self._mirror = \
+                "http://security.debian.org/debian-security/" if is_security \
+                    else "http://ftp.debian.org/debian/"
+        #end if
 
         self._cache_dir = cache_dir or os.path.realpath(
             os.path.join(
@@ -46,7 +53,8 @@ class DebianSourcesList(BasePackagesListMixin):
             )
         )
 
-        self._target_dir = os.path.join(self._cache_dir, self._component)
+        self._target_dir = os.path.join(self._cache_dir, "security" if
+                self._is_security else "archive", self._component)
     #end function
 
     @property
@@ -59,16 +67,14 @@ class DebianSourcesList(BasePackagesListMixin):
 
     @property
     def url(self):
-        return self._mirror    + "/dists/" + \
-               self._release   + "/"       + \
-               self._component + "/source/Sources.gz"
-    #end function
+        path = \
+            "/dists/%(release)s/%(subdir)s%(component)s/source/Sources.gz" % {
+                "release": self._release,
+                "subdir": "updates/" if self._is_security else "",
+                "component": self._component
+            }
 
-    @property
-    def by_hash_url(self):
-        return self._mirror    + "/dists/" + \
-               self._release   + "/"       + \
-               self._component + "/source/by-hash/"
+        return self._mirror + path
     #end function
 
 #end class

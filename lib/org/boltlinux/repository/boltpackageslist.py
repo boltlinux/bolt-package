@@ -82,14 +82,5 @@ class BoltPackagesList(BasePackagesListMixin):
                self._component + "/Packages.gz"
     #end function
 
-    @property
-    def by_hash_url(self):
-        return self._mirror    + "/" + \
-               self._release   + "/" + \
-               self._libc      + "/" + \
-               self._arch      + "/" + \
-               self._component + "/by-hash/"
-    #end function
-
 #end class
 
