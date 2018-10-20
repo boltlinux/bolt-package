@@ -70,13 +70,6 @@ class BoltPackages(RepoTask):
                     repo_name = repo_info["name"]
                     repo_url  = repo_info["repo-url"]
 
-                    if self._verbose:
-                        self.log.info(
-                            "Refreshing Bolt binary package list for "\
-                                    "repo '%s', libc '%s', arch '%s'." %
-                                        (repo_name, libc, arch))
-                    #end if
-
                     packages_list = BoltPackagesList(
                         release   = self._release,
                         component = "main",
@@ -87,6 +80,13 @@ class BoltPackages(RepoTask):
 
                     try:
                         if not packages_list.is_up2date():
+                            if self._verbose:
+                                self.log.info(
+                                    "Refreshing packages list for "
+                                        "'%s', libc '%s', arch '%s'." %
+                                                (repo_name, libc, arch))
+                            #end if
+
                             packages_list.refresh()
                     except RepositoryError as e:
                         msg = "Failed to refresh Bolt packages list for "\
@@ -114,8 +114,8 @@ class BoltPackages(RepoTask):
 
                         if self._verbose:
                             self.log.info(
-                                "Updating Bolt binary package DB entries for "\
-                                    "repo '%s', libc '%s', arch '%s'." %
+                                "Updating package DB entries for '%s', "
+                                    "libc '%s', arch '%s'." %
                                         (repo_name, libc, arch))
                         #end if
 

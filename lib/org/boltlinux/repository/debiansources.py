@@ -73,13 +73,6 @@ class DebianSources(RepoTask):
                 if self.is_stopped():
                     break
 
-                if self._verbose:
-                    msg = "Refreshing Debian source package list for" \
-                            " component '%s%s'."
-                    self.log.info(msg % (component,
-                        " (security)" if is_security else ""))
-                #end if
-
                 sources_list = DebianSourcesList(
                     release     = self._release,
                     component   = component,
@@ -90,9 +83,16 @@ class DebianSources(RepoTask):
 
                 try:
                     if not sources_list.is_up2date():
+                        if self._verbose:
+                            msg = "Refreshing Debian source Packages list "\
+                                    "for component '%s%s'."
+                            self.log.info(msg % (component,
+                                " (security)" if is_security else ""))
+                        #end if
+
                         sources_list.refresh()
                 except RepositoryError as e:
-                    msg = "Failed to refresh Debian source package list for" \
+                    msg = "Error updating Debian sources for" \
                             " component '%s': %s"
                     self.log.error(msg % (component, str(e)))
                 #end try
@@ -117,7 +117,7 @@ class DebianSources(RepoTask):
 
                     if self._verbose:
                         self.log.info(
-                            "Updating Debian source package DB entries for component '%s%s'."
+                            "Updating Debian sources DB entries for component '%s%s'."
                                 % (component, " (security)" if is_security else ""))
                     #end if
 
