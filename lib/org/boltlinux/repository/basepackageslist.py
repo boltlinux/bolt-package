@@ -42,7 +42,7 @@ class BasePackagesListMixin:
         old_etag = os.path.basename(os.readlink(self.filename_gzipped))
         try:
             request = urllib.request.Request(self.url, method="HEAD")
-            with urllib.request.urlopen(request) as response:
+            with urllib.request.urlopen(request, timeout=30) as response:
                 new_etag = self._etag_from_http_response(response)
         except urllib.error.URLError as e:
             return False
@@ -64,7 +64,7 @@ class BasePackagesListMixin:
         filename_etag = None
 
         try:
-            with urllib.request.urlopen(self.url) as response:
+            with urllib.request.urlopen(self.url, timeout=30) as response:
                 etag = self._etag_from_http_response(response)
 
                 filename_etag = os.path.join(
@@ -93,7 +93,8 @@ class BasePackagesListMixin:
                     os.unlink(self.filename_gzipped)
                 #end if
 
-                os.symlink(etag, self.filename_gzipped)
+                if os.path.exists(filename_etag):
+                    os.symlink(etag, self.filename_gzipped)
             #end with
         except (OSError, urllib.error.URLError) as e:
             if filename_etag and os.path.exists(filename_etag):
@@ -144,7 +145,8 @@ class BasePackagesListMixin:
                 #end if
             #end for
 
-            yield pkg_info
+            if pkg_info:
+                yield pkg_info
         #end for
     #end function
 
