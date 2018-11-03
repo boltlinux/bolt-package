@@ -35,22 +35,27 @@ class SpecfileSerializer:
         "architecture-independent": 1,
     }
 
-    def __init__(self, xml_doc):
-        self._xml_doc = xml_doc
-        self._node    = xml_doc.getroot()
-    #end function
+    def serialize(self, specfile):
+        root_node = specfile.xml_doc.getroot()
 
-    def serialize(self):
         element = {}
-        element["source"] = self.apply_templates(self._node.xpath("source")[0])
+        element["source"] = self.apply_templates(root_node.xpath("source")[0])
+
+        element["source"].update({
+            "name":    specfile.source_name,
+            "version": specfile.latest_version
+        })
+
+        if specfile.upstream_version:
+            element["source"]["upstream_version"] = specfile.upstream_version
 
         packages = []
-        for item in self._node.xpath("package"):
-            pkg  = {}
+        for item in root_node.xpath("package"):
+            pkg  = self.apply_templates(item)
             desc = item.xpath("description/summary")[0]
 
             pkg.update(self.fetch_attributes(item))
-            pkg["description"] = desc.text
+            pkg["summary"] = desc.text
 
             packages.append(pkg)
         #end for

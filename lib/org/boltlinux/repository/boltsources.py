@@ -216,8 +216,8 @@ class BoltSources(RepoTask):
                 if ref_obj is not None:
                     if ref_obj.git_hash != commit_id:
                         self.log.warning(
-                            "Package '%s' at '%.8s' in '%s' modified without version bump." %
-                                (source_name, revision._commit_id, rules._repo_name)
+                            "Package '%s' at '%s' in '%s' modified without version bump." %
+                                (source_name, commit_id, rules._repo_name)
                         )
                         ref_obj.json             = json_data
                         ref_obj.upstream_version = upstream_version

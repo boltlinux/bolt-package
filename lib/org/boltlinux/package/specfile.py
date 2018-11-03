@@ -126,7 +126,7 @@ class Specfile:
     #end function
 
     def serialize(self):
-        return SpecfileSerializer(self.xml_doc).serialize()
+        return SpecfileSerializer().serialize(self)
 
     @property
     def source_name(self):
