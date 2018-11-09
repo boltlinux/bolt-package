@@ -23,16 +23,22 @@
 # THE SOFTWARE.
 #
 
+import os
+import sys
+import logging
 import threading
+import traceback
 
 class RepoTask(threading.Thread):
 
-    def __init__(self):
+    def __init__(self, name):
         super().__init__()
+        self._name      = name
         self._stop_flag = threading.Event()
         self._active    = threading.Event()
         self._lock      = threading.Lock()
         self._condition = threading.Condition(self._lock)
+        self.log        = logging.getLogger("org.boltlinux.repository")
     #end function
 
     def run(self):
@@ -42,8 +48,18 @@ class RepoTask(threading.Thread):
                     continue
             #end with
 
-            self.refresh()
-            self.update_db()
+            try:
+                self.run_task()
+            except Exception as e:
+                _, exc_value, exc_tb = sys.exc_info()
+                frame = traceback.TracebackException(type(exc_value),
+                            exc_value, exc_tb, limit=None).stack[-1]
+                filename = os.path.basename(frame.filename)
+                msg = "Repo task '{}' **CRASH** in '{}' line '{}': {} {}"\
+                            .format(self._name, filename, frame.lineno,
+                                    type(e).__name__, e)
+                self.log.error(msg)
+            #end try
 
             with self._condition:
                 self._active.clear()

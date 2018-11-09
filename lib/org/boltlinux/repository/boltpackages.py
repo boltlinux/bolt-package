@@ -38,7 +38,7 @@ from org.boltlinux.package.xpkg import BaseXpkg
 class BoltPackages(RepoTask):
 
     def __init__(self, config, verbose=True):
-        super().__init__()
+        super().__init__("bolt-packages")
 
         release = config.get("release", {})
 
@@ -58,6 +58,11 @@ class BoltPackages(RepoTask):
             )
 
         self.log = logging.getLogger("org.boltlinux.repository")
+    #end function
+
+    def run_task(self):
+        self.refresh()
+        self.update_db()
     #end function
 
     def refresh(self):
@@ -133,7 +138,7 @@ class BoltPackages(RepoTask):
                                 .setdefault(arch, {})
 
                         self._parse_revisions(packages_list, source_pkg_index,
-                                binary_pkg_subindex)
+                                binary_pkg_subindex, repo_name)
                     #end for
                 #end for
             #end for
@@ -177,15 +182,16 @@ class BoltPackages(RepoTask):
     #end function
 
     def _parse_revisions(self, packages_list, source_pkg_index,
-            binary_pkg_index):
+            binary_pkg_index, repo_name):
         for pkg_info in packages_list:
             if self.is_stopped():
                 break
 
-            pkg_name    = pkg_info["Package"]
-            pkg_version = pkg_info["Version"]
-            pkg_source  = pkg_info["Source"]
-            arch_indep  = pkg_info["Architecture"] == "all"
+            pkg_name     = pkg_info["Package"]
+            pkg_version  = pkg_info["Version"]
+            pkg_source   = pkg_info["Source"]
+            arch_indep   = pkg_info["Architecture"] == "all"
+            pkg_filename = pkg_info["Filename"]
 
             if pkg_source is not None:
                 source_ref_obj = source_pkg_index \
@@ -209,6 +215,8 @@ class BoltPackages(RepoTask):
                     name       = pkg_name,
                     version    = pkg_version,
                     component  = packages_list.component,
+                    repo_name  = repo_name,
+                    filename   = pkg_filename,
                     arch_indep = arch_indep
                 )
                 db.session.add(binary_pkg)

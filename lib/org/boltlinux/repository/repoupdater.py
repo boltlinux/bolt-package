@@ -28,6 +28,7 @@ import threading
 from org.boltlinux.repository.debiansources import DebianSources
 from org.boltlinux.repository.boltsources import BoltSources
 from org.boltlinux.repository.boltpackages import BoltPackages
+from org.boltlinux.repository.boltpackagescan import BoltPackageScan
 
 class RepoUpdater:
 
@@ -39,7 +40,8 @@ class RepoUpdater:
         self._tasks  = [
             DebianSources(config),
             BoltSources(config),
-            BoltPackages(config)
+            BoltPackages(config),
+            BoltPackageScan(config)
         ]
     #end function
 

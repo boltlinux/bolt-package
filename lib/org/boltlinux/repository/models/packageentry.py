@@ -25,29 +25,18 @@
 
 from org.boltlinux.repository.flaskinit import db
 
-class BinaryPackage(db.Model):
-    __tablename__ = "binary_package"
+class PackageEntry(db.Model):
+    __tablename__ = "package_entry"
 
     id_ = db.Column(db.Integer, primary_key=True, index=True)
 
-    source_package_id = db.Column(db.Integer, db.ForeignKey("source_package.id_"),
+    binary_package_id = db.Column(db.Integer, db.ForeignKey("binary_package.id_"),
             nullable=False, index=True)
 
-    libc       = db.Column(db.String(10), nullable=False)
-    arch       = db.Column(db.String(10), nullable=False)
-    name       = db.Column(db.String(50), nullable=False)
-    version    = db.Column(db.String(50), nullable=False)
-    component  = db.Column(db.String(10), nullable=False, index=True)
-    repo_name  = db.Column(db.String(50), nullable=False)
-    filename   = db.Column(db.Text,       nullable=False)
-    arch_indep = db.Column(db.Boolean(),  nullable=False, default=False)
-    sortkey    = db.Column(db.Integer,    nullable=False, default=0)
-    needs_scan = db.Column(db.Boolean(),  nullable=False, default=True)
-
-    __table_args__ = (
-        db.Index("ix_binary_package_name_version", "name", "version"),
-        db.Index("ix_binary_package_libc_arch_name_version", "libc", "arch", "name", "version"),
-        db.UniqueConstraint("libc", "arch", "name", "version")
-    )
+    uname    = db.Column(db.String(64),  nullable=False)
+    gname    = db.Column(db.String(64),  nullable=False)
+    mode     = db.Column(db.Integer,     nullable=False)
+    pathname = db.Column(db.String(256), nullable=False, index=True)
+    target   = db.Column(db.String(256), nullable=True, default=None)
 #end class
 

@@ -37,7 +37,7 @@ from org.boltlinux.error import RepositoryError
 class DebianSources(RepoTask):
 
     def __init__(self, config, verbose=True):
-        super().__init__()
+        super().__init__("debian-sources")
 
         self._release = config.get("release", {}).get("upstream", "stable")
 
@@ -60,6 +60,11 @@ class DebianSources(RepoTask):
             )
 
         self.log = logging.getLogger("org.boltlinux.repository")
+    #end function
+
+    def run_task(self):
+        self.refresh()
+        self.update_db()
     #end function
 
     def refresh(self):

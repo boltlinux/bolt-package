@@ -42,7 +42,7 @@ from org.boltlinux.package.xpkg import BaseXpkg
 class BoltSources(RepoTask):
 
     def __init__(self, config, verbose=True):
-        super().__init__()
+        super().__init__("bolt-sources")
 
         self._verbose      = verbose
         self._repositories = config.get("repositories", [])
@@ -58,6 +58,11 @@ class BoltSources(RepoTask):
             )
 
         self.log = logging.getLogger("org.boltlinux.repository")
+    #end function
+
+    def run_task(self):
+        self.refresh()
+        self.update_db()
     #end function
 
     def refresh(self):
