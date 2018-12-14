@@ -59,9 +59,6 @@ class BinaryPackage(Resource):
             query = BinaryPackageModel.query\
                 .filter_by(id_=id_)
         elif name and version:
-            libc = libc if libc else req_args.get("libc")
-            arch = arch if arch else req_args.get("arch")
-
             query = BinaryPackageModel.query\
                 .filter_by(libc=libc)\
                 .filter_by(arch=arch)\
