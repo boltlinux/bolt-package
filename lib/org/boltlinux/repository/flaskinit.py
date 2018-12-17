@@ -30,7 +30,22 @@ from flask import Flask
 from flask_restful import Api
 from flask_sqlalchemy import SQLAlchemy
 
-app = Flask(__name__)
+extra_vars = [
+    "FLASK_STATIC_URL_PATH",
+    "FLASK_STATIC_FOLDER",
+    "FLASK_ROOT_PATH"
+]
+
+extra_args = {}
+
+for var in extra_vars:
+    if var in os.environ:
+        argname = var.lower().split("_", 1)[-1]
+        extra_args[argname] = os.environ[var]
+    #end if
+#end for
+
+app = Flask(__name__, **extra_args)
 api = Api(app)
 db  = SQLAlchemy()
 
