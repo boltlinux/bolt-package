@@ -43,6 +43,7 @@ class BinaryPackage(db.Model):
     arch_indep = db.Column(db.Boolean(),  nullable=False, default=False)
     sortkey    = db.Column(db.Integer,    nullable=False, default=0)
     needs_scan = db.Column(db.Boolean(),  nullable=False, default=True)
+    summary    = db.Column(db.Text(),     nullable=False)
 
     __table_args__ = (
         db.Index("ix_binary_package_name_version", "name", "version"),

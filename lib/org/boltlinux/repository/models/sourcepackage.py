@@ -44,7 +44,8 @@ class SourcePackage(db.Model):
     git_hash         = db.Column(db.String(8),  nullable=True)
     sortkey          = db.Column(db.Integer,    nullable=False, default=0)
     status           = db.Column(db.Integer,    nullable=False,
-                            default=STATUS_UNKNOWN, index=True)
+                                 default=STATUS_UNKNOWN, index=True)
+    summary          = db.Column(db.Text(),     nullable=False)
 
     json = db.Column(db.Text)
 

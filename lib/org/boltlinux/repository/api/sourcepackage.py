@@ -42,6 +42,7 @@ class SourcePackage(Resource):
         "version":          fields.String,
         "upstream_version": fields.String,
         "status":           fields.Integer,
+        "summary":          fields.String
     }
 
     def get(self, id_=None, name=None, version=None):

@@ -212,6 +212,7 @@ class BoltSources(RepoTask):
                 source_name      = specfile.source_name
                 version          = specfile.latest_version
                 upstream_version = specfile.upstream_version
+                source_summary   = specfile.summary.capitalize()
                 json_data        = json.dumps(specfile.serialize())
 
                 ref_obj = source_pkg_index \
@@ -227,6 +228,7 @@ class BoltSources(RepoTask):
                         ref_obj.json             = json_data
                         ref_obj.upstream_version = upstream_version
                         ref_obj.git_hash         = commit_id
+                        ref_obj.summary          = source_summary
                     #end if
                 else:
                     ref_obj = SourcePackage(
@@ -236,6 +238,7 @@ class BoltSources(RepoTask):
                         upstream_version = upstream_version,
                         git_hash         = commit_id,
                         json             = json_data,
+                        summary          = source_summary
                     )
                     db.session.add(ref_obj)
 

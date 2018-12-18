@@ -41,7 +41,8 @@ class BinaryPackage(Resource):
         "component":  fields.String,
         "arch":       fields.String,
         "libc":       fields.String,
-        "arch_indep": fields.Boolean
+        "arch_indep": fields.Boolean,
+        "summary":    fields.String
     }
 
     @marshal_with(RESOURCE_FIELDS)

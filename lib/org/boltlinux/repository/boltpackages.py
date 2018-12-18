@@ -192,6 +192,7 @@ class BoltPackages(RepoTask):
             pkg_source   = pkg_info["Source"]
             arch_indep   = pkg_info["Architecture"] == "all"
             pkg_filename = pkg_info["Filename"]
+            pkg_summary  = pkg_info.get("Description", "").capitalize()
 
             if pkg_source is not None:
                 source_ref_obj = source_pkg_index \
@@ -200,9 +201,9 @@ class BoltPackages(RepoTask):
 
                 if source_ref_obj is None:
                     self.log.error(
-                        "Source '%s' not found for package '%s' on for %s on %s" %
-                            (pkg_source, pkg_name, packages_list.libc,
-                                packages_list.arch))
+                        "Source '%s' not found for package '%s' on %s (%s)" %
+                            (pkg_source, pkg_name, packages_list.arch,
+                                packages_list.libc))
                     continue
                 #end if
             #end if
@@ -217,7 +218,8 @@ class BoltPackages(RepoTask):
                     component  = packages_list.component,
                     repo_name  = repo_name,
                     filename   = pkg_filename,
-                    arch_indep = arch_indep
+                    arch_indep = arch_indep,
+                    summary    = pkg_summary
                 )
                 db.session.add(binary_pkg)
 

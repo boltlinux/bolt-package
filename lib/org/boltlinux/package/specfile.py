@@ -178,4 +178,13 @@ class Specfile:
             return None
     #end function
 
+    @property
+    def summary(self):
+        try:
+            return self.xml_doc.xpath(
+                "string(/control/source/description/summary)")
+        except IndexError:
+            return ""
+    #end function
+
 #end class
