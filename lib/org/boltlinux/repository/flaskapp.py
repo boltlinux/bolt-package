@@ -73,7 +73,6 @@ api.add_resource(api_v1.SourcePackage,
 )
 
 api.add_resource(api_v1.BinaryPackage,
-    "/v1/package",
     "/v1/package/<int:id_>",
     "/v1/package/arch/<string:arch>/libc/<string:libc>",
     "/v1/package/arch/<string:arch>/libc/<string:libc>/name/<string:name>",
