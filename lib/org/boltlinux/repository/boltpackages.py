@@ -192,7 +192,11 @@ class BoltPackages(RepoTask):
             pkg_source   = pkg_info["Source"]
             arch_indep   = pkg_info["Architecture"] == "all"
             pkg_filename = pkg_info["Filename"]
-            pkg_summary  = pkg_info.get("Description", "").capitalize()
+            pkg_summary  = pkg_info.get("Description", "")
+
+            if len(pkg_summary) > 1:
+                pkg_summary = pkg_summary[0].upper() + \
+                        pkg_summary[1:]
 
             if pkg_source is not None:
                 source_ref_obj = source_pkg_index \

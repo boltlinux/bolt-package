@@ -212,8 +212,12 @@ class BoltSources(RepoTask):
                 source_name      = specfile.source_name
                 version          = specfile.latest_version
                 upstream_version = specfile.upstream_version
-                source_summary   = specfile.summary.capitalize()
+                source_summary   = specfile.summary
                 json_data        = json.dumps(specfile.serialize())
+
+                if len(source_summary) > 1:
+                    source_summary = source_summary[0].upper() + \
+                            source_summary[1:]
 
                 ref_obj = source_pkg_index \
                         .get(source_name, {})\
