@@ -41,10 +41,8 @@ class RequestArgsSchema(Schema):
 
     @validates("search")
     def validate_search(self, search):
-        if re.match(r"^[-a-zA-Z0-9]*$", search) is None:
+        if re.match(r"^[-a-zA-Z0-9.+]*$", search) is None:
             raise ValidationError("Invalid characters in search term.")
-        if len(search) < 2:
-            raise ValidationError("Search term is too short.")
 
     @validates("libc")
     def validate_libc(self, libc):
@@ -53,13 +51,15 @@ class RequestArgsSchema(Schema):
 
     @validates("offkey")
     def validate_offkey(self, offkey):
-        if re.match(r"^[-a-zA-Z0-9]+$", offkey) is None:
+        if re.match(r"^[-a-zA-Z0-9.+]+$", offkey) is None:
             raise ValidationError("Invalid key offset.")
 
     @validates("items")
     def validate_items(self, items):
-        if items < 0 or items > 100:
-            raise ValidationError("Invalid amount of items requested.")
+        if items > 100:
+            raise ValidationError("You may request a maximum of 100 items.")
+        if items < 0:
+            raise ValidationError("Cannot return a negative number of items.")
 
     @post_load
     def setdefaults(self, data):
