@@ -56,8 +56,8 @@ class RequestArgsSchema(Schema):
 
     @validates("items")
     def validate_items(self, items):
-        if items > 100:
-            raise ValidationError("You may request a maximum of 100 items.")
+        if items > 200:
+            raise ValidationError("You may request a maximum of 200 items.")
         if items < 0:
             raise ValidationError("Cannot return a negative number of items.")
 
