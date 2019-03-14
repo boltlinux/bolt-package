@@ -9,7 +9,7 @@ SITE_PACKAGES=$(shell python3 -c "from distutils import sysconfig; print(sysconf
 PREFIX=/usr
 DESTDIR=/
 
-.PHONY: install clean
+.PHONY: install clean serve
 
 install:
 	$(PYTHON) setup.py install --prefix=$(PREFIX) \
@@ -21,3 +21,9 @@ tarball:
 
 clean:
 	rm -fr build
+
+serve:
+	{ \
+		. ./environment.sh; \
+		flask run -h ""; \
+	}
