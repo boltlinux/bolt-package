@@ -33,12 +33,12 @@ class BinaryPackage(db.Model):
     source_package_id = db.Column(db.Integer, db.ForeignKey("source_package.id_"),
             nullable=False, index=True)
 
+    repo_name  = db.Column(db.String(50), nullable=False)
     libc       = db.Column(db.String(10), nullable=False)
     arch       = db.Column(db.String(10), nullable=False)
     name       = db.Column(db.String(50), nullable=False)
     version    = db.Column(db.String(50), nullable=False)
     component  = db.Column(db.String(10), nullable=False, index=True)
-    repo_name  = db.Column(db.String(50), nullable=False)
     filename   = db.Column(db.Text,       nullable=False)
     arch_indep = db.Column(db.Boolean(),  nullable=False, default=False)
     sortkey    = db.Column(db.Integer,    nullable=False, default=0)
@@ -46,9 +46,11 @@ class BinaryPackage(db.Model):
     summary    = db.Column(db.Text(),     nullable=False)
 
     __table_args__ = (
-        db.Index("ix_binary_package_name_version", "name", "version"),
-        db.Index("ix_binary_package_libc_arch_name_version", "libc", "arch", "name", "version"),
-        db.UniqueConstraint("libc", "arch", "name", "version")
+        db.Index("ix_binary_package_repo_name_name_version",
+                    "repo_name", "name", "version"),
+        db.Index("ix_binary_package_repo_name_libc_arch_name_version",
+                    "repo_name", "libc", "arch", "name", "version"),
+        db.UniqueConstraint("repo_name", "libc", "arch", "name", "version")
     )
 #end class
 

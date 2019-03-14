@@ -105,12 +105,12 @@ class BoltPackages(RepoTask):
 
     def update_db(self):
         with app.app_context():
-            source_pkg_index = self._generate_source_pkg_index()
-            binary_pkg_index = self._generate_binary_pkg_index()
-
             for repo_info in self._repositories:
                 repo_name = repo_info["name"]
                 repo_url  = repo_info["repo-url"]
+
+                source_pkg_index = self._generate_source_pkg_index(repo_name)
+                binary_pkg_index = self._generate_binary_pkg_index(repo_name)
 
                 for libc, archlist in self._architectures.items():
                     for arch in archlist:
@@ -152,11 +152,12 @@ class BoltPackages(RepoTask):
 
     # PRIVATE
 
-    def _generate_source_pkg_index(self):
+    def _generate_source_pkg_index(self, repo_name):
         source_pkg_index = {}
 
         query = SourcePackage.query\
                 .options(db.defer("json"))\
+                .filter_by(repo_name=repo_name)\
                 .all()
 
         for obj in query:
@@ -168,15 +169,18 @@ class BoltPackages(RepoTask):
         return source_pkg_index
     #end function
 
-    def _generate_binary_pkg_index(self):
+    def _generate_binary_pkg_index(self, repo_name):
         binary_pkg_index = {}
 
-        for obj in BinaryPackage.query.all():
+        for obj in BinaryPackage.query\
+                .filter_by(repo_name=repo_name)\
+                .all():
             binary_pkg_index \
-                    .setdefault(obj.libc, {}) \
-                    .setdefault(obj.arch, {}) \
-                    .setdefault(obj.name, {}) \
-                    .setdefault(obj.version, obj)
+                .setdefault(obj.libc, {}) \
+                .setdefault(obj.arch, {}) \
+                .setdefault(obj.name, {}) \
+                .setdefault(obj.version, obj)
+        #end for
 
         return binary_pkg_index
     #end function
@@ -215,12 +219,12 @@ class BoltPackages(RepoTask):
             if not binary_pkg_index.get(pkg_name, {}).get(pkg_version):
                 binary_pkg = BinaryPackage(
                     source_package_id = source_ref_obj.id_,
+                    repo_name  = repo_name,
                     libc       = packages_list.libc,
                     arch       = packages_list.arch,
                     name       = pkg_name,
                     version    = pkg_version,
                     component  = packages_list.component,
-                    repo_name  = repo_name,
                     filename   = pkg_filename,
                     arch_indep = arch_indep,
                     summary    = pkg_summary

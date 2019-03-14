@@ -90,7 +90,6 @@ class BoltSources(RepoTask):
 
     def update_db(self):
         with app.app_context():
-            source_pkg_index   = self._generate_source_pkg_index()
             upstream_src_index = self._generate_upstream_src_index()
 
             for repo_info in self._repositories:
@@ -104,16 +103,22 @@ class BoltSources(RepoTask):
                 #end if
 
                 repo_name = repo_info["name"]
+                source_pkg_index = self._generate_source_pkg_index(repo_name)
 
                 start_rev = Setting.query\
                         .filter_by(name = "last_processed_revision@" + repo_name)\
                         .one_or_none()
 
                 rules = BoltPackageRules(repo_name, repo_info["rules"],
-                        cache_dir=self._cache_dir)
+                            cache_dir=self._cache_dir)
 
-                self._parse_revisions(rules, source_pkg_index, upstream_src_index,
-                        start_revision=start_rev and start_rev.value)
+                self._parse_revisions(
+                    rules,
+                    source_pkg_index,
+                    upstream_src_index,
+                    repo_name,
+                    start_revision=start_rev and start_rev.value
+                )
 
                 if start_rev is not None:
                     start_rev.value = rules.get_head_hash()
@@ -125,16 +130,16 @@ class BoltSources(RepoTask):
 
                     db.session.add(start_rev)
                 #end function
+
+                # calculate the sortkeys for packages of same name
+                self._sort_packages(source_pkg_index)
+
+                # make sure all packages have their upstream ref set
+                self._fix_upstream_refs(source_pkg_index, upstream_src_index)
+
+                # mark packages as recent, up2date, outdated
+                self._determine_recentness(source_pkg_index, upstream_src_index)
             #end for
-
-            # calculate the sortkeys for packages of same name
-            self._sort_packages(source_pkg_index)
-
-            # make sure all packages have their upstream ref set
-            self._fix_upstream_refs(source_pkg_index, upstream_src_index)
-
-            # mark packages as recent, up2date, outdated
-            self._determine_recentness(source_pkg_index, upstream_src_index)
 
             db.session.commit()
         #end with
@@ -142,10 +147,16 @@ class BoltSources(RepoTask):
 
     def sort(self):
         with app.app_context():
-            source_pkg_index = self._generate_source_pkg_index()
+            for repo_info in self._repositories:
+                if self.is_stopped():
+                    break
 
-            # calculate the sortkeys for packages of same name
-            self._sort_packages(source_pkg_index)
+                repo_name = repo_info["name"]
+                source_pkg_index = self._generate_source_pkg_index(repo_name)
+
+                # calculate the sortkeys for packages of same name
+                self._sort_packages(source_pkg_index)
+            #end for
 
             db.session.commit()
         #end with
@@ -153,10 +164,17 @@ class BoltSources(RepoTask):
 
     def fix_upstream_refs(self):
         with app.app_context():
-            source_pkg_index   = self._generate_source_pkg_index()
             upstream_src_index = self._generate_upstream_src_index()
 
-            self._fix_upstream_refs(source_pkg_index, upstream_src_index)
+            for repo_info in self._repositories:
+                if self.is_stopped():
+                    break
+
+                repo_name = repo_info["name"]
+                source_pkg_index = self._generate_source_pkg_index()
+
+                self._fix_upstream_refs(source_pkg_index, upstream_src_index)
+            #end for
 
             db.session.commit()
         #end with
@@ -164,11 +182,12 @@ class BoltSources(RepoTask):
 
     # PRIVATE
 
-    def _generate_source_pkg_index(self):
+    def _generate_source_pkg_index(self, repo_name):
         source_pkg_index = {}
 
         query = SourcePackage.query\
                 .options(db.defer("json"))\
+                .filter_by(repo_name=repo_name)\
                 .all()
 
         for obj in query:
@@ -190,7 +209,7 @@ class BoltSources(RepoTask):
     #end function
 
     def _parse_revisions(self, rules, source_pkg_index, upstream_src_index,
-            start_revision=None):
+            repo_name, start_revision=None):
         for revision in rules.revisions(start_rev=start_revision):
             revision.checkout()
 
@@ -236,13 +255,14 @@ class BoltSources(RepoTask):
                     #end if
                 else:
                     ref_obj = SourcePackage(
-                        sortkey          = -1,
+                        repo_name        = repo_name,
                         name             = source_name,
                         version          = version,
                         upstream_version = upstream_version,
                         git_hash         = commit_id,
-                        json             = json_data,
-                        summary          = source_summary
+                        sortkey          = -1,
+                        summary          = source_summary,
+                        json             = json_data
                     )
                     db.session.add(ref_obj)
 

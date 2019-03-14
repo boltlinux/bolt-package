@@ -38,6 +38,7 @@ class SourcePackage(db.Model):
     upstream_source_id = db.Column(db.Integer,
             db.ForeignKey("upstream_source.id_"), nullable=True, index=True)
 
+    repo_name        = db.Column(db.String(50), nullable=False)
     name             = db.Column(db.String(50), nullable=False)
     version          = db.Column(db.String(50), nullable=False)
     upstream_version = db.Column(db.String(50), nullable=True)
@@ -50,8 +51,9 @@ class SourcePackage(db.Model):
     json = db.Column(db.Text)
 
     __table_args__ = (
-        db.Index("ix_source_package_name_version", "name", "version"),
-        db.UniqueConstraint("name", "version")
+        db.Index("ix_source_package_repo_name_name_version",
+                    "repo_name", "name", "version"),
+        db.UniqueConstraint("repo_name", "name", "version")
     )
 #end class
 

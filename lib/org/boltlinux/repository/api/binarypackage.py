@@ -46,21 +46,23 @@ class BinaryPackage(Resource):
     }
 
     @marshal_with(RESOURCE_FIELDS)
-    def get(self, id_=None, libc="musl", arch="x86_64", name=None,
-            version=None):
-        if id_ is not None or (name and version):
-            return self._get_one(id_, libc, arch, name, version)
+    def get(self, id_=None, repo="core", libc="musl", arch="x86_64",
+            name=None, version=None):
+        if id_ is not None or (repo and name and version):
+            return self._get_one(id_, repo, libc, arch, name, version)
         else:
-            return self._get_many(libc, arch, name)
+            return self._get_many(repo, libc, arch, name)
         #end if
     #end function
 
-    def _get_one(self, id_, libc, arch, name, version):
+    def _get_one(self, id_, repo, libc, arch, name, version):
         if id_ is not None:
             query = BinaryPackageModel.query\
+                .filter_by(repo_name=repo)\
                 .filter_by(id_=id_)
         elif name and version:
             query = BinaryPackageModel.query\
+                .filter_by(repo_name=repo)\
                 .filter_by(libc=libc)\
                 .filter_by(arch=arch)\
                 .filter_by(name=name)\
@@ -74,7 +76,7 @@ class BinaryPackage(Resource):
             raise http_exc.NotFound()
     #end function
 
-    def _get_many(self, libc, arch, name):
+    def _get_many(self, repo, libc, arch, name):
         req_args, errors = RequestArgsSchema().load(request.args)
         if errors:
             raise http_exc.BadRequest(errors)
@@ -89,11 +91,13 @@ class BinaryPackage(Resource):
         s2 = db.aliased(BinaryPackageModel)
 
         subquery = db.session.query(db.func.max(s1.sortkey))\
+                .filter_by(repo_name=repo)\
                 .filter_by(libc=libc)\
                 .filter_by(arch=arch)\
-                .filter_by(name = s2.name)
+                .filter_by(name=s2.name)
 
         query = db.session.query(s2)\
+                .filter_by(repo_name=repo)\
                 .filter(s2.name > offkey)\
                 .filter_by(libc=libc)\
                 .filter_by(arch=arch)\

@@ -45,19 +45,20 @@ class SourcePackage(Resource):
         "summary":          fields.String
     }
 
-    def get(self, id_=None, name=None, version=None):
-        if id_ is not None or (name and version):
-            return self._get_one(id_, name, version)
+    def get(self, id_=None, repo=None, name=None, version=None):
+        if id_ is not None or (repo and name and version):
+            return self._get_one(id_, repo, name, version)
         else:
-            return self._get_many(name)
+            return self._get_many(repo, name)
     #end function
 
-    def _get_one(self, id_, name, version):
+    def _get_one(self, id_, repo, name, version):
         if id_ is not None:
             query = SourcePackageModel.query\
                 .filter_by(id_=id_)
         elif name and version:
             query = SourcePackageModel.query\
+                    .filter_by(repo_name=repo)\
                     .filter_by(name=name)\
                     .filter_by(version=version)
         else:
@@ -75,7 +76,7 @@ class SourcePackage(Resource):
     #end function
 
     @marshal_with(RESOURCE_FIELDS)
-    def _get_many(self, name=None):
+    def _get_many(self, repo=None, name=None):
         req_args, errors = RequestArgsSchema().load(request.args)
         if errors:
             raise http_exc.BadRequest(errors)
@@ -88,11 +89,13 @@ class SourcePackage(Resource):
         s2 = db.aliased(SourcePackageModel)
 
         subquery = db.session.query(db.func.max(s1.sortkey))\
-                .filter_by(name = s2.name)
+                .filter_by(repo_name=repo)\
+                .filter_by(name=s2.name)
 
         query = db.session.query(s2)\
                 .options(db.defer("json"))\
                 .filter(s2.name > offkey)\
+                .filter_by(repo_name=repo)\
                 .order_by(s2.name)
 
         if search:
