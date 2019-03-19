@@ -7,7 +7,7 @@ DESTDIR=install
 BRANCH=$(shell git rev-parse --abbrev-ref HEAD)
 SITE_PACKAGES=$(shell python3 -c "from distutils import sysconfig; print(sysconfig.get_python_lib())")
 PREFIX=/usr
-DESTDIR=/
+DESTDIR=build
 
 .PHONY: install clean serve
 
