@@ -46,8 +46,6 @@ class BinaryPackage(db.Model):
     summary    = db.Column(db.Text(),     nullable=False)
 
     __table_args__ = (
-        db.Index("ix_binary_package_repo_name_name_version",
-                    "repo_name", "name", "version"),
         db.Index("ix_binary_package_repo_name_libc_arch_name_version",
                     "repo_name", "libc", "arch", "name", "version"),
         db.UniqueConstraint("repo_name", "libc", "arch", "name", "version")
