@@ -58,7 +58,6 @@ class BinaryPackage(Resource):
     def _get_one(self, id_, repo, libc, arch, name, version):
         if id_ is not None:
             query = BinaryPackageModel.query\
-                .filter_by(repo_name=repo)\
                 .filter_by(id_=id_)
         elif name and version:
             query = BinaryPackageModel.query\
