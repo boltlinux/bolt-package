@@ -131,7 +131,7 @@ class ShlibCache:
                             self._find_object(lib_name)
         except KeyError:
             pass
-        
+
         return default
     #end function
 
