@@ -30,7 +30,7 @@ class BinaryPackage(db.Model):
 
     id_ = db.Column(db.Integer, primary_key=True, index=True)
 
-    binary_package_id = db.Column(db.Integer, db.ForeignKey("binary_package.id_"),
+    source_package_id = db.Column(db.Integer, db.ForeignKey("source_package.id_"),
             nullable=False, index=True)
 
     repo_name  = db.Column(db.String(50), nullable=False)
