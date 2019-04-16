@@ -66,16 +66,12 @@ with app.app_context():
 import org.boltlinux.repository.api as api_v1
 
 api.add_resource(api_v1.SourcePackage,
-    "/v1/source/<int:id_>",
-    "/v1/source/repo/<string:repo>",
-    "/v1/source/repo/<string:repo>/name/<string:name>",
-    "/v1/source/repo/<string:repo>/name/<string:name>/version/<string:version>"
+    "/v1/repo/<string:repo>/source",
+    "/v1/repo/<string:repo>/source/<string:name>/version/<string:version>",
 )
 
 api.add_resource(api_v1.BinaryPackage,
-    "/v1/package/<int:id_>",
-    "/v1/package/repo/<string:repo>/arch/<string:arch>/libc/<string:libc>",
-    "/v1/package/repo/<string:repo>/arch/<string:arch>/libc/<string:libc>/name/<string:name>",
-    "/v1/package/repo/<string:repo>/arch/<string:arch>/libc/<string:libc>/name/<string:name>/version/<string:version>",
+    "/v1/repo/<string:repo>/arch/<string:arch>/libc/<string:libc>/package",
+    "/v1/repo/<string:repo>/package/<string:name>/version/<string:version>",
 )
 

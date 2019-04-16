@@ -38,6 +38,7 @@ class SourcePackage(Resource):
 
     RESOURCE_FIELDS = {
         "id_":              fields.Integer,
+        "repo_name":        fields.String,
         "name":             fields.String,
         "version":          fields.String,
         "upstream_version": fields.String,
@@ -45,24 +46,21 @@ class SourcePackage(Resource):
         "summary":          fields.String
     }
 
-    def get(self, id_=None, repo=None, name=None, version=None):
-        if id_ is not None or (repo and name and version):
-            return self._get_one(id_, repo, name, version)
-        else:
-            return self._get_many(repo, name)
+    def get(self, repo=None, name=None, version=None):
+        if repo:
+            if name and version:
+                return self._get_one(repo, name, version)
+            else:
+                return self._get_many(repo)
+
+            return None
     #end function
 
-    def _get_one(self, id_, repo, name, version):
-        if id_ is not None:
-            query = SourcePackageModel.query\
-                .filter_by(id_=id_)
-        elif name and version:
-            query = SourcePackageModel.query\
-                    .filter_by(repo_name=repo)\
-                    .filter_by(name=name)\
-                    .filter_by(version=version)
-        else:
-            return None
+    def _get_one(self, repo, name, version):
+        query = SourcePackageModel.query\
+                .filter_by(repo_name=repo)\
+                .filter_by(name=name)\
+                .filter_by(version=version)
 
         try:
             result = query.one()
@@ -76,7 +74,7 @@ class SourcePackage(Resource):
     #end function
 
     @marshal_with(RESOURCE_FIELDS)
-    def _get_many(self, repo=None, name=None):
+    def _get_many(self, repo=None):
         req_args, errors = RequestArgsSchema().load(request.args)
         if errors:
             raise http_exc.BadRequest(errors)
@@ -101,16 +99,10 @@ class SourcePackage(Resource):
         if search:
             query = query.filter(s2.name.like("%"+search+"%"))
 
-        if name:
-            query = query\
-                .filter_by(name=name)\
-                .order_by(s2.sortkey)
-        else:
-            query = query.filter_by(sortkey=subquery)
-
-        query = query.limit(items)
-
-        return query.all()
+        return query\
+                .filter_by(sortkey=subquery)\
+                .limit(items)\
+                .all()
     #end function
 
 #end class

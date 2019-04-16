@@ -23,19 +23,24 @@
 # THE SOFTWARE.
 #
 
+import json
+
 from flask import request
 from sqlalchemy.orm import exc as sql_exc
 from werkzeug import exceptions as http_exc
-from flask_restful import Resource, fields, marshal_with
+from flask_restful import Resource, fields, marshal, marshal_with
 
 from org.boltlinux.repository.flaskinit import app, db
-from org.boltlinux.repository.models import BinaryPackage as BinaryPackageModel
+from org.boltlinux.repository.models import \
+    BinaryPackage as BinaryPackageModel, \
+    SourcePackage as SourcePackageModel
 from org.boltlinux.repository.api.schema import RequestArgsSchema
 
 class BinaryPackage(Resource):
 
     RESOURCE_FIELDS = {
         "id_":        fields.Integer,
+        "repo_name":  fields.String,
         "name":       fields.String,
         "version":    fields.String,
         "component":  fields.String,
@@ -45,37 +50,92 @@ class BinaryPackage(Resource):
         "summary":    fields.String
     }
 
-    @marshal_with(RESOURCE_FIELDS)
-    def get(self, id_=None, repo="core", libc="musl", arch="x86_64",
+    def get(self, repo="core", libc="musl", arch="x86_64",
             name=None, version=None):
-        if id_ is not None or (repo and name and version):
-            return self._get_one(id_, repo, libc, arch, name, version)
-        else:
-            return self._get_many(repo, libc, arch, name)
+        if repo:
+            if name and version:
+                return self._get_one(repo, name, version)
+            else:
+                return self._get_many(repo, arch, libc)
         #end if
     #end function
 
-    def _get_one(self, id_, repo, libc, arch, name, version):
-        if id_ is not None:
-            query = BinaryPackageModel.query\
-                .filter_by(id_=id_)
-        elif name and version:
-            query = BinaryPackageModel.query\
+    def _get_one(self, repo, name, version):
+        ######################################################################
+        #
+        # Get the requested binary package with name and version.
+        #
+        ######################################################################
+
+        bin_pkg = BinaryPackageModel.query\
                 .filter_by(repo_name=repo)\
-                .filter_by(libc=libc)\
-                .filter_by(arch=arch)\
+                .filter_by(name=name)\
+                .filter_by(version=version)\
+                .first()
+
+        if not bin_pkg:
+            raise http_exc.NotFound("Package '{}' version '{}' not found."
+                    .format(name, version))
+
+        obj = marshal(bin_pkg, BinaryPackage.RESOURCE_FIELDS)
+        obj["data"] = {}
+
+        ######################################################################
+        #
+        # Fetch the source package matching the binary package and extract the
+        # binary package description.
+        #
+        ######################################################################
+
+        source_pkg = SourcePackageModel.query.get(bin_pkg.source_package_id)
+
+        if source_pkg:
+            source_info = json.loads(source_pkg.json)
+            for pkg in source_info["packages"]:
+                if pkg["name"] == name:
+                    obj["data"] = pkg
+                    break
+            #end for
+        #end if
+
+        ######################################################################
+        #
+        # Fetch all combinations of arch, libc for package, version.
+        #
+        ######################################################################
+
+        query = BinaryPackageModel.query\
+                .filter_by(repo_name=repo)\
                 .filter_by(name=name)\
                 .filter_by(version=version)
-        else:
-            return None
 
-        try:
-            return query.one()
-        except sql_exc.NoResultFound:
-            raise http_exc.NotFound()
+        obj["variants"] = {}
+
+        for pkg in query.all():
+            obj["variants"]\
+                .setdefault(pkg.arch, {})\
+                .setdefault(pkg.libc, pkg.version)
+        #end for
+
+        ######################################################################
+        #
+        # Fetch all versions of package.
+        #
+        ######################################################################
+
+        obj["versions"] = [
+            r for (r,) in db.session\
+                .query(BinaryPackageModel.version)\
+                .filter_by(repo_name=repo)\
+                .filter_by(name=name)\
+                .distinct()
+        ]
+
+        return obj
     #end function
 
-    def _get_many(self, repo, libc, arch, name):
+    @marshal_with(RESOURCE_FIELDS)
+    def _get_many(self, repo, arch, libc):
         req_args, errors = RequestArgsSchema().load(request.args)
         if errors:
             raise http_exc.BadRequest(errors)
@@ -105,16 +165,10 @@ class BinaryPackage(Resource):
         if search:
             query = query.filter(s2.name.like("%"+search+"%"))
 
-        if name:
-            query = query\
-                .filter_by(name=name)\
-                .order_by(s2.sortkey)
-        else:
-            query = query.filter_by(sortkey=subquery)
-
-        query = query.limit(items)
-
-        return query.all()
+        return query\
+                .filter_by(sortkey=subquery)\
+                .limit(items)\
+                .all()
     #end function
 
 #end class
