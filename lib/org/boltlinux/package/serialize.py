@@ -27,7 +27,7 @@ import re
 import textwrap
 from copy import deepcopy
 from lxml import etree
-from html2text import html2text
+from html2text import HTML2Text
 
 class SpecfileSerializer:
 
@@ -103,8 +103,11 @@ class SpecfileSerializer:
         desc.tag = "div"
         desc.xpath("summary")[0].tag = "h1"
 
+        html_to_text = HTML2Text()
+        html_to_text.escape_snob = True
+
         html = etree.tostring(desc, encoding="unicode")
-        md   = html2text(html).strip()
+        md   = html_to_text.handle(html).strip()
 
         return md
     #end function
