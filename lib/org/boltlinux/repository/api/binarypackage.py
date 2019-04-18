@@ -63,22 +63,31 @@ class BinaryPackage(Resource):
     def _get_one(self, repo, name, version):
         ######################################################################
         #
-        # Get the requested binary package with name and version.
+        # Fetch all combinations of arch, libc for package, version.
         #
         ######################################################################
 
-        bin_pkg = BinaryPackageModel.query\
+        package_list = BinaryPackageModel.query\
                 .filter_by(repo_name=repo)\
                 .filter_by(name=name)\
                 .filter_by(version=version)\
-                .first()
+                .all()
 
-        if not bin_pkg:
+        if not package_list:
             raise http_exc.NotFound("Package '{}' version '{}' not found."
                     .format(name, version))
 
+        # Use the first entry as the one to display.
+        bin_pkg = package_list[0]
         obj = marshal(bin_pkg, BinaryPackage.RESOURCE_FIELDS)
-        obj["data"] = {}
+
+        obj["variants"] = {}
+
+        for pkg in package_list:
+            obj["variants"]\
+                .setdefault(pkg.arch, {})\
+                .setdefault(pkg.libc, pkg.version)
+        #end for
 
         ######################################################################
         #
@@ -89,6 +98,8 @@ class BinaryPackage(Resource):
 
         source_pkg = SourcePackageModel.query.get(bin_pkg.source_package_id)
 
+        obj["data"] = {}
+
         if source_pkg:
             source_info = json.loads(source_pkg.json)
             for pkg in source_info["packages"]:
@@ -97,25 +108,6 @@ class BinaryPackage(Resource):
                     break
             #end for
         #end if
-
-        ######################################################################
-        #
-        # Fetch all combinations of arch, libc for package, version.
-        #
-        ######################################################################
-
-        query = BinaryPackageModel.query\
-                .filter_by(repo_name=repo)\
-                .filter_by(name=name)\
-                .filter_by(version=version)
-
-        obj["variants"] = {}
-
-        for pkg in query.all():
-            obj["variants"]\
-                .setdefault(pkg.arch, {})\
-                .setdefault(pkg.libc, pkg.version)
-        #end for
 
         ######################################################################
         #
