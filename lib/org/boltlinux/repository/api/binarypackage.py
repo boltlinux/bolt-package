@@ -53,7 +53,7 @@ class BinaryPackage(Resource):
     def get(self, repo="core", libc="musl", arch="x86_64",
             name=None, version=None):
         if repo:
-            if name and version:
+            if name:
                 return self._get_one(repo, name, version)
             else:
                 return self._get_many(repo, arch, libc)
@@ -67,11 +67,28 @@ class BinaryPackage(Resource):
         #
         ######################################################################
 
-        package_list = BinaryPackageModel.query\
+        if version:
+            package_list = BinaryPackageModel.query\
                 .filter_by(repo_name=repo)\
                 .filter_by(name=name)\
                 .filter_by(version=version)\
                 .all()
+        else:
+            s1 = db.aliased(BinaryPackageModel)
+            s2 = db.aliased(BinaryPackageModel)
+
+            subquery = db.session.query(db.func.max(s1.sortkey))\
+                .filter_by(repo_name=repo)\
+                .filter_by(libc=s2.libc)\
+                .filter_by(arch=s2.arch)\
+                .filter_by(name=s2.name)
+
+            package_list = db.session.query(s2)\
+                .filter_by(repo_name=repo)\
+                .filter_by(name=name)\
+                .filter_by(sortkey=subquery)\
+                .all()
+        #end if
 
         if not package_list:
             raise http_exc.NotFound("Package '{}' version '{}' not found."
@@ -122,6 +139,18 @@ class BinaryPackage(Resource):
                 .filter_by(name=name)\
                 .distinct()
         ]
+
+        ######################################################################
+        #
+        # Replace '==' version specifiers with package version.
+        #
+        ######################################################################
+
+        for entry in obj["data"].get("requires", []):
+            version_spec = entry.get("version", "").strip()
+            if version_spec.endswith("=="):
+                entry["version"] = "{} {}".format(version_spec[:-1],
+                        obj["version"])
 
         return obj
     #end function
