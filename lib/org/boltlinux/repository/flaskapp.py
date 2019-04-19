@@ -72,6 +72,7 @@ api.add_resource(api_v1.SourcePackage,
 
 api.add_resource(api_v1.BinaryPackage,
     "/v1/repo/<string:repo>/arch/<string:arch>/libc/<string:libc>/package",
+    "/v1/repo/<string:repo>/package/<string:name>",
     "/v1/repo/<string:repo>/package/<string:name>/version/<string:version>",
 )
 
