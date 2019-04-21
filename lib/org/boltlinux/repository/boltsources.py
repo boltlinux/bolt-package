@@ -44,6 +44,8 @@ class BoltSources(RepoTask):
     def __init__(self, config, verbose=True):
         super().__init__("bolt-sources")
 
+        release_id = config.get("release", {}).get("id", "stable")
+
         self._verbose      = verbose
         self._repositories = config.get("repositories", [])
 
@@ -52,7 +54,7 @@ class BoltSources(RepoTask):
                 os.path.realpath(
                     os.path.join(
                         AppConfig.get_config_folder(),
-                        "cache", "pkg-rules"
+                        "cache", "pkg-rules", release_id
                     )
                 )
             )
@@ -77,7 +79,7 @@ class BoltSources(RepoTask):
             #end if
 
             rules = BoltPackageRules(repo_info["name"], repo_info["rules"],
-                    cache_dir=self._cache_dir)
+                        self._cache_dir)
 
             try:
                 rules.refresh()
@@ -110,7 +112,7 @@ class BoltSources(RepoTask):
                         .one_or_none()
 
                 rules = BoltPackageRules(repo_name, repo_info["rules"],
-                            cache_dir=self._cache_dir)
+                            self._cache_dir)
 
                 self._parse_revisions(
                     rules,

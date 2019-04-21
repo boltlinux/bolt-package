@@ -54,7 +54,7 @@ class DebianSources(RepoTask):
                 os.path.realpath(
                     os.path.join(
                         AppConfig.get_config_folder(),
-                        "cache", "upstream"
+                        "cache", "upstream", self._release
                     )
                 )
             )
