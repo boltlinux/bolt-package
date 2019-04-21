@@ -40,12 +40,7 @@ class BoltPackageRules:
         else:
             self._rules_url, self._branch = rules_url, "master"
 
-        self._cache_dir = cache_dir or os.path.realpath(
-            os.path.join(
-                AppConfig.get_config_folder(),
-                "cache", "upstream"
-            )
-        )
+        self._cache_dir = cache_dir
     #end function
 
     def clone(self, verbose=False):
