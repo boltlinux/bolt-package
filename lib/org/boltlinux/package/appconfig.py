@@ -56,7 +56,7 @@ class AppConfig:
 
   "repositories": [
     { 
-      "name": "bolt-os",
+      "name": "core",
       "repo-url": "http://packages.boltlinux.org/repo",
       "rules": "https://github.com/boltlinux/bolt-pkg-rules.git@release/zeus"
     }
