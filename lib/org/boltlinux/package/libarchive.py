@@ -221,6 +221,8 @@ lib.archive_read_support_format_all.argtypes = [ctypes.c_void_p]
 lib.archive_read_support_format_all.restype = ctypes.c_int
 lib.archive_read_support_format_raw.argtypes = [ctypes.c_void_p]
 lib.archive_read_support_format_raw.restype = ctypes.c_int
+lib.archive_read_support_format_empty.argtypes = [ctypes.c_void_p]
+lib.archive_read_support_format_empty.restype = ctypes.c_int
 
 lib.archive_write_set_option.argtypes = [ctypes.c_void_p, ctypes.c_char_p, ctypes.c_char_p, ctypes.c_char_p]
 lib.archive_write_set_option.restype = ctypes.c_int
@@ -632,6 +634,9 @@ class ArchiveFileReader:
 
         if raw:
             if lib.archive_read_support_format_raw(self._c_archive_p) != \
+                    STATUS_OK:
+                raise Exception()
+            if lib.archive_read_support_format_empty(self._c_archive_p) != \
                     STATUS_OK:
                 raise Exception()
         else:
