@@ -38,7 +38,7 @@ from org.boltlinux.package.packagemanager import PackageManager
 from org.boltlinux.package.basepackage import BasePackage
 from org.boltlinux.package.packagedesc import PackageDescription
 from org.boltlinux.package.filestats import FileStats
-from org.boltlinux.package.util import switch
+from org.boltlinux.toolbox import switch
 
 class BinaryPackage(BasePackage):
 

@@ -34,8 +34,8 @@ from org.boltlinux.package.platform import Platform
 from org.boltlinux.package.libarchive import ArchiveEntry, ArchiveFileWriter
 from org.boltlinux.package.filestats import FileStats
 from org.boltlinux.package.binarypackage import BinaryPackage
-from org.boltlinux.package.util import switch
 from org.boltlinux.package.metadata import PackageMetaData
+from org.boltlinux.toolbox import switch
 
 class DebianPackage(BinaryPackage):
 
