@@ -23,7 +23,7 @@
 # THE SOFTWARE.
 #
 
-class BoltError(RuntimeError):
+class BoltError(Exception):
     pass
 
 class InvocationError(BoltError):
