@@ -54,14 +54,7 @@ def print_usage():
         "OPTIONS:                                                                       \n"
         "                                                                               \n"
         "  -h --help         Print this help message.                                   \n"
-        "                                                                               \n"
-        "  --gen-patches     Try to generate the patch tarball.                         \n"
-        "  --use-orig        Look for an *.orig.tar.* tarball to use.                   \n"
-        "                                                                               \n"
-        "  -a --do-all       Do all of the above.                                       \n"
-        "                                                                               \n"
         "  --set-maintainer  Write maintainer info to changelog (initial import).       \n"
-        "  --no-network      Don't download binary packages to examine contents.        \n"
         % BOLT_VERSION
     )
 #end function
@@ -69,15 +62,12 @@ def print_usage():
 def parse_cmd_line():
     # define default configuration
     config = {
-        "gen_patches": False,
-        "use_orig": False,
-        "use_network": True,
         "set_maintainer": False
     }
 
     try:
-        opts, args = getopt.getopt(sys.argv[1:], "ha", ["help", "gen-patches",
-            "use-orig", "do-all", "no-network", "set-maintainer"])
+        opts, args = getopt.getopt(sys.argv[1:], "h",
+                ["help", "set-maintainer"])
     except getopt.GetoptError as e:
         raise InvocationError("Error parsing command line: %s" % str(e))
 
@@ -87,21 +77,8 @@ def parse_cmd_line():
                 print_usage()
                 sys.exit(0)
                 break
-            if case("--gen-patches"):
-                config["gen_patches"] = True
-                break
-            if case("--use-orig"):
-                config["use_orig"] = True
-                break
-            if case("--no-network"):
-                config["use_network"] = False
-                break
             if case("--set-maintainer"):
                 config["set_maintainer"] = True
-                break
-            if case("--do-all", "-a"):
-                config["gen_patches"] = True
-                config["use_orig"] = True
                 break
         #end switch
     #end for
@@ -123,8 +100,7 @@ if __name__ == "__main__":
         app_config = AppConfig.instance().load_user_config()
 
         # RUN ACTION
-        SourcePackage(args[0], app_config, use_network=options["use_network"])\
-                .to_bolt(**options)
+        SourcePackage(args[0], app_config).to_bolt(**options)
     except InvocationError as e:
         sys.stderr.write("deb2bolt: %s\n" % str(e))
         sys.exit(BOLT_ERR_INVOCATION)

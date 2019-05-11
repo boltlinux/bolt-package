@@ -26,7 +26,10 @@
 import re
 from xml.sax.saxutils import escape as xml_escape
 
-class BasePackageMixin:
+class BasePackage:
+
+    def __init__(self):
+        self.fields = {}
 
     def get(self, key, default=None):
         return self.fields.get(key, default)
@@ -35,8 +38,11 @@ class BasePackageMixin:
         field_name  = None
         field_value = None
 
-        # parse a block in the control file
+        ######################################################################
+        # Parse block of meta data.
+
         fields = {}
+
         for line in content.splitlines():
             if not line.strip() or line.startswith("#"):
                 continue
@@ -44,7 +50,9 @@ class BasePackageMixin:
             if re.match(r"^\S+:", line):
                 field_name, field_value = line.split(":", 1)
 
-                field_name  = field_name.strip().lower()
+                field_name = field_name\
+                    .strip()\
+                    .lower()
                 field_value = field_value.strip()
 
                 fields[field_name] = field_value
@@ -56,9 +64,16 @@ class BasePackageMixin:
             #end if
         #end for
 
-        for dep_type in ["pre-depends", "depends",  "build-depends",
-                         "suggests",    "provides", "breaks",
-                         "conflicts",   "replaces", "build-conflicts"]:
+        ######################################################################
+        # Lots of twisted substitutions and transforms on dep fields.
+
+        dependency_types = [
+            "pre-depends", "depends",  "build-depends",
+            "suggests",    "provides", "breaks",
+            "conflicts",   "replaces", "build-conflicts"
+        ]
+
+        for dep_type in dependency_types:
             if fields.get(dep_type):
                 val = fields[dep_type]
                 val = re.sub(r"\s+", "", val)
@@ -81,6 +96,9 @@ class BasePackageMixin:
                 fields[dep_type] = []
             #end if
         #end for
+
+        ######################################################################
+        # Turn package description into crude XML.
 
         if "description" in fields:
             if "\n" in fields["description"]:

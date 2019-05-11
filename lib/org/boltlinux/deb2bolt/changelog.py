@@ -94,15 +94,16 @@ class Release:
 
         self.epoch, self.version, self.revision = \
                 m.groups(default="") if m else ("", "", "")
+
         if not self.revision:
             self.revision = "0"
-
-        self._parse_content(content)
 
         self.upstream_version = version
         self.maintainer = maintainer
         self.email = email
         self.date = date
+
+        self._parse_content(content)
     #end function
 
     def _parse_content(self, content):
@@ -194,10 +195,19 @@ class Changelog:
                         r"((?:Mon|Tue|Wed|Thu|Fri|Sat|Sun), .*$)", line)
                 if m:
                     maintainer = m.group(1)
-                    email = m.group(2)
-                    date = parse_datetime(m.group(3))
-                    self.releases.append(Release(version, content.strip(),
-                        maintainer, email, date))
+                    email      = m.group(2)
+                    date       = parse_datetime(m.group(3))
+                    content    = content.strip()
+
+                    self.releases.append(
+                        Release(
+                            version,
+                            content,
+                            maintainer,
+                            email,
+                            date
+                        )
+                    )
                     continue
                 #end if
 

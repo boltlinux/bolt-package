@@ -28,64 +28,87 @@ import re
 import stat
 import sys
 
-from org.boltlinux.deb2bolt.basepackage import BasePackageMixin
+import urllib.error
+import urllib.request
+
+from tempfile import TemporaryDirectory
+
+from org.boltlinux.error import BoltSyntaxError, NetworkError
+from org.boltlinux.package.libarchive import ArchiveEntry, ArchiveFileReader
+from org.boltlinux.package.progressbar import ProgressBar
+from org.boltlinux.deb2bolt.basepackage import BasePackage
 from org.boltlinux.deb2bolt.packageutils import PackageUtilsMixin
-from org.boltlinux.error import BoltSyntaxError, CacheMiss
 
 BINARY_PKG_XML_TEMPLATE = """\
 <?xml version="1.0" encoding="utf-8"?>
-<package name="%(binary_name)s" section="%(section)s">
+<package name="{binary_name}" section="{section}">
     <description>
-        <summary>%(summary)s</summary>
+        <summary>{summary}</summary>
         <p>
-%(description)s
+{description}
         </p>
     </description>
 
     <requires>
-%(install_deps)s\
+{install_deps}\
     </requires>
 
     <contents>
-%(contents)s\
+{contents}\
     </contents>
 </package>
 """
 
-class BinaryPackage(BasePackageMixin, PackageUtilsMixin):
+class BinaryPackage(BasePackage, PackageUtilsMixin):
 
     def __init__(self, content):
+        super().__init__()
         try:
             self.parse_content(content)
         except:
-            msg = "error parsing control file."
-            raise BoltSyntaxError(msg)
-        #end try
+            raise BoltSyntaxError("error parsing control file.")
+
+        contents = []
     #end function
 
-    def load_content_spec(self, debdir, pkg_name, pkg_version,
-            use_network=True, **kwargs):
-        sys.stdout.write("Guessing contents of '%s' ...\n" % pkg_name)
+    def generate_content_spec(self, pkg_name, pkg_version, pkg_cache):
+        pkg_meta = pkg_cache.binary[pkg_name][pkg_version]
 
-        mirror = kwargs.get("mirror", "http://ftp.debian.org/debian/")
-        guess_pkg_contents = True
-
-        if use_network:
+        with TemporaryDirectory(prefix="deb2bolt-") as tmpdir:
             try:
-                self.contents = self.get_content_spec_via_package_pool(
-                        pkg_name, pkg_version, mirror=mirror)
-            except CacheMiss:
-                sys.stderr.write(
-                    "Package '%s' not found via apt-cache. "
-                        "Applying local fallback logic.\n" % pkg_name)
-            else:
-                guess_pkg_contents = False
-        #end if
+                sys.stdout.write("Fetching '%s' ...\n" % pkg_meta.url)
 
-        if guess_pkg_contents:
-            self.contents = self.get_content_spec_local_guesswork(
-                    debdir, pkg_name, pkg_version)
-        #end if
+                with urllib.request.urlopen(pkg_meta.url) as response:
+                    bytes_read = 0
+
+                    progress_bar = ProgressBar(response.length) if \
+                            response.length else None
+                    if progress_bar:
+                        progress_bar(bytes_read)
+
+                    deb_name = os.path.basename(pkg_meta.url)
+
+                    with open(os.path.join(tmpdir, deb_name), "wb+") \
+                            as outfile:
+                        while True:
+                            buf = response.read(4096)
+                            if not buf:
+                                break
+                            outfile.write(buf)
+                            bytes_read += len(buf)
+                            if progress_bar:
+                                progress_bar(bytes_read)
+                        #end while
+                    #end with
+
+                    deb_name = outfile.name
+                #end with
+            except urllib.error.URLError as e:
+                raise NetworkError("error retrieving '%s': %s" % \
+                        (pkg_meta.url, str(e)))
+
+            self.contents = self._binary_deb_list_contents(deb_name)
+        #end with
     #end function
 
     def as_xml(self, indent=0):
@@ -99,20 +122,18 @@ class BinaryPackage(BasePackageMixin, PackageUtilsMixin):
                 continue
 
             if pkg_version:
-                install_deps += " " * 8
-                install_deps += "<package name=\"%s\" version=\"%s\"/>\n" \
+                install_deps += ' ' * 8
+                install_deps += '<package name="%s" version="%s"/>\n' \
                         % (pkg_name, pkg_version)
             else:
-                install_deps += " " * 8 + "<package name=\"%s\"/>\n" % pkg_name
+                install_deps += ' ' * 8
+                install_deps += '<package name="%s"/>\n' % pkg_name
         #end for
 
         contents = ""
         for entry in self.contents:
-            entry_path,  \
-            entry_type,  \
-            entry_mode,  \
-            entry_uname, \
-            entry_gname = entry
+            (entry_path, entry_type, entry_mode, entry_uname,
+                    entry_gname) = entry
 
             if self.is_doc_path(entry_path):
                 continue
@@ -125,10 +146,11 @@ class BinaryPackage(BasePackageMixin, PackageUtilsMixin):
             if self.is_misc_unneeded(entry_path):
                 continue
 
-            contents += \
-                " " * 8 + \
-                '<%s src="%s"' % ("dir" if entry_type == stat.S_IFDIR \
-                    else "file", entry_path)
+            contents += ' ' * 8
+            contents += '<%s src="%s"' % (
+                "dir" if entry_type == stat.S_IFDIR else "file",
+                entry_path
+            )
 
             if entry_type == stat.S_IFDIR:
                 default_mode = 0o755
@@ -152,16 +174,94 @@ class BinaryPackage(BasePackageMixin, PackageUtilsMixin):
             contents += '/>\n'
         #end for
 
-        info_set = {
-            "binary_name": self.get("name"),
-            "section": self.get("section"),
-            "summary": self.get("summary"),
-            "description": self.get("description", ""),
+        context = {
+            "binary_name":  self.get("name"),
+            "section":      self.get("section"),
+            "summary":      self.get("summary"),
+            "description":  self.get("description", ""),
             "install_deps": install_deps,
-            "contents": contents
+            "contents":     contents
         }
 
-        return BINARY_PKG_XML_TEMPLATE % info_set
+        return BINARY_PKG_XML_TEMPLATE.format(**context)
+    #end function
+
+    # PRIVATE
+
+    def _binary_deb_list_contents(self, filename):
+        contents = []
+
+        with TemporaryDirectory() as tmpdir:
+            contents = self._binary_deb_list_contents_impl(filename, tmpdir)
+
+        return contents
+    #end function
+
+    def _binary_deb_list_contents_impl(self, filename, tmpdir):
+        # extract data file from deb
+        with ArchiveFileReader(filename) as archive:
+            data_name = None
+
+            for entry in archive:
+                if entry.pathname.startswith("data.tar"):                        
+                    data_name = os.path.join(tmpdir, entry.pathname)
+
+                    with open(data_name, "wb+") as outfile:
+                        while True:
+                            buf = archive.read_data(4096)
+                            if not buf:
+                                break
+                            outfile.write(buf)
+                        #end while
+                    #end with
+
+                    break
+                #end if
+            #end for
+        #end with
+
+        if not data_name:
+            raise PackagingError("binary package %s contains no data." %
+                    data_name)
+
+        contents = []
+
+        # parse data file entries and build content listing
+        with ArchiveFileReader(data_name) as archive:
+            for entry in archive:
+                entry_path = self.fix_path(entry.pathname)
+
+                if entry.is_directory and self.is_path_implicit(entry_path):
+                    continue
+                if self.is_doc_path(entry_path):
+                    continue
+                if self.is_l10n_path(entry_path):
+                    continue
+                if self.is_menu_path(entry_path):
+                    continue
+
+                if entry.is_directory:
+                    entry_type = stat.S_IFDIR
+                elif entry.is_symbolic_link:
+                    entry_type = stat.S_IFLNK
+                elif entry.is_file or entry.is_hardlink:
+                    entry_type = stat.S_IFREG
+                else:
+                    raise BoltValueError(
+                        "type of '%s' unknown '%d'" % (entry_path, entry_type)
+                    )
+
+                contents.append([
+                    entry_path,
+                    entry_type,
+                    entry.mode,
+                    entry.uname,
+                    entry.gname
+                ])
+            #end for
+        #end with
+
+        return contents
     #end function
 
 #end class

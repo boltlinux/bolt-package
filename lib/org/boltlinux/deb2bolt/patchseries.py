@@ -48,6 +48,9 @@ class PatchSeries:
         #end if
     #end function
 
+    def __len__(self):
+        return len(self.patches)
+
     def __iter__(self):
         for p in self.patches:
             yield p
@@ -57,8 +60,7 @@ class PatchSeries:
         if not self.patches:
             return ""
 
-        buf  = '\n'
-        buf += '<patches>\n'
+        buf = '<patches>\n'
         buf += '    <patchset subdir="sources">\n'
         for p in self.patches:
             p = re.sub(r"\s+-p\d+\s*$", r"", p)
@@ -66,7 +68,7 @@ class PatchSeries:
         buf += '    </patchset>\n'
         buf += '</patches>'
 
-        return re.sub(r"^", " " * 4 * indent, buf, flags=re.M) + "\n"
+        return re.sub(r"^", " " * 4 * indent, buf, flags=re.M)
     #end function
 
 #end class
