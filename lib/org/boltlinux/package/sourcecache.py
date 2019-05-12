@@ -28,7 +28,7 @@ import sys
 import hashlib
 import urllib.request
 
-from org.boltlinux.package.progressbar import ProgressBar
+from org.boltlinux.toolbox.progressbar import ProgressBar
 
 class SourceCache:
 
@@ -63,20 +63,14 @@ class SourceCache:
         if not sha256sum:
             return abs_path
 
+        h = hashlib.sha256()
+
         with open(abs_path, "rb") as fp:
-            h = hashlib.sha256()
-
-            while True:
-                buf = fp.read(8*1024)
-                if not buf:
-                    break
-                h.update(buf)
-            #end while
-
-            real_sha256sum = h.hexdigest()
+            for chunk in iter(lambda: f.read(4096), b""):
+                h.update(chunk)
         #end with
 
-        if sha256sum == real_sha256sum:
+        if sha256sum == h.hexdigest():
             return abs_path
 
         return None
@@ -99,33 +93,31 @@ class SourceCache:
 
             try:
                 with urllib.request.urlopen(source_url) as response:
+                    progress_bar = None
+
                     if self.verbose:
                         sys.stdout.write("Retrieving '%s'.\n" % source_url)
 
                     if response.length:
                         progress_bar = ProgressBar(response.length)
-                    else:
-                        progress_bar = None
+                        progress_bar(0)
                     #end if
-
-                    bytes_read = 0
-                    if self.verbose and progress_bar:
-                        progress_bar(bytes_read)
 
                     os.makedirs(os.path.dirname(target_url), exist_ok=True)
 
-                    with open(target_url, "wb+") as outfile:
-                        while True:
-                            buf = response.read(8*1024)
-                            if not buf:
-                                break
+                    with open(target_url, "wb+") as f:
+                        bytes_read = 0
 
-                            h.update(buf)
-                            bytes_read += len(buf)
-                            outfile.write(buf)
+                        for chunk in iter(
+                                lambda: response.read(1024 * 1024), b""):
+                            f.write(chunk)
 
-                            if self.verbose and progress_bar:
+                            if progress_bar:
+                                bytes_read += len(chunk)
                                 progress_bar(bytes_read)
+                            #end if
+
+                            h.update(chunk)
                         #end while
                     #end with
                 #end with
@@ -149,4 +141,3 @@ class SourceCache:
     #end function
 
 #end class
-

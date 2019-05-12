@@ -106,13 +106,9 @@ class BoltPackageScan(RepoTask):
                 with tempfile.TemporaryDirectory() as dirname:
                     archive_file = os.path.join(dirname, pkg_name)
 
-                    with open(archive_file, "wb+") as fp:
-                        while True:
-                            buf = response.read(4096)
-                            if not buf:
-                                break
-                            fp.write(buf)
-                        #end while
+                    with open(archive_file, "wb+") as f:
+                        for chunk in iter(lambda: response.read(8192), b""):
+                            f.write(chunk)
                     #end with
 
                     return self._scan_file(archive_file)
@@ -137,13 +133,9 @@ class BoltPackageScan(RepoTask):
 
                     data_file = os.path.join(dirname, entry.pathname)
 
-                    with open(data_file, "wb+") as fp:
-                        while True:
-                            buf = archive.read_data(4096)
-                            if not buf:
-                                break
-                            fp.write(buf)
-                        #end while
+                    with open(data_file, "wb+") as f:
+                        for chunk in iter(lambda: archive.read_data(4096), b""):
+                            f.write(chunk)
                     #end with
                 #end for
             #end with

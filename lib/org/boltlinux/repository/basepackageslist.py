@@ -72,14 +72,9 @@ class BasePackagesListMixin:
                     etag
                 )
 
-                with open(filename_etag, "wb+") as outfile:
-                    while True:
-                        buf = response.read(8*1024)
-                        if not buf:
-                            break
-                        outfile.write(buf)
-                    #end while
-                #end with
+                with open(filename_etag, "wb+") as f:
+                    for chunk in iter(lambda: f.read(8192), b""):
+                        f.write(chunk)
 
                 if remove_old and os.path.lexists(self.filename_gzipped):
                     if os.path.exists(self.filename_gzipped):
@@ -109,12 +104,8 @@ class BasePackagesListMixin:
             with open(self.filename_text, "wb+") as f:
                 with ArchiveFileReader(self.filename_gzipped, raw=True) as archive:
                     for entry in archive:
-                        while True:
-                            buf = archive.read_data(8*1024)
-                            if not buf:
-                                break
-                            f.write(buf)
-                        #end while
+                        for chunk in iter(lambda: archive.read_data(8192), b""):
+                            f.write(chunk)
                     #end for
                 #end with
             #end with

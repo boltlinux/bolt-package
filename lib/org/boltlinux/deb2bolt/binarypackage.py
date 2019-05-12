@@ -35,7 +35,7 @@ from tempfile import TemporaryDirectory
 
 from org.boltlinux.error import BoltSyntaxError, NetworkError
 from org.boltlinux.package.libarchive import ArchiveEntry, ArchiveFileReader
-from org.boltlinux.package.progressbar import ProgressBar
+from org.boltlinux.toolbox.progressbar import ProgressBar
 from org.boltlinux.deb2bolt.basepackage import BasePackage
 from org.boltlinux.deb2bolt.packageutils import PackageUtilsMixin
 
@@ -90,12 +90,12 @@ class BinaryPackage(BasePackage, PackageUtilsMixin):
                         progress_bar(0)
                     #end if
 
-                    bytes_read = 0
-                    deb_name   = os.path.basename(pkg_meta.url)
+                    deb_name = os.path.basename(pkg_meta.url)
 
                     with open(os.path.join(tmpdir, deb_name), "wb+") as f:
-                        for chunk in iter(
-                                lambda: response.read(1024 * 1024), b""):
+                        bytes_read = 0
+
+                        for chunk in iter(lambda: response.read(8192), b""):
                             f.write(chunk)
 
                             if progress_bar:

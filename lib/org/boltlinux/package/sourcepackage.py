@@ -34,7 +34,7 @@ from org.boltlinux.package.libarchive import ArchiveFileReader
 from org.boltlinux.package.packagedesc import PackageDescription
 from org.boltlinux.package.basepackage import BasePackage
 from org.boltlinux.package.platform import Platform
-from org.boltlinux.package.progressbar import ProgressBar
+from org.boltlinux.toolbox.progressbar import ProgressBar
 
 class SourcePackage(BasePackage):
 
@@ -148,10 +148,9 @@ class SourcePackage(BasePackage):
 
             with ArchiveFileReader(archive_file) as archive:
                 progress_bar = ProgressBar(total_size)
-                bytes_read   = 0
+                progress_bar(0)
 
-                if self.verbose:
-                    progress_bar(bytes_read)
+                bytes_read = 0
 
                 for entry in archive:
                     pathname = re.sub(r"^(?:\.+)?(?:/+)?[^/]*", "",
@@ -169,19 +168,18 @@ class SourcePackage(BasePackage):
                         os.chmod(full_path, entry.mode)
                     elif entry.is_file:
                         entry.mode |= 0o600
-                        with open(full_path, "wb+") as fp:
-                            while True:
-                                buf = archive.read_data(4096)
-                                if not buf:
-                                    break
-                                bytes_read += len(buf)
-                                fp.write(buf)
-                            #end while
+                        with open(full_path, "wb+") as f:
+                            for chunk in iter(lambda: archive.read_data(4096), b""):
+                                f.write(chunk)
+                                bytes_read += len(chunk)
+                            #end for
                         #end with
-                        if self.verbose:
-                            progress_bar(bytes_read)
+
+                        # This won't do anything if stdout is not a TTY.
+                        progress_bar(bytes_read)
+
                         os.chmod(full_path, entry.mode)
-                        # assume it is sufficient to do this for files
+                        # Assume it is sufficient to do this for files.
                         os.utime(full_path, (entry.atime, entry.mtime))
                     elif entry.is_symbolic_link:
                         if os.path.exists(full_path):

@@ -244,10 +244,8 @@ class DebianPackageCache:
             with urllib.request.urlopen(request, timeout=connection_timeout)\
                     as response:
                 with open(blob_name + "$", 'wb+') as f:
-                    for chunk in iter(
-                            lambda: response.read(1024 * 1024), b""):
+                    for chunk in iter(lambda: response.read(8192), b""):
                         f.write(chunk)
-                    #end for
                 #end with
             #end with
         except (OSError, urllib.error.URLError) as e:
