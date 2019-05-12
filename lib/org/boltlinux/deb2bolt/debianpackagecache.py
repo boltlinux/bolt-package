@@ -243,13 +243,11 @@ class DebianPackageCache:
             request = urllib.request.Request(source_url, method="GET")
             with urllib.request.urlopen(request, timeout=connection_timeout)\
                     as response:
-                with open(blob_name, 'wb+') as fp:
-                    while True:
-                        # TODO: add progress callback.
-                        buf = response.read(8 * 1024)
-                        if not buf:
-                            break
-                        fp.write(buf)
+                with open(blob_name, 'wb+') as f:
+                    for chunk in iter(
+                            lambda: response.read(1024 * 1024), b""):
+                        f.write(chunk)
+                    #end for
                 #end with
             #end with
         except (OSError, urllib.error.URLError) as e:

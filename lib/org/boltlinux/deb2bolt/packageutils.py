@@ -24,16 +24,7 @@
 #
 
 import os
-import sys
 import re
-import stat
-import locale
-import subprocess
-import urllib.request
-
-import org.boltlinux.package.libarchive as libarchive
-from org.boltlinux.error import NotFound, PackagingError, NetworkError, \
-        BoltValueError
 
 class PackageUtilsMixin:
 

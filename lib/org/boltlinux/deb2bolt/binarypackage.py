@@ -83,29 +83,29 @@ class BinaryPackage(BasePackage, PackageUtilsMixin):
                 sys.stdout.write("Fetching '%s' ...\n" % pkg_meta.url)
 
                 with urllib.request.urlopen(pkg_meta.url) as response:
+                    progress_bar = None
+
+                    if response.length:
+                        progress_bar = ProgressBar(response.length)
+                        progress_bar(0)
+                    #end if
+
                     bytes_read = 0
+                    deb_name   = os.path.basename(pkg_meta.url)
 
-                    progress_bar = ProgressBar(response.length) if \
-                            response.length else None
-                    if progress_bar:
-                        progress_bar(bytes_read)
+                    with open(os.path.join(tmpdir, deb_name), "wb+") as f:
+                        for chunk in iter(
+                                lambda: response.read(1024 * 1024), b""):
+                            f.write(chunk)
 
-                    deb_name = os.path.basename(pkg_meta.url)
-
-                    with open(os.path.join(tmpdir, deb_name), "wb+") \
-                            as outfile:
-                        while True:
-                            buf = response.read(4096)
-                            if not buf:
-                                break
-                            outfile.write(buf)
-                            bytes_read += len(buf)
                             if progress_bar:
+                                bytes_read += len(chunk)
                                 progress_bar(bytes_read)
-                        #end while
+                            #end if
+                        #end for
                     #end with
 
-                    deb_name = outfile.name
+                    deb_name = f.name
                 #end with
             except urllib.error.URLError as e:
                 raise NetworkError("error retrieving '%s': %s" % \
@@ -202,21 +202,18 @@ class BinaryPackage(BasePackage, PackageUtilsMixin):
     #end function
 
     def _binary_deb_list_contents_impl(self, filename, tmpdir):
-        # extract data file from deb
-        with ArchiveFileReader(filename) as archive:
-            data_name = None
+        data_name = None
 
+        with ArchiveFileReader(filename) as archive:
             for entry in archive:
                 if entry.pathname.startswith("data.tar"):                        
                     data_name = os.path.join(tmpdir, entry.pathname)
 
-                    with open(data_name, "wb+") as outfile:
-                        while True:
-                            buf = archive.read_data(4096)
-                            if not buf:
-                                break
-                            outfile.write(buf)
-                        #end while
+                    with open(data_name, "wb+") as f:
+                        for chunk in iter(
+                                lambda: archive.read_data(4096), b""):
+                            f.write(chunk)
+                        #end for
                     #end with
 
                     break
@@ -269,4 +266,3 @@ class BinaryPackage(BasePackage, PackageUtilsMixin):
     #end function
 
 #end class
-
