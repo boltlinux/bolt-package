@@ -68,11 +68,15 @@ class BinaryPackage(BasePackage, PackageUtilsMixin):
         except:
             raise BoltSyntaxError("error parsing control file.")
 
-        contents = []
+        self.contents = []
     #end function
 
     def generate_content_spec(self, pkg_name, pkg_version, pkg_cache):
-        pkg_meta = pkg_cache.binary[pkg_name][pkg_version]
+        try:
+            pkg_meta = pkg_cache.binary[pkg_name][pkg_version]
+        except KeyError:
+            # TODO: log me!!!
+            return
 
         with TemporaryDirectory(prefix="deb2bolt-") as tmpdir:
             try:
