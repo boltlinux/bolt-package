@@ -243,7 +243,7 @@ class DebianPackageCache:
             request = urllib.request.Request(source_url, method="GET")
             with urllib.request.urlopen(request, timeout=connection_timeout)\
                     as response:
-                with open(blob_name, 'wb+') as f:
+                with open(blob_name + "$", 'wb+') as f:
                     for chunk in iter(
                             lambda: response.read(1024 * 1024), b""):
                         f.write(chunk)
@@ -251,12 +251,15 @@ class DebianPackageCache:
                 #end with
             #end with
         except (OSError, urllib.error.URLError) as e:
-            if os.path.exists(blob_name):
-                os.unlink(blob_name)
+            if os.path.exists(blob_name + "$"):
+                os.unlink(blob_name + "$")
             raise DebianPackageCacheError(
                 "failed to download http resource: {}".format(str(e))
             )
         #end try
+
+        # Atomically rename blob.
+        os.rename(blob_name + "$", blob_name)
 
         # Create temporary symlink to new blob.
         os.symlink(os.path.basename(blob_name), target_file + "$")
