@@ -9,7 +9,7 @@ SITE_PACKAGES=$(shell python3 -c "from distutils import sysconfig; print(sysconf
 PREFIX=/usr
 DESTDIR=build
 
-.PHONY: install clean serve
+.PHONY: install tarball clean serve
 
 install:
 	$(PYTHON) setup.py install --prefix=$(PREFIX) \
