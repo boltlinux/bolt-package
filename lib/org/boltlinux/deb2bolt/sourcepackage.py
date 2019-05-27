@@ -116,7 +116,7 @@ SOURCE_PKG_XML_TEMPLATE = """\
 
 class SourcePackage(BasePackage, PackageUtilsMixin):
 
-    def __init__(self, control_file, app_config):
+    def __init__(self, control_file, app_config, suite="stable"):
         super().__init__()
 
         if not os.path.exists(control_file):
@@ -170,7 +170,7 @@ class SourcePackage(BasePackage, PackageUtilsMixin):
         ######################################################################
         # Open and refresh the package cache.
 
-        pkg_cache = DebianPackageCache("stretch")
+        pkg_cache = DebianPackageCache(suite)
         pkg_cache.update(what=DebianPackageCache.BINARY)
 
         ######################################################################
@@ -221,7 +221,7 @@ class SourcePackage(BasePackage, PackageUtilsMixin):
         self._simplify_package_contents()
     #end function
 
-    def to_bolt(self, set_maintainer=False):
+    def to_bolt(self, set_maintainer=False, **kwargs):
         """Analyzes Debian sources and produces an equivalent (as far as
         possible) Bolt OS sources package."""
 

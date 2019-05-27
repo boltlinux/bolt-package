@@ -55,6 +55,7 @@ def print_usage():
         "                                                                               \n"
         "  -h --help         Print this help message.                                   \n"
         "  --set-maintainer  Write maintainer info to changelog (initial import).       \n"
+        "  --suite           The Debian release to work against (e.g. \"stretch\").     \n"
         % BOLT_VERSION
     )
 #end function
@@ -62,12 +63,13 @@ def print_usage():
 def parse_cmd_line():
     # define default configuration
     config = {
-        "set_maintainer": False
+        "set_maintainer": False,
+        "suite": "stable"
     }
 
     try:
         opts, args = getopt.getopt(sys.argv[1:], "h",
-                ["help", "set-maintainer"])
+                ["help", "set-maintainer", "suite="])
     except getopt.GetoptError as e:
         raise InvocationError("Error parsing command line: %s" % str(e))
 
@@ -79,6 +81,9 @@ def parse_cmd_line():
                 break
             if case("--set-maintainer"):
                 config["set_maintainer"] = True
+                break
+            if case("--suite"):
+                config["suite"] = v.strip()
                 break
         #end switch
     #end for
@@ -100,7 +105,8 @@ if __name__ == "__main__":
         app_config = AppConfig.instance().load_user_config()
 
         # RUN ACTION
-        SourcePackage(args[0], app_config).to_bolt(**options)
+        SourcePackage(args[0], app_config, suite=options["suite"])\
+            .to_bolt(**options)
     except InvocationError as e:
         sys.stderr.write("deb2bolt: %s\n" % str(e))
         sys.exit(BOLT_ERR_INVOCATION)
