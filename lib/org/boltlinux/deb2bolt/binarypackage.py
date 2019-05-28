@@ -27,6 +27,7 @@ import os
 import re
 import stat
 import sys
+import logging
 
 import urllib.error
 import urllib.request
@@ -38,6 +39,8 @@ from org.boltlinux.package.libarchive import ArchiveEntry, ArchiveFileReader
 from org.boltlinux.toolbox.progressbar import ProgressBar
 from org.boltlinux.deb2bolt.basepackage import BasePackage
 from org.boltlinux.deb2bolt.packageutils import PackageUtilsMixin
+
+LOGGER = logging.getLogger(__name__)
 
 BINARY_PKG_XML_TEMPLATE = """\
 <?xml version="1.0" encoding="utf-8"?>
@@ -75,12 +78,15 @@ class BinaryPackage(BasePackage, PackageUtilsMixin):
         try:
             pkg_meta = pkg_cache.binary[pkg_name][pkg_version]
         except KeyError:
-            # TODO: log me!!!
+            LOGGER.warning(
+                "Cannot find Debian package '{}' version '{}' in cache"
+                .format(pkg_name, pkg_version)
+            )
             return
 
         with TemporaryDirectory(prefix="deb2bolt-") as tmpdir:
             try:
-                sys.stdout.write("Fetching '%s' ...\n" % pkg_meta.url)
+                LOGGER.info("Fetching '%s'" % pkg_meta.url)
 
                 with urllib.request.urlopen(pkg_meta.url) as response:
                     progress_bar = None

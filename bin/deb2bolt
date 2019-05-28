@@ -27,6 +27,7 @@
 import os
 import sys
 import getopt
+import logging
 
 # make relocatable
 INSTALL_DIR = os.path.normpath(os.path.dirname(
@@ -91,6 +92,13 @@ def parse_cmd_line():
     return config, args
 #end function
 
+def configure_logging():
+    logging.basicConfig(
+        level=logging.INFO,
+        format="[%(levelname)-8s] %(name)s: %(message)s"
+    )
+#end function
+
 if __name__ == "__main__":
     try:
         # PARSE CMD LINE
@@ -100,6 +108,9 @@ if __name__ == "__main__":
             print_usage()
             sys.exit(BOLT_ERR_INVOCATION)
         #end if
+
+        # SETUP LOGGING
+        configure_logging()
 
         # LOAD APP CONFIG
         app_config = AppConfig.instance().load_user_config()
