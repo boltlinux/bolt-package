@@ -26,26 +26,31 @@
 import os
 import re
 
-class PatchSeries:
+import org.boltlinux.toolbox.libarchive as libarchive
 
-    def __init__(self, series_file=None):
+from org.boltlinux.toolbox.util import file_sha256sum
+from org.boltlinux.toolbox.libarchive import ArchiveFileWriter
+from org.boltlinux.error import BoltError
+
+class QuiltPatchSeries:
+
+    def __init__(self, series_file):
         self.patches = []
-        self.patch_subdir = "patches"
+        self.series_file = series_file
 
-        if series_file and os.path.exists(series_file):
-            with open(series_file, "r", encoding="utf-8") as f:
-                for line in f:
-                    line = line.strip()
-                    if not line:
-                        continue
-                    if line.startswith("#"):
-                        continue
-                    self.patches.append(line)
-                #end for
-            #end with
+        if not os.path.isfile(series_file):
+            raise BoltError("No such file: {}".format(series_file))
 
-            self.patch_subdir = os.path.basename(os.path.dirname(series_file))
-        #end if
+        with open(series_file, "r", encoding="utf-8") as f:
+            for line in f:
+                line = line.strip()
+                if not line:
+                    continue
+                if line.startswith("#"):
+                    continue
+                self.patches.append(line)
+            #end for
+        #end with
     #end function
 
     def __len__(self):
@@ -55,6 +60,10 @@ class PatchSeries:
         for p in self.patches:
             yield p
     #end function
+
+    @property
+    def patch_dir(self):
+        return os.path.abspath(os.path.dirname(self.series_file))
 
     def as_xml(self, indent=0):
         if not self.patches:
@@ -69,6 +78,31 @@ class PatchSeries:
         buf += '</patches>'
 
         return re.sub(r"^", " " * 4 * indent, buf, flags=re.M)
+    #end function
+
+    def create_tarball(self, tarfile):
+        """Creates a gzip-compressed tarball and writes the contents to the
+        filename specified in tarfile."""
+        patch_dir = self.patch_dir
+
+        with ArchiveFileWriter(tarfile, libarchive.FORMAT_TAR_USTAR,
+                libarchive.COMPRESSION_GZIP) as archive:
+            for p in self.patches:
+                # Remove extra parameter, e.g. -p1
+                p = re.sub(r"\s+-p\d+\s*$", r"", p)
+
+                patch_abs_path = os.path.join(patch_dir, p)
+                patch_pathname = os.path.join("patches", p)
+
+                archive.add_file(patch_abs_path, pathname=patch_pathname,
+                        uname="root", gname="root")
+            #end for
+        #end with
+
+        size      = os.path.getsize(tarfile)
+        sha256sum = file_sha256sum(tarfile)
+
+        return (sha256sum, size)
     #end function
 
 #end class

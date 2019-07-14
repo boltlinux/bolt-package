@@ -24,21 +24,17 @@
 #
 
 import os
-import re
 import stat
-import sys
 import logging
-
-import urllib.error
-import urllib.request
 
 from tempfile import TemporaryDirectory
 
-from org.boltlinux.error import BoltSyntaxError, NetworkError
-from org.boltlinux.package.libarchive import ArchiveEntry, ArchiveFileReader
-from org.boltlinux.toolbox.progressbar import ProgressBar
-from org.boltlinux.deb2bolt.basepackage import BasePackage
+from org.boltlinux.toolbox.downloader import Downloader
+from org.boltlinux.toolbox.libarchive import ArchiveFileReader
+from org.boltlinux.deb2bolt.debianpackagecache import DebianPackageCache
+from org.boltlinux.deb2bolt.debianpackagemetadata import DebianPackageVersion
 from org.boltlinux.deb2bolt.packageutils import PackageUtilsMixin
+from org.boltlinux.error import BoltError
 
 LOGGER = logging.getLogger(__name__)
 
@@ -62,72 +58,66 @@ BINARY_PKG_XML_TEMPLATE = """\
 </package>
 """
 
-class BinaryPackage(BasePackage, PackageUtilsMixin):
+class DebianPackage(PackageUtilsMixin):
 
-    def __init__(self, content):
-        super().__init__()
-        try:
-            self.parse_content(content)
-        except:
-            raise BoltSyntaxError("error parsing control file.")
+    def __init__(self, pkg_cache, pkg_name, version=None, suite="stable",
+            arch="amd64", work_dir="."):
+        """
+        Relies on a pre-initialized DebianPackageCache instance being passed
+        in as the first parameter.
 
+        Initializes a DebianPackage instance where pkg_name is the name of
+        a Debian binary package in the Debian package archive.
+
+        If version is not specified, the latest available version will be
+        selected.
+        """
+        self.name     = pkg_name
+        self.version  = DebianPackageVersion(version) if version else None
+        self.suite    = suite
+        self.arch     = arch
         self.contents = []
-    #end function
+        self.work_dir = os.path.abspath(work_dir)
+        self._cache   = pkg_cache
 
-    def generate_content_spec(self, pkg_name, pkg_version, pkg_cache):
         try:
-            pkg_meta = pkg_cache.binary[pkg_name][pkg_version]
+            if self.version:
+                self.metadata = self._cache.binary[self.name][self.version.full]
+            else:
+                self.version, self.metadata = \
+                    max(self._cache.binary[self.name].items())
         except KeyError:
-            LOGGER.warning(
-                "Cannot find Debian package '{}' version '{}' in cache"
-                .format(pkg_name, pkg_version)
+            raise BoltError(
+                "Package '{}' version '{}' not found in cache."
+                    .format(self.name, self.version or "latest")
             )
-            return
-
-        with TemporaryDirectory(prefix="deb2bolt-") as tmpdir:
-            try:
-                LOGGER.info("Fetching '%s'" % pkg_meta.url)
-
-                with urllib.request.urlopen(pkg_meta.url) as response:
-                    progress_bar = None
-
-                    if response.length:
-                        progress_bar = ProgressBar(response.length)
-                        progress_bar(0)
-                    #end if
-
-                    deb_name = os.path.basename(pkg_meta.url)
-
-                    with open(os.path.join(tmpdir, deb_name), "wb+") as f:
-                        bytes_read = 0
-
-                        for chunk in iter(lambda: response.read(8192), b""):
-                            f.write(chunk)
-
-                            if progress_bar:
-                                bytes_read += len(chunk)
-                                progress_bar(bytes_read)
-                            #end if
-                        #end for
-                    #end with
-
-                    deb_name = f.name
-                #end with
-            except urllib.error.URLError as e:
-                raise NetworkError("error retrieving '%s': %s" % \
-                        (pkg_meta.url, str(e)))
-
-            self.contents = self._binary_deb_list_contents(deb_name)
-        #end with
+        #end try
     #end function
 
-    def as_xml(self, indent=0):
+    def build_content_spec(self):
+        filename = self.metadata["Filename"]
+        outfile  = os.path.join(self.work_dir, os.path.basename(filename))
+        url      = "/".join([self.metadata.base_url, filename])
+
+        with open(outfile, "wb+") as f:
+            LOGGER.info("Fetching {}".format(url))
+            for chunk in Downloader().get(url):
+                f.write(chunk)
+        #end with
+
+        self.contents = \
+            self._binary_deb_list_contents(outfile)
+    #end function
+
+    def to_xml(self):
         self.contents.sort()
 
-        install_deps = ""
-        for dep in self.get("depends", []) + self.get("pre-depends", []):
-            pkg_name, pkg_version = dep
+        metadata     = self.metadata.to_bolt()
+        dependencies = metadata.get("Depends", []) + \
+            metadata.get("Pre-Depends", [])
 
+        install_deps = ""
+        for pkg_name, pkg_version in dependencies:
             if self.is_pkg_name_debian_specific(pkg_name):
                 continue
 
@@ -185,10 +175,10 @@ class BinaryPackage(BasePackage, PackageUtilsMixin):
         #end for
 
         context = {
-            "binary_name":  self.get("name"),
-            "section":      self.get("section"),
-            "summary":      self.get("summary"),
-            "description":  self.get("description", ""),
+            "binary_name":  self.name,
+            "section":      metadata["Section"],
+            "summary":      metadata["Summary"],
+            "description":  metadata.get("Description", ""),
             "install_deps": install_deps,
             "contents":     contents
         }
@@ -201,6 +191,8 @@ class BinaryPackage(BasePackage, PackageUtilsMixin):
     def _binary_deb_list_contents(self, filename):
         contents = []
 
+        LOGGER.info("Analyzing contents of {}".format(filename))
+
         with TemporaryDirectory() as tmpdir:
             contents = self._binary_deb_list_contents_impl(filename, tmpdir)
 
@@ -208,14 +200,14 @@ class BinaryPackage(BasePackage, PackageUtilsMixin):
     #end function
 
     def _binary_deb_list_contents_impl(self, filename, tmpdir):
-        data_name = None
+        data_tarball = None
 
         with ArchiveFileReader(filename) as archive:
             for entry in archive:
                 if entry.pathname.startswith("data.tar"):                        
-                    data_name = os.path.join(tmpdir, entry.pathname)
+                    data_tarball = os.path.join(tmpdir, entry.pathname)
 
-                    with open(data_name, "wb+") as f:
+                    with open(data_tarball, "wb+") as f:
                         for chunk in iter(
                                 lambda: archive.read_data(4096), b""):
                             f.write(chunk)
@@ -227,14 +219,14 @@ class BinaryPackage(BasePackage, PackageUtilsMixin):
             #end for
         #end with
 
-        if not data_name:
+        if not data_tarball:
             raise PackagingError("binary package %s contains no data." %
-                    data_name)
+                    data_tarball)
 
         contents = []
 
         # parse data file entries and build content listing
-        with ArchiveFileReader(data_name) as archive:
+        with ArchiveFileReader(data_tarball) as archive:
             for entry in archive:
                 entry_path = self.fix_path(entry.pathname)
 

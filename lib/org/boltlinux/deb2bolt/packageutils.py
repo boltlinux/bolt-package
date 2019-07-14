@@ -149,6 +149,12 @@ class PackageUtilsMixin:
         return False
     #end function
 
+    def is_pkg_name_implicit(self, name):
+        if name in ["libc6",]:
+            return True
+        return False
+    #end function
+
     def is_pkg_name_debian_specific(self, name):
         if name.startswith("dpkg"):
             return True
@@ -158,7 +164,7 @@ class PackageUtilsMixin:
             return True
         if name.startswith("dh-"):
             return True
-        if name in ["quilt", "lsb-release"]:
+        if name in ["quilt", "lsb-release", "cdbs"]:
             return True
         return False
     #end function

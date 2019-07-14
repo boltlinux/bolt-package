@@ -33,12 +33,11 @@ import urllib.error
 import urllib.request
 
 from org.boltlinux.error import BoltError
-from org.boltlinux.package.libarchive import ArchiveFileReader
+from org.boltlinux.toolbox.libarchive import ArchiveFileReader
 from org.boltlinux.deb2bolt.debianpackagemetadata import \
         DebianPackageMetaData, DebianPackageVersion
 
-class DebianPackageCacheError(BoltError):
-    pass
+LOGGER = logging.getLogger(__name__)
 
 class DebianPackageDict(dict):
 
@@ -121,6 +120,8 @@ class DebianPackageCache:
         if what & self.BINARY:
             pkg_types.extend(["binary-{}".format(self.arch), "binary-all"])
 
+        LOGGER.info("Updating package cache...")
+
         for component, base_url in self.sources_list:
             for pocket in self.pockets:
                 for type_ in pkg_types:
@@ -150,7 +151,7 @@ class DebianPackageCache:
 
                         self._download_tagged_http_resource(source, target,
                                 etag=new_etag)
-                    except DebianPackageCacheError as e:
+                    except BoltError as e:
                         self.log.error("Failed to retrieve {}: {}"
                                 .format(source, str(e)))
 
@@ -176,6 +177,8 @@ class DebianPackageCache:
         if what & self.BINARY:
             pkg_types.extend(["binary-{}".format(self.arch), "binary-all"])
             self.binary.clear()
+
+        LOGGER.info("Loading package cache...")
 
         for component, base_url in self.sources_list:
             for pocket in self.pockets:
@@ -251,7 +254,7 @@ class DebianPackageCache:
         except (OSError, urllib.error.URLError) as e:
             if os.path.exists(blob_name + "$"):
                 os.unlink(blob_name + "$")
-            raise DebianPackageCacheError(
+            raise BoltError(
                 "failed to download http resource: {}".format(str(e))
             )
         #end try
@@ -282,7 +285,7 @@ class DebianPackageCache:
                     "".join([random.choice(alphabet) for i in range(16)])
                 )
         except urllib.error.URLError as e:
-            raise DebianPackageCacheError("failed to generate etag: {}"
+            raise BoltError("failed to generate etag: {}"
                     .format(str(e)))
 
         sha256 = hashlib.sha256()

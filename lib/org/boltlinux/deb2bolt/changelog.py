@@ -25,6 +25,7 @@
 
 import os
 import re
+
 from datetime import datetime
 from dateutil.tz import tzlocal
 from dateutil.parser import parse as parse_datetime
@@ -171,15 +172,13 @@ class Release:
 
 class Changelog:
 
-    def __init__(self, filename, maintainer_info):
+    def __init__(self, filename):
         self.releases = []
 
         version = None
         content = ""
         email   = ""
         date    = None
-
-        self.maintainer_info = maintainer_info
 
         with open(filename, "r", encoding="utf-8") as f:
             for line in f:
@@ -216,28 +215,25 @@ class Changelog:
         #end with
     #end function
 
-    def generate_maintainer_info(self):
-        version    = self.releases[0].upstream_version
-        maintainer = self.maintainer_info["name" ]
-        email      = self.maintainer_info["email"]
-        date       = datetime.now(tzlocal()).replace(microsecond=0)
-        content    = "* Adaptation of Debian sources for Bolt OS"
-        release    = Release(version, content, maintainer, email, date)
-
-        release.revision += "bolt1"
-        self.releases.insert(0, release)
-    #end function
-
-    def as_xml(self, indent=0, set_maintainer=False):
+    def to_xml(self, indent=0, maintainer_info=None):
         buf  = '<?xml version="1.0" encoding="utf-8"?>\n'
         buf += '<changelog>\n'
-        if set_maintainer:
-            self.generate_maintainer_info()
-            buf += self.releases[0].as_xml(indent=1, have_upstream_version=True)
+
+        if maintainer_info is not None:
+            version    = self.releases[0].upstream_version
+            maintainer = maintainer_info.get("name", "")
+            email      = maintainer_info.get("email", "")
+            date       = datetime.now(tzlocal()).replace(microsecond=0)
+            content    = "* Adaptation of Debian sources for Bolt OS"
+
+            release = Release(version, content, maintainer, email, date)
+            release.revision += "bolt1"
+
+            buf += release.as_xml(indent=1, have_upstream_version=True)
         else:
             for rel in self.releases:
                 buf += rel.as_xml(indent=1)
-        #end if
+
         buf += '</changelog>'
         return re.sub(r"^", " " * 4 * indent, buf, flags=re.M) + "\n"
     #end function
