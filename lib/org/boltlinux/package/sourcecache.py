@@ -65,7 +65,7 @@ class SourceCache:
 
         h = hashlib.sha256()
 
-        with open(abs_path, "rb") as fp:
+        with open(abs_path, "rb") as f:
             for chunk in iter(lambda: f.read(4096), b""):
                 h.update(chunk)
         #end with

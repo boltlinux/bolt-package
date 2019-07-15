@@ -25,7 +25,6 @@
 
 import os
 import logging
-import functools
 import urllib.error
 import urllib.request
 import tempfile
@@ -33,7 +32,6 @@ import tempfile
 from org.boltlinux.repository.flaskinit import app, db
 from org.boltlinux.repository.models import BinaryPackage, PackageEntry
 from org.boltlinux.repository.repotask import RepoTask
-from org.boltlinux.error import RepositoryError
 from org.boltlinux.package.libarchive import ArchiveFileReader, ArchiveError
 
 class BoltPackageScan(RepoTask):
@@ -125,7 +123,6 @@ class BoltPackageScan(RepoTask):
         result    = []
 
         try:
-
             with ArchiveFileReader(pkg_file) as archive:
                 for entry in archive:
                     if not entry.pathname.startswith("data.tar."):
@@ -155,7 +152,7 @@ class BoltPackageScan(RepoTask):
                     ])
             #end with
         except (OSError, ArchiveError) as e:
-            self.log.error("Failed to scan {}: {}".format(filename, str(e)))
+            self.log.error("Failed to scan {}: {}".format(pkg_file, str(e)))
 
         return result
     #end function

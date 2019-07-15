@@ -32,7 +32,6 @@ import subprocess
 
 from org.boltlinux.toolbox.downloader import Downloader
 from org.boltlinux.toolbox.libarchive import ArchiveFileReader
-from org.boltlinux.deb2bolt.debianpackagecache import DebianPackageCache
 from org.boltlinux.deb2bolt.quiltpatchseries import QuiltPatchSeries
 from org.boltlinux.deb2bolt.packageutils import PackageUtilsMixin
 from org.boltlinux.deb2bolt.debianpackage import DebianPackage

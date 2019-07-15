@@ -27,14 +27,16 @@ import os
 import sys
 import re
 import subprocess
+
 from lxml import etree
 
 from org.boltlinux.error import PackagingError
-from org.boltlinux.package.libarchive import ArchiveFileReader
 from org.boltlinux.package.packagedesc import PackageDescription
 from org.boltlinux.package.basepackage import BasePackage
 from org.boltlinux.package.platform import Platform
+
 from org.boltlinux.toolbox.progressbar import ProgressBar
+from org.boltlinux.toolbox.libarchive import ArchiveFileReader
 
 class SourcePackage(BasePackage):
 
@@ -42,7 +44,7 @@ class SourcePackage(BasePackage):
         os.path.normpath(
             os.path.join(
                 os.path.dirname(os.path.realpath(__file__)),
-                "..", "..", "..", "..", "..", "helpers"
+                "..", "..", "..", "..", "helpers"
             )
         ),
         os.path.join(os.sep, "usr",   "share", "bolt-pack", "helpers"),

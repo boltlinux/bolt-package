@@ -35,7 +35,7 @@ INSTALL_DIR = os.path.normpath(os.path.dirname(
 sys.path.insert(1, INSTALL_DIR + os.sep + 'lib')
 
 from org.boltlinux.error import BoltError, InvocationError
-from org.boltlinux.package.util import switch
+from org.boltlinux.toolbox.switch import switch
 from org.boltlinux.package.appconfig import AppConfig
 from org.boltlinux.deb2bolt.debianpackagecache import DebianPackageCache
 from org.boltlinux.deb2bolt.converter import Deb2BoltPackageConverter

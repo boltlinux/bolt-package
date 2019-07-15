@@ -28,6 +28,12 @@ import re
 import time
 import stat
 import magic
+
+try:
+    from magic import FileMagic
+except ImportError:
+    from magic.compat import FileMagic
+
 from collections import namedtuple
 
 class FileStats:
@@ -94,7 +100,7 @@ class FileStats:
     def detect_from_filename(filename):
         if os.path.islink(filename):
             link_target = os.readlink(filename)
-            magic_obj = magic.FileMagic(
+            magic_obj = FileMagic(
                     mime_type='inode/symlink', encoding='binary',
                     name='symbolic link to ' + link_target)
         else:

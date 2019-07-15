@@ -25,10 +25,10 @@
 
 import os
 import re
+import hashlib
 
 import org.boltlinux.toolbox.libarchive as libarchive
 
-from org.boltlinux.toolbox.util import file_sha256sum
 from org.boltlinux.toolbox.libarchive import ArchiveFileWriter
 from org.boltlinux.error import BoltError
 
@@ -100,9 +100,19 @@ class QuiltPatchSeries:
         #end with
 
         size      = os.path.getsize(tarfile)
-        sha256sum = file_sha256sum(tarfile)
+        sha256sum = self._file_sha256_sum(tarfile)
 
         return (sha256sum, size)
+    #end function
+
+    # PRIVATE
+
+    def _file_sha256_sum(self, filename):
+        h = hashlib.sha256()
+        with open(filename, "rb") as f:
+            for chunk in iter(lambda: f.read(4096), b""):
+                h.update(chunk)
+        return h.hexdigest()
     #end function
 
 #end class

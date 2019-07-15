@@ -327,7 +327,7 @@ class ArchiveEntry:
     def ctime(self):
         return lib.archive_entry_ctime(self._c_entry_p)
 
-    @atime.setter
+    @ctime.setter
     def ctime(self, ctime):
         lib.archive_entry_set_ctime(self._c_entry_p, ctime, 0)
 

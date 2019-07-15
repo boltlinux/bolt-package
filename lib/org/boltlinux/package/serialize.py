@@ -23,8 +23,8 @@
 # THE SOFTWARE.
 #
 
-import re
 import textwrap
+
 from copy import deepcopy
 from lxml import etree
 from html2text import HTML2Text

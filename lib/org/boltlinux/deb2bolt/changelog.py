@@ -23,7 +23,6 @@
 # THE SOFTWARE.
 #
 
-import os
 import re
 
 from datetime import datetime

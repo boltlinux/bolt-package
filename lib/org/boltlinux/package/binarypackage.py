@@ -28,17 +28,20 @@ import re
 import glob
 import stat
 import subprocess
+
 from pathlib import Path
 from collections import OrderedDict
 from lxml import etree
+
 from org.boltlinux.error import UnmetDependency, PackagingError
-from org.boltlinux.package.braceexpand import braceexpand
 from org.boltlinux.package.platform import Platform
 from org.boltlinux.package.packagemanager import PackageManager
 from org.boltlinux.package.basepackage import BasePackage
 from org.boltlinux.package.packagedesc import PackageDescription
 from org.boltlinux.package.filestats import FileStats
-from org.boltlinux.toolbox import switch
+
+from org.boltlinux.toolbox.braceexpand import braceexpand
+from org.boltlinux.toolbox.switch import switch
 
 class BinaryPackage(BasePackage):
 

@@ -24,13 +24,10 @@
 #
 
 import os
-import re
 import logging
 import tempfile
 
 from org.boltlinux.deb2bolt.debiansource import DebianSource
-from org.boltlinux.deb2bolt.debianpackagecache import DebianPackageCache
-from org.boltlinux.error import BoltError
 
 LOGGER = logging.getLogger(__name__)
 

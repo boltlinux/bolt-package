@@ -31,7 +31,6 @@ from tempfile import TemporaryDirectory
 
 from org.boltlinux.toolbox.downloader import Downloader
 from org.boltlinux.toolbox.libarchive import ArchiveFileReader
-from org.boltlinux.deb2bolt.debianpackagecache import DebianPackageCache
 from org.boltlinux.deb2bolt.debianpackagemetadata import DebianPackageVersion
 from org.boltlinux.deb2bolt.packageutils import PackageUtilsMixin
 from org.boltlinux.error import BoltError
@@ -220,7 +219,7 @@ class DebianPackage(PackageUtilsMixin):
         #end with
 
         if not data_tarball:
-            raise PackagingError("binary package %s contains no data." %
+            raise BoltError("binary package %s contains no data." %
                     data_tarball)
 
         contents = []
@@ -246,7 +245,7 @@ class DebianPackage(PackageUtilsMixin):
                 elif entry.is_file or entry.is_hardlink:
                     entry_type = stat.S_IFREG
                 else:
-                    raise BoltValueError(
+                    raise BoltError(
                         "type of '%s' unknown '%d'" % (entry_path, entry_type)
                     )
 

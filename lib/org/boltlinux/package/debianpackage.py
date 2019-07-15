@@ -24,18 +24,18 @@
 #
 
 import os
-import re
 import stat
 import time
+
 from tempfile import TemporaryDirectory
 from collections import OrderedDict
-import org.boltlinux.package.libarchive as libarchive
-from org.boltlinux.package.platform import Platform
-from org.boltlinux.package.libarchive import ArchiveEntry, ArchiveFileWriter
+
+import org.boltlinux.toolbox.libarchive as libarchive
+from org.boltlinux.toolbox.libarchive import ArchiveEntry, ArchiveFileWriter
+
 from org.boltlinux.package.filestats import FileStats
 from org.boltlinux.package.binarypackage import BinaryPackage
 from org.boltlinux.package.metadata import PackageMetaData
-from org.boltlinux.toolbox import switch
 
 class DebianPackage(BinaryPackage):
 

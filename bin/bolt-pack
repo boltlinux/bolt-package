@@ -33,10 +33,11 @@ INSTALL_DIR = os.path.normpath(os.path.dirname(
     os.path.realpath(sys.argv[0])) + os.sep + ".." )
 sys.path.insert(1, INSTALL_DIR + os.sep + 'lib')
 
+from org.boltlinux.toolbox.switch import switch
 from org.boltlinux.error import BoltError, InvocationError
+
 from org.boltlinux.package.appconfig import AppConfig
 from org.boltlinux.package.packagecontrol import PackageControl
-from org.boltlinux.package.util import switch
 from org.boltlinux.package.version import VERSION as BOLT_VERSION
 
 BOLT_ERR_INVOCATION = 1

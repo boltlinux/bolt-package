@@ -25,7 +25,7 @@
 
 import os
 import shutil
-from lxml import etree
+
 from org.boltlinux.error import UnmetDependency, InvocationError
 from org.boltlinux.package.sourcepackage import SourcePackage
 from org.boltlinux.package.debianpackage import DebianPackage

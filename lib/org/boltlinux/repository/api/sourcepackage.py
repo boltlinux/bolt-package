@@ -30,7 +30,7 @@ from sqlalchemy.orm import exc as sql_exc
 from werkzeug import exceptions as http_exc
 from flask_restful import Resource, fields, marshal_with, marshal
 
-from org.boltlinux.repository.flaskinit import app, db
+from org.boltlinux.repository.flaskinit import db
 from org.boltlinux.repository.models import SourcePackage as SourcePackageModel
 from org.boltlinux.repository.api.schema import RequestArgsSchema
 

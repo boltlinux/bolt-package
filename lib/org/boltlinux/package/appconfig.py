@@ -25,11 +25,9 @@
 
 import os
 import pwd
-import copy
 import json
 import base64
 import socket
-import getpass
 
 class AppConfig:
 

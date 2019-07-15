@@ -26,9 +26,7 @@
 import os
 
 from org.boltlinux.package.appconfig  import AppConfig
-from org.boltlinux.package.libarchive import ArchiveFileReader, ArchiveError
 from org.boltlinux.repository.basepackageslist import BasePackagesListMixin
-from org.boltlinux.error import RepositoryError
 
 class BoltPackagesList(BasePackagesListMixin):
 

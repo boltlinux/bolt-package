@@ -28,7 +28,6 @@ import re
 import stat
 import hashlib
 import functools
-import tempfile
 
 import org.boltlinux.package.libarchive as libarchive
 

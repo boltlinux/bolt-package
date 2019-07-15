@@ -23,7 +23,6 @@
 # THE SOFTWARE.
 #
 
-import re
 from lxml import etree
 from dateutil.parser import parse as parse_datetime
 
