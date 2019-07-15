@@ -30,8 +30,12 @@ class PackageEntry(db.Model):
 
     id_ = db.Column(db.Integer, primary_key=True, index=True)
 
-    binary_package_id = db.Column(db.Integer, db.ForeignKey("binary_package.id_"),
-            nullable=False, index=True)
+    binary_package_id = db.Column(
+        db.Integer,
+        db.ForeignKey("binary_package.id_"),
+        nullable=False,
+        index=True
+    )
 
     uname    = db.Column(db.String(64),  nullable=False)
     gname    = db.Column(db.String(64),  nullable=False)
@@ -39,4 +43,3 @@ class PackageEntry(db.Model):
     pathname = db.Column(db.String(256), nullable=False, index=True)
     target   = db.Column(db.String(256), nullable=True, default=None)
 #end class
-

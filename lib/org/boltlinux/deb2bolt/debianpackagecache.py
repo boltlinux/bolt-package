@@ -89,7 +89,7 @@ class DebianPackageCache:
             self.sources_list.append(
                 (
                     "security",
-                    "http://security.debian.org/debian-security/dists/{}/updates"
+                    "http://security.debian.org/debian-security/dists/{}/updates"  # noqa:
                         .format(release)
                 )
             )
@@ -112,7 +112,7 @@ class DebianPackageCache:
     def open(self):
         self._parse_package_list()
 
-    def update(self, what=SOURCE|BINARY):
+    def update(self, what=SOURCE|BINARY):  # noqa:
         pkg_types = []
 
         if what & self.SOURCE:
@@ -168,7 +168,7 @@ class DebianPackageCache:
 
     # PRIVATE
 
-    def _parse_package_list(self, what=SOURCE|BINARY):
+    def _parse_package_list(self, what=SOURCE|BINARY):  # noqa:
         pkg_types = []
 
         if what & self.SOURCE:
@@ -213,7 +213,8 @@ class DebianPackageCache:
                             base_url
                         ).group("pool_base")
 
-                        for chunk in re.split(r"\n\n+", buf, flags=re.MULTILINE):
+                        for chunk in re.split(r"\n\n+", buf,
+                                flags=re.MULTILINE):
                             chunk = chunk.strip()
                             if not chunk:
                                 continue

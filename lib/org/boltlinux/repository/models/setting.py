@@ -37,4 +37,3 @@ class Setting(db.Model):
         db.UniqueConstraint("name", "value")
     )
 #end class
-

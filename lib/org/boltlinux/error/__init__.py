@@ -55,4 +55,3 @@ class BoltValueError(BoltError):
 
 class RepositoryError(BoltError):
     pass
-

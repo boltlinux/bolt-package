@@ -45,9 +45,13 @@ class DebianSources(RepoTask):
 
         self._verbose    = verbose
         self._components = config.get("components", ["main"])
-        self._mirror     = config.get("mirror", "http://ftp.debian.org/debian/")
-        self._security   = config.get("security",
-                "http://security.debian.org/debian-security/")
+
+        self._mirror = config.get(
+            "mirror", "http://ftp.debian.org/debian/"
+        )
+        self._security = config.get(
+            "security", "http://security.debian.org/debian-security/"
+        )
 
         self._cache_dir  = \
             config.get("cache-dir",
@@ -122,8 +126,11 @@ class DebianSources(RepoTask):
 
                     if self._verbose:
                         self.log.info(
-                            "Updating Debian sources DB entries for component '%s%s'."
-                                % (component, " (security)" if is_security else ""))
+                            "Updating Debian sources DB entries for component "
+                            "'{}{}'.".format(
+                                component, " (security)" if is_security else ""
+                            )
+                        )
                     #end if
 
                     sources_list = DebianSourcesList(
@@ -134,7 +141,11 @@ class DebianSources(RepoTask):
                         is_security = is_security
                     )
 
-                    self._parse_revisions(component, sources_list, stored_pkg_index)
+                    self._parse_revisions(
+                        component,
+                        sources_list,
+                        stored_pkg_index
+                    )
                 #end if
             #end for
 
@@ -152,7 +163,7 @@ class DebianSources(RepoTask):
             pkg_name    = pkg_info["Package"]
             pkg_version = pkg_info["Version"]
 
-            if not pkg_name in stored_pkg_index:
+            if pkg_name not in stored_pkg_index:
                 source_pkg = UpstreamSource(
                     name      = pkg_name,
                     version   = pkg_version,
@@ -174,4 +185,3 @@ class DebianSources(RepoTask):
     #end function
 
 #end class
-

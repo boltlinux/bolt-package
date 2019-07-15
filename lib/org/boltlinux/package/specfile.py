@@ -79,7 +79,7 @@ class Specfile:
         if not relaxng.validate(self.xml_doc):
             errors = []
             for err in relaxng.error_log:
-                errors.append("* %s on line %d, column %d: %s" % 
+                errors.append("* %s on line %d, column %d: %s" %
                         (os.path.basename(err.filename), err.line,
                             err.column, err.message))
             #end for
@@ -96,14 +96,14 @@ class Specfile:
         specification = [
             ["//patchset/@strip", r"^[1-9]\d*$"],
             ["//patchset/file/@strip", r"^[1-9]\d*$"],
-            ["//*[name() = 'source' or name() = 'package']/@name", r"^[a-zA-Z0-9]*(?:(?:\+|-|\.)[a-zA-Z0-9]*)*$" ],
-            ["//binary//package/@version", r"(?:^(?:<<|<=|=|>=|>>)\s*(?:(\d+):)?([-.+~a-zA-Z0-9]+?)(?:-([.~+a-zA-Z0-9]+)){0,1}$)|(?:^==$)"],
-            ["//source//package/@version", r"(?:^(?:<<|<=|=|>=|>>)\s*(?:(\d+):)?([-.+~a-zA-Z0-9]+?)(?:-([.~+a-zA-Z0-9]+)){0,1}$)"],
+            ["//*[name() = 'source' or name() = 'package']/@name", r"^[a-zA-Z0-9]*(?:(?:\+|-|\.)[a-zA-Z0-9]*)*$" ],  # noqa:
+            ["//binary//package/@version", r"(?:^(?:<<|<=|=|>=|>>)\s*(?:(\d+):)?([-.+~a-zA-Z0-9]+?)(?:-([.~+a-zA-Z0-9]+)){0,1}$)|(?:^==$)"],  # noqa:
+            ["//source//package/@version", r"(?:^(?:<<|<=|=|>=|>>)\s*(?:(\d+):)?([-.+~a-zA-Z0-9]+?)(?:-([.~+a-zA-Z0-9]+)){0,1}$)"],  # noqa:
             ["//changelog/release/@epoch", r"^\d+$"],
-            ["//changelog/release/@version", r"^([-.+~a-zA-Z0-9]+?)(?:-([.~+a-zA-Z0-9]+)){0,1}$"],
+            ["//changelog/release/@version", r"^([-.+~a-zA-Z0-9]+?)(?:-([.~+a-zA-Z0-9]+)){0,1}$"],  # noqa:
             ["//changelog/release/@revision", r"^[.~+a-zA-Z0-9]+$"],
-            ["//changelog/release/@email", r"^[-_%.a-zA-Z0-9]+@[-.a-z0-9]+\.[a-z]{2,4}$"],
-            ["//changelog/release/@date", r"^\d{4}-\d{2}-\d{2}\s+\d{2}:\d{2}:\d{2}\s*(?:((?:-|\+)\d{2}:?\d{2})|(?:(?:GMT|UTC)(?:(?:-|\+)\d{1,2}))|[a-zA-Z]+)$"]
+            ["//changelog/release/@email", r"^[-_%.a-zA-Z0-9]+@[-.a-z0-9]+\.[a-z]{2,4}$"],  # noqa:
+            ["//changelog/release/@date", r"^\d{4}-\d{2}-\d{2}\s+\d{2}:\d{2}:\d{2}\s*(?:((?:-|\+)\d{2}:?\d{2})|(?:(?:GMT|UTC)(?:(?:-|\+)\d{1,2}))|[a-zA-Z]+)$"]  # noqa:
         ]
 
         for xpath, regexp in specification:
@@ -111,7 +111,7 @@ class Specfile:
                 if not re.match(regexp, attr):
                     path = attr.getparent().tag + "/@" + attr.attrname
                     line = attr.getparent().sourceline
-                    errors.append("* %s on line %s: '%s' does not match '%s'." \
+                    errors.append("* %s on line %s: '%s' does not match '%s'."
                             % (path, line, attr, regexp))
                 #end if
             #end for
@@ -141,7 +141,8 @@ class Specfile:
         try:
             epoch = self.xml_doc\
                 .xpath("/control/changelog/release[1]/@epoch")[0]
-        except IndexError: pass
+        except IndexError:
+            pass
 
         version = self.xml_doc\
             .xpath("/control/changelog/release[1]/@version")[0]
@@ -149,7 +150,8 @@ class Specfile:
         try:
             rev = self.xml_doc\
                 .xpath("/control/changelog/release[1]/@revision")[0]
-        except IndexError: pass
+        except IndexError:
+            pass
 
         if epoch:
             version = epoch + ":" + version

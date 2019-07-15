@@ -56,4 +56,3 @@ class SourcePackage(db.Model):
         db.UniqueConstraint("repo_name", "name", "version")
     )
 #end class
-

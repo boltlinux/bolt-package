@@ -38,4 +38,3 @@ class UpstreamSource(db.Model):
         db.UniqueConstraint("name", "version")
     )
 #end class
-

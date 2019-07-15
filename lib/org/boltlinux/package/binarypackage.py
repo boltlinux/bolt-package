@@ -79,30 +79,48 @@ class BinaryPackage(BasePackage):
             raise ValueError(msg)
         #end if
 
-        epoch     = bin_node.get("epoch",    0)
-        version   = bin_node.get("version", "")
-        revision  = bin_node.get("revision", None)
-        archindep = bin_node.get("architecture-independent", "false")
+        epoch = \
+            bin_node.get("epoch",    0)
+        version = \
+            bin_node.get("version", "")
+        revision = \
+            bin_node.get("revision", None)
 
-        self.name         = bin_node.get("name")
-        self.description  = PackageDescription(bin_node.find("description"))
-        self.maintainer   = bin_node.get("maintainer") + " <" + \
-                bin_node.get("email") + ">"
-        self.version      = (epoch + ":" if int(epoch) > 0 else "") + version + \
-                ("-" + revision if revision != None else "")
-        self.section      = bin_node.get("section", "unknown")
-        self.source       = bin_node.get("source")
-        self.architecture = bin_node.get("architecture")
-        self.build_for    = bin_node.get("build-for")
+        self.name = \
+            bin_node.get("name")
+        self.description = \
+            PackageDescription(bin_node.find("description"))
+        self.maintainer = \
+            bin_node.get("maintainer") + " <" + \
+            bin_node.get("email") + ">"
+
+        self.version = \
+            (epoch + ":" if int(epoch) > 0 else "") + version + \
+            ("-" + revision if revision is not None else "")
+
+        self.section = \
+            bin_node.get("section", "unknown")
+        self.source = \
+            bin_node.get("source")
+        self.architecture = \
+            bin_node.get("architecture")
+        self.build_for = \
+            bin_node.get("build-for")
 
         if self.build_for:
             self.build_for = [v.strip() for v in self.build_for.split(",")]
 
-        self.make_debug_pkgs = parms["debug_pkgs"]
-        self.install_prefix  = parms["install_prefix"]
-        self.host_type       = parms["host_type"]
-        self.relations       = {}
-        actual_build_for     = parms.get("build_for", None)
+        self.make_debug_pkgs = \
+            parms["debug_pkgs"]
+        self.install_prefix = \
+            parms["install_prefix"]
+        self.host_type = \
+            parms["host_type"]
+
+        self.relations = {}
+
+        actual_build_for = \
+            parms.get("build_for", None)
 
         for dep_type in ["requires", "provides", "conflicts", "replaces"]:
             dep_node = bin_node.find(dep_type)
@@ -134,7 +152,7 @@ class BinaryPackage(BasePackage):
                         tmp_version = pkg_manager\
                                 .installed_version_of_package(dep_name)
                         if not tmp_version:
-                            raise UnmetDependency("cannot resolve dependency '%s'." \
+                            raise UnmetDependency("cannot resolve dependency '%s'."
                                     % dep_name)
                         pkg_node.attrib["version"] = dep_version[:-1] \
                             + " " + tmp_version
@@ -143,13 +161,13 @@ class BinaryPackage(BasePackage):
 
                 pkg_prefix = None
 
-                if actual_build_for != None:
-                    pkg_prefix = pkg_node.get(actual_build_for + \
+                if actual_build_for is not None:
+                    pkg_prefix = pkg_node.get(actual_build_for +
                             "-prefix", None)
-                if pkg_prefix == None:
+                if pkg_prefix is None:
                     if self.architecture == "tools":
                         pkg_prefix = "tools-"
-                if pkg_prefix != None:
+                if pkg_prefix is not None:
                     pkg_node.attrib["name"] = pkg_prefix + \
                             pkg_node.attrib["name"]
             #end for
@@ -287,10 +305,12 @@ class BinaryPackage(BasePackage):
                     elif os.path.isdir(abs_path) and not \
                             os.path.islink(abs_path):
                         # entry is a real directory
-                        listing = list(Path(self.basedir)\
-                            .rglob(rel_path + "/**/*"))
-                        if not src in contents:
-                            attr.stats = FileStats.detect_from_filename(abs_path)
+                        listing = list(
+                            Path(self.basedir).rglob(rel_path + "/**/*")
+                        )
+                        if src not in contents:
+                            attr.stats = \
+                                FileStats.detect_from_filename(abs_path)
                             contents.setdefault(src, attr)
                     else:
                         # entry is a symlink or file
@@ -323,7 +343,7 @@ class BinaryPackage(BasePackage):
             if self.collect_py_cache_files and k.endswith(".py"):
                 py2_style = False
 
-                for letter in [ "c", "o" ]:
+                for letter in ["c", "o"]:
                     k_opt = k + letter
                     abs_path = self.basedir + os.sep + k_opt
                     if not os.path.isfile(abs_path):
@@ -345,7 +365,7 @@ class BinaryPackage(BasePackage):
                 if not os.path.isdir(self.basedir + os.sep + k_cache_dir):
                     continue
                 listing = list(Path(self.basedir).glob(
-                    k_cache_dir.lstrip(os.sep) + os.sep + k_base_name + 
+                    k_cache_dir.lstrip(os.sep) + os.sep + k_base_name +
                         ".cpython*.pyc"))
                 if not listing:
                     continue
@@ -371,12 +391,12 @@ class BinaryPackage(BasePackage):
             while k != "/" and k != "":
                 k = os.path.dirname(k)
 
-                if (not k in contents) and (not k in extra_contents):
+                if (k not in contents) and (k not in extra_contents):
                     abs_path = self.basedir + os.sep + k
                     if os.path.exists(abs_path):
                         extra_contents[k] = BinaryPackage.EntryAttributes({
-                            "deftype":  "dir",
-                            "stats":    FileStats.detect_from_filename(abs_path)
+                            "deftype": "dir",
+                            "stats": FileStats.detect_from_filename(abs_path)
                         })
                     #end if
                 #end if
@@ -461,7 +481,7 @@ class BinaryPackage(BasePackage):
                 link_target = attr.stats.link_target
 
                 if not os.path.isabs(link_target):
-                    link_target = os.path.normpath(os.path.dirname(src) + \
+                    link_target = os.path.normpath(os.path.dirname(src) +
                             os.sep + link_target)
                 else:
                     fallback = "/usr"
@@ -516,7 +536,7 @@ class BinaryPackage(BasePackage):
                 found = True
                 break
 
-            if not "requires" in self.relations:
+            if "requires" not in self.relations:
                 self.relations["requires"] = \
                         BasePackage.DependencySpecification()
 
@@ -528,13 +548,13 @@ class BinaryPackage(BasePackage):
         # last resort in case .so is a linker script, for example
         if not found:
             for pkg in bin_pkgs:
-                if not lib_name in pkg.contents:
+                if lib_name not in pkg.contents:
                     continue
 
                 found = True
 
                 if pkg.name != self.name:
-                    if not "requires" in self.relations:
+                    if "requires" not in self.relations:
                         self.relations["requires"] = \
                                 BasePackage.DependencySpecification()
                     self.relations["requires"][pkg_name] = \

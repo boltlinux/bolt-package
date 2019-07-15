@@ -6,3 +6,4 @@ from .upstreamsource import UpstreamSource
 from .packageentry   import PackageEntry
 from .setting        import Setting
 
+# flake8: noqa

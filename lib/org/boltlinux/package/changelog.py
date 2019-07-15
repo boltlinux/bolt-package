@@ -87,7 +87,7 @@ class Changelog:
   <xsl:template match="*|text()"/>
 
 </xsl:stylesheet>
-"""
+""" # noqa:
 
     def __init__(self, xml_changelog):
         if isinstance(xml_changelog, etree._Element):

@@ -53,7 +53,7 @@ class BoltPackageRules:
         git_clone = ["git", "clone", self._rules_url, self.rules_dir]
 
         try:
-            proc = subprocess.run(git_clone, timeout=300, check=True,
+            subprocess.run(git_clone, timeout=300, check=True,
                     stdout=stdout, stderr=stderr)
         except subprocess.CalledProcessError as e:
             raise RepositoryError("failed to clone '%s': %s" %
@@ -70,10 +70,14 @@ class BoltPackageRules:
 
         git_base_cmd = ["git", "-C", self.rules_dir]
 
-        git_fetch_origin = git_base_cmd + ["fetch",    "origin"    ]
-        git_checkout     = git_base_cmd + ["checkout", "--force", self._branch]
-        git_reset_hard   = git_base_cmd + ["reset", "--hard", "origin/" + self._branch]
-        git_clean_xfd    = git_base_cmd + ["clean",    "-xfd"      ]
+        git_fetch_origin = git_base_cmd + \
+                ["fetch", "origin"]
+        git_checkout = git_base_cmd + \
+                ["checkout", "--force", self._branch]
+        git_reset_hard = git_base_cmd + \
+                ["reset", "--hard", "origin/" + self._branch]
+        git_clean_xfd = git_base_cmd + \
+                ["clean", "-xfd"]
 
         git_commands_to_run = [
             git_fetch_origin,
@@ -84,8 +88,8 @@ class BoltPackageRules:
 
         for command in git_commands_to_run:
             try:
-                proc = subprocess.run(command, timeout=300, check=True,
-                        stdout=stdout, stderr=stderr)
+                subprocess.run(command, timeout=300, check=True,
+                    stdout=stdout, stderr=stderr)
             except subprocess.CalledProcessError as e:
                 raise RepositoryError("failed to refresh '%s': %s" %
                         (self.rules_dir, str(e)))
@@ -142,7 +146,9 @@ class BoltPackageRules:
         return os.path.join(self._cache_dir, self._repo_name)
 
     def get_head_hash(self, verbose=False):
-        git_rev_parse = ["git", "-C", self.rules_dir, "rev-parse", self._branch]
+        git_rev_parse = [
+            "git", "-C", self.rules_dir, "rev-parse", self._branch
+        ]
 
         stderr = sys.stderr if verbose else subprocess.PIPE
 
@@ -150,7 +156,9 @@ class BoltPackageRules:
             git_rev_parse_result = subprocess.run(git_rev_parse, timeout=300,
                     check=True, stdout=subprocess.PIPE, stderr=stderr)
         except subprocess.CalledProcessError as e:
-            raise RepositoryError("error retrieving hash for HEAD: %s" % str(e))
+            raise RepositoryError(
+                "error retrieving hash for HEAD: %s" % str(e)
+            )
 
         preferred_encoding = locale.getpreferredencoding()
 
@@ -239,4 +247,3 @@ class Revision:
         return self._commit_id
 
 #end class
-

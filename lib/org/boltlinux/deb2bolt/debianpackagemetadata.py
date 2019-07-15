@@ -172,8 +172,10 @@ class DebianPackageMetaData(PackageUtilsMixin):
 
             # If the name part lists alternatives, grep the first.
             val = map(
-                lambda x: (x[0].split("|")[0] \
-                    if "|" in x[0] else x[0], x[1]), val
+                lambda x: (
+                    x[0].split("|")[0] if "|" in x[0] else x[0], x[1]
+                ),
+                val
             )
 
             # Remove Debian multi-stage build dep stuff.
@@ -233,7 +235,7 @@ class DebianPackageMetaData(PackageUtilsMixin):
                     raise BoltError("invalid control file syntax.")
                 fields.setdefault(key, []).append(line.strip())
             else:
-                if not ":" in line:
+                if ":" not in line:
                     raise BoltError("invalid control file syntax.")
                 key, val = [item.strip() for item in line.split(":", 1)]
                 val_list = fields.setdefault(key, [])

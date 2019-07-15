@@ -82,7 +82,7 @@ class DebianPackage(BinaryPackage):
 
                 dirname    = os.path.dirname(pkg_path)
                 abs_path   = os.path.normpath(self.basedir + os.sep + pkg_path)
-                file_stats = FileStats.detect_from_filename(abs_path) 
+                file_stats = FileStats.detect_from_filename(abs_path)
                 file_attrs = BinaryPackage.EntryAttributes({
                     "deftype": "file",
                     "mode":    "0644",
@@ -303,12 +303,12 @@ class DebianPackage(BinaryPackage):
     def conffiles(self, pkg_contents):
         result = ""
         for src, attr in pkg_contents.items():
-            if attr.stats.is_directory or attr.conffile == False:
+            if attr.stats.is_directory or attr.conffile is False:
                 continue
             real_path = os.path.normpath(self.basedir + os.sep + src)
             if not os.path.isfile(real_path) or os.path.islink(real_path):
                 continue
-            if attr.conffile == None and src.startswith("/etc/"):
+            if attr.conffile is None and src.startswith("/etc/"):
                 attr.conffile = True
             if attr.conffile:
                 result += src + "\n"

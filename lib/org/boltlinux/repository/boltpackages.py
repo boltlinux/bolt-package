@@ -245,7 +245,9 @@ class BoltPackages(RepoTask):
                         return
 
                     versions = list(entries.keys())
-                    versions.sort(key=functools.cmp_to_key(BaseXpkg.compare_versions))
+                    versions.sort(
+                        key=functools.cmp_to_key(BaseXpkg.compare_versions)
+                    )
 
                     for i, v in enumerate(versions, start=1):
                         entries[v].sortkey = i
@@ -255,4 +257,3 @@ class BoltPackages(RepoTask):
     #end function
 
 #end class
-

@@ -25,7 +25,7 @@
 
 import os
 
-from org.boltlinux.package.appconfig  import AppConfig
+from org.boltlinux.package.appconfig import AppConfig
 from org.boltlinux.repository.basepackageslist import BasePackagesListMixin
 
 class DebianSourcesList(BasePackagesListMixin):
@@ -76,4 +76,3 @@ class DebianSourcesList(BasePackagesListMixin):
     #end function
 
 #end class
-

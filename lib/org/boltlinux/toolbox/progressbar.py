@@ -50,10 +50,10 @@ class ProgressBar:
 
         if self._isatty:
             if amount < self._total:
-                self._out_file.write("[" + "#" * num_bars + \
+                self._out_file.write("[" + "#" * num_bars +
                         " " * num_spaces + "] %i%%\r" % percent)
             else:
-                self._out_file.write("[" + "#" * num_bars + \
+                self._out_file.write("[" + "#" * num_bars +
                         " " * num_spaces + "] %i%%\n" % percent)
         #end if
 

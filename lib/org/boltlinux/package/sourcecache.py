@@ -122,7 +122,7 @@ class SourceCache:
                     #end with
                 #end with
             except urllib.error.URLError as e:
-                sys.stderr.write("Failed to retrieve '%s': %s\n" % 
+                sys.stderr.write("Failed to retrieve '%s': %s\n" %
                         (source_url, e.reason))
                 continue
             #end try

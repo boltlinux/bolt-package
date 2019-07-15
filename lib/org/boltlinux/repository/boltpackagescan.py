@@ -80,10 +80,10 @@ class BoltPackageScan(RepoTask):
                 for uname, gname, mode, pathname in pkg_info_list:
                     pkg_entry = PackageEntry(
                         binary_package_id = pkg_obj.id_,
-                        uname    = uname,
-                        gname    = gname,
-                        mode     = mode,
-                        pathname = pathname
+                        uname             = uname,
+                        gname             = gname,
+                        mode              = mode,
+                        pathname          = pathname
                     )
 
                     db.session.add(pkg_entry)
@@ -131,7 +131,8 @@ class BoltPackageScan(RepoTask):
                     data_file = os.path.join(dirname, entry.pathname)
 
                     with open(data_file, "wb+") as f:
-                        for chunk in iter(lambda: archive.read_data(4096), b""):
+                        for chunk in \
+                                iter(lambda: archive.read_data(4096), b""):
                             f.write(chunk)
                     #end with
                 #end for
@@ -158,4 +159,3 @@ class BoltPackageScan(RepoTask):
     #end function
 
 #end class
-

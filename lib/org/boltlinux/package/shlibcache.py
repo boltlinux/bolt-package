@@ -72,7 +72,7 @@ class ShlibCache:
     #end class
 
     def __init__(self, prefix="/usr"):
-        self.prefixes = [prefix,]
+        self.prefixes = [prefix]
         self.map = {}
         self.have_ldconfig = False
 
@@ -81,10 +81,16 @@ class ShlibCache:
             self.have_ldconfig = True
 
             try:
-                procinfo = subprocess.run([ldconfig, "-p"], stdout=subprocess.PIPE,
-                        stderr=subprocess.STDOUT, check=True)
+                procinfo = subprocess.run(
+                    [ldconfig, "-p"],
+                    stdout=subprocess.PIPE,
+                    stderr=subprocess.STDOUT,
+                    check=True
+                )
             except subprocess.CalledProcessError as e:
-                raise RuntimeError("failed to initialize shlib cache: " + str(e))
+                raise RuntimeError(
+                    "failed to initialize shlib cache: " + str(e)
+                )
 
             output_lines = procinfo\
                     .stdout\
@@ -185,7 +191,7 @@ class ShlibCache:
     def _find_object(self, lib_name, fallback=None):
         lib_path = [p + os.sep + "lib" for p in self.prefixes]
 
-        if fallback and not fallback in self.prefixes:
+        if fallback and fallback not in self.prefixes:
             lib_path.append(fallback + os.sep + "lib")
 
         for path in lib_path:

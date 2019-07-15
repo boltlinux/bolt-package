@@ -89,7 +89,8 @@ class SpecfileSerializer:
                 result = method(child)
 
                 element[child.tag] = result
-            except AttributeError: pass
+            except AttributeError:
+                pass
         #end for
 
         return element
@@ -150,4 +151,3 @@ class SpecfileSerializer:
     #end function
 
 #end class
-

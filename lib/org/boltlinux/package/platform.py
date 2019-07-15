@@ -42,10 +42,14 @@ class Platform:
         #end if
 
         if Platform.find_executable("gcc"):
-            build_flags["CFLAGS"]   = "-g -O2 -fstack-protector-strong -Wformat -Werror=format-security"
-            build_flags["CXXFLAGS"] = "-g -O2 -fstack-protector-strong -Wformat -Werror=format-security"
-            build_flags["CPPFLAGS"] = "-Wdate-time -D_FORTIFY_SOURCE=2"
-            build_flags["LDFLAGS"]  = "-Wl,-z,relro"
+            build_flags["CFLAGS"] = "-g -O2 -fstack-protector-strong " \
+                "-Wformat -Werror=format-security"
+            build_flags["CXXFLAGS"] = "-g -O2 -fstack-protector-strong " \
+                "-Wformat -Werror=format-security"
+            build_flags["CPPFLAGS"] = \
+                "-Wdate-time -D_FORTIFY_SOURCE=2"
+            build_flags["LDFLAGS"] = \
+                "-Wl,-z,relro"
         #end if
 
         return build_flags
@@ -142,11 +146,13 @@ class Platform:
         if not uname:
             return ""
 
-        preferred_encoding = locale.getpreferredencoding(False)
-        return subprocess.run([uname, "-s"], stdout=subprocess.PIPE,
-                stderr=subprocess.DEVNULL).stdout\
-                        .decode(locale.getpreferredencoding(False))\
-                        .strip()
+        return subprocess.run(
+            [uname, "-s"],
+            stdout=subprocess.PIPE,
+            stderr=subprocess.DEVNULL
+        ).stdout \
+         .decode(locale.getpreferredencoding(False)) \
+         .strip()
     #end function
 
     # HIDDEN

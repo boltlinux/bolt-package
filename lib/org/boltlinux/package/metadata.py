@@ -88,7 +88,7 @@ class PackageMetaData:
 
                 val.append(line.strip())
             else:
-                if not ":" in line:
+                if ":" not in line:
                     raise BoltSyntaxError("invalid control file syntax.")
 
                 if key is not None:
@@ -97,7 +97,7 @@ class PackageMetaData:
                 k, v = [item.strip() for item in line.split(":", 1)]
 
                 key = k
-                val = [v,]
+                val = [v]
             #end if
         #end for
 
@@ -108,4 +108,3 @@ class PackageMetaData:
     #end function
 
 #end class
-

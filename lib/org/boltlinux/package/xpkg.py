@@ -54,7 +54,7 @@ class BaseXpkg:
         with open(self.STATUS_FILE, "r", encoding="utf-8") as fp:
             buf = fp.read()
 
-        package_list = re.split(r"\n\n+", buf , flags=re.MULTILINE)
+        package_list = re.split(r"\n\n+", buf, flags=re.MULTILINE)
 
         for pkg in package_list:
             meta_data = {}
@@ -73,10 +73,11 @@ class BaseXpkg:
                 self.packages[meta_data["package"]] = meta_data["version"]
 
                 if "provides" in meta_data:
-                    provides = [p.strip() for p in \
-                            meta_data["provides"].split(",")]
+                    provides = [
+                        p.strip() for p in meta_data["provides"].split(",")
+                    ]
                     for name in provides:
-                        if not name in self.packages:
+                        if name not in self.packages:
                             self.packages[name] = meta_data["version"]
                     #end for
                 #end if
@@ -129,9 +130,11 @@ class BaseXpkg:
                     #end if
 
                     for c_a, c_b in zip(p_a, p_b):
-                        if BaseXpkg.CHAR_VALUES[c_a] > BaseXpkg.CHAR_VALUES[c_b]:
+                        if BaseXpkg.CHAR_VALUES[c_a] > \
+                                BaseXpkg.CHAR_VALUES[c_b]:
                             return +1
-                        if BaseXpkg.CHAR_VALUES[c_a] < BaseXpkg.CHAR_VALUES[c_b]:
+                        if BaseXpkg.CHAR_VALUES[c_a] < \
+                                BaseXpkg.CHAR_VALUES[c_b]:
                             return -1
                     #end for
 
@@ -188,7 +191,8 @@ class BaseXpkg:
 
         expected_result = operator_map[operator]
 
-        if self.compare_versions(installed_version, version) in expected_result:
+        if self.compare_versions(
+                installed_version, version) in expected_result:
             return True
 
         return False
@@ -245,4 +249,3 @@ class Opkg(BaseXpkg):
     #end function
 
 #end class
-

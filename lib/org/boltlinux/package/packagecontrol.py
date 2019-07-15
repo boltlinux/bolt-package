@@ -158,7 +158,7 @@ class PackageControl:
             )
 
             if self.parms["enable_packages"]:
-                if not pkg.name in self.parms["enable_packages"]:
+                if pkg.name not in self.parms["enable_packages"]:
                     continue
             if self.parms["disable_packages"]:
                 if pkg.name in self.parms["disable_packages"]:
@@ -178,7 +178,7 @@ class PackageControl:
             if self.parms.get("outdir"):
                 pkg.output_dir = os.path.realpath(self.parms["outdir"])
             else:
-                pkg_output_dir = None
+                pkg.output_dir = None
             #end if
 
             self.bin_pkgs.append(pkg)
@@ -206,7 +206,7 @@ class PackageControl:
 
     def unpack(self):
         cache_dir = self.app_config.get("cache-dir",
-            os.path.realpath(AppConfig.get_config_folder() + \
+            os.path.realpath(AppConfig.get_config_folder() +
                 os.sep + "cache"))
 
         release = self.app_config.get("release", {}).get("id", "stable")
@@ -237,8 +237,6 @@ class PackageControl:
     #end function
 
     def install(self):
-        source_dir  = self.defines["BOLT_SOURCE_DIR"]
-        build_dir   = self.defines["BOLT_BUILD_DIR"]
         install_dir = self.defines["BOLT_INSTALL_DIR"]
 
         if os.path.exists(install_dir):

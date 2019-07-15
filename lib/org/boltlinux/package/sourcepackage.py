@@ -111,7 +111,7 @@ class SourcePackage(BasePackage):
         }
 
         for node in source_node.xpath("rules/*"):
-            if not node.tag in ["prepare", "build", "install", "clean"]:
+            if node.tag not in ["prepare", "build", "install", "clean"]:
                 continue
             self.rules[node.tag] = \
                     etree.tostring(node, method="text", encoding="unicode")
@@ -160,7 +160,7 @@ class SourcePackage(BasePackage):
                     if not pathname:
                         continue
 
-                    full_path = os.path.normpath(source_dir_and_subdir + 
+                    full_path = os.path.normpath(source_dir_and_subdir +
                             os.sep + pathname)
                     os.makedirs(os.path.dirname(full_path), exist_ok=True)
 
@@ -171,7 +171,8 @@ class SourcePackage(BasePackage):
                     elif entry.is_file:
                         entry.mode |= 0o600
                         with open(full_path, "wb+") as f:
-                            for chunk in iter(lambda: archive.read_data(4096), b""):
+                            for chunk in \
+                                    iter(lambda: archive.read_data(4096), b""):
                                 f.write(chunk)
                                 bytes_read += len(chunk)
                             #end for
@@ -204,7 +205,7 @@ class SourcePackage(BasePackage):
 
         for patch_file, subdir, strip_components in self.patches:
             if not os.path.isabs(patch_file):
-                patch_file = os.path.normpath(self.basedir + 
+                patch_file = os.path.normpath(self.basedir +
                         os.sep + patch_file)
             #end if
 
@@ -223,8 +224,8 @@ class SourcePackage(BasePackage):
         if env is None:
             env = {}
 
-        if not action in ["prepare", "build", "install", "clean"]:
-            raise PackagingError("invalid package action '%s'." % 
+        if action not in ["prepare", "build", "install", "clean"]:
+            raise PackagingError("invalid package action '%s'." %
                     str(action))
         #end if
 
@@ -284,4 +285,3 @@ class SourcePackage(BasePackage):
     #end function
 
 #end function
-

@@ -90,7 +90,10 @@ class ChangeSet:
 class Release:
 
     def __init__(self, version, content, maintainer, email, date):
-        m = re.match(r"^(?:(\d+):)?([-+:~.a-zA-Z0-9]+?)(?:-([^-]+))?$", version)
+        m = re.match(
+            r"^(?:(\d+):)?([-+:~.a-zA-Z0-9]+?)(?:-([^-]+))?$",
+            version
+        )
 
         self.epoch, self.version, self.revision = \
                 m.groups(default="") if m else ("", "", "")
@@ -152,7 +155,7 @@ class Release:
             "date":       self.date
         }
 
-        buf  = '<release%(epoch)s version="%(version)s" revision="%(revision)s"'
+        buf  = '<release%(epoch)s version="%(version)s" revision="%(revision)s"'  # noqa:
         if have_upstream_version:
             buf += ' upstream-version="%(upstream)s"\n'
         else:
@@ -181,16 +184,20 @@ class Changelog:
 
         with open(filename, "r", encoding="utf-8") as f:
             for line in f:
-                m = re.match(r"^\s*[-.a-z0-9]+\s+\(([^)]+)\)(?:\s+\w+)+;"\
-                        r"\s*urgency=\w+", line)
+                m = re.match(
+                    r"^\s*[-.a-z0-9]+\s+\(([^)]+)\)(?:\s+\w+)+;"
+                    r"\s*urgency=\w+", line
+                )
                 if m:
                     version = m.group(1)
                     content = ""
                     continue
                 #end if
 
-                m = re.match(r"^\s* --\s+([^<]+)\s+<([^>]+)>\s+"\
-                        r"((?:Mon|Tue|Wed|Thu|Fri|Sat|Sun), .*$)", line)
+                m = re.match(
+                    r"^\s* --\s+([^<]+)\s+<([^>]+)>\s+"
+                    r"((?:Mon|Tue|Wed|Thu|Fri|Sat|Sun), .*$)", line
+                )
                 if m:
                     maintainer = m.group(1)
                     email      = m.group(2)

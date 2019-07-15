@@ -83,8 +83,10 @@ class BoltSources(RepoTask):
             try:
                 rules.refresh()
             except RepositoryError as e:
-                msg = "Error refreshing source package rules for origin '%s': %s"
-                self.log.error(msg % (repo_info["name"], str(e)))
+                self.log.error(
+                    "Error refreshing source package rules for "
+                    "origin '{}': {}".format(repo_info["name"], str(e))
+                )
             #end try
         #end for
     #end function
@@ -99,16 +101,17 @@ class BoltSources(RepoTask):
 
                 if self._verbose:
                     self.log.info(
-                        "Updating Bolt source package DB entries for origin '%s'."
-                            % repo_info["name"])
+                        "Updating Bolt source package DB entries for "
+                        "origin '{}'.".format(repo_info["name"])
+                    )
                 #end if
 
                 repo_name = repo_info["name"]
                 source_pkg_index = self._generate_source_pkg_index(repo_name)
 
                 start_rev = Setting.query\
-                        .filter_by(name = "last_processed_revision@" + repo_name)\
-                        .one_or_none()
+                    .filter_by(name = "last_processed_revision@" + repo_name)\
+                    .one_or_none()
 
                 rules = BoltPackageRules(repo_name, repo_info["rules"],
                             self._cache_dir)
@@ -139,7 +142,10 @@ class BoltSources(RepoTask):
                 self._fix_upstream_refs(source_pkg_index, upstream_src_index)
 
                 # mark packages as recent, up2date, outdated
-                self._determine_recentness(source_pkg_index, upstream_src_index)
+                self._determine_recentness(
+                    source_pkg_index,
+                    upstream_src_index
+                )
             #end for
 
             db.session.commit()
@@ -171,8 +177,8 @@ class BoltSources(RepoTask):
                 if self.is_stopped():
                     break
 
-                repo_name = repo_info["name"]
-                source_pkg_index = self._generate_source_pkg_index()
+                source_pkg_index = \
+                    self._generate_source_pkg_index()
 
                 self._fix_upstream_refs(source_pkg_index, upstream_src_index)
             #end for
@@ -222,7 +228,7 @@ class BoltSources(RepoTask):
 
                 try:
                     specfile = Specfile(package_xml)
-                except MalformedSpecfile as e:
+                except MalformedSpecfile:
                     short_path = package_xml[len(rules._cache_dir):]\
                             .lstrip("/")
                     self.log.warning("Malformed specfile '%s'." % short_path)
@@ -246,8 +252,10 @@ class BoltSources(RepoTask):
                 if ref_obj is not None:
                     if ref_obj.git_hash != commit_id:
                         self.log.warning(
-                            "Package '%s' at '%s' in '%s' modified without version bump." %
-                                (source_name, commit_id, rules._repo_name)
+                            "Package '{}' at '{}' in '{}' modified without "
+                            "version bump.".format(
+                                source_name, commit_id, rules._repo_name
+                            )
                         )
                         ref_obj.json             = json_data
                         ref_obj.upstream_version = upstream_version
@@ -353,4 +361,3 @@ class BoltSources(RepoTask):
     #end function
 
 #end class
-

@@ -150,7 +150,7 @@ class PackageUtilsMixin:
     #end function
 
     def is_pkg_name_implicit(self, name):
-        if name in ["libc6",]:
+        if name in ["libc6"]:
             return True
         return False
     #end function

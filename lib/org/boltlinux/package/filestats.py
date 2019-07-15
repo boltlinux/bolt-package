@@ -150,7 +150,8 @@ class FileStats:
 
     @property
     def build_id(self):
-        regexp_build_id = r"ELF \d+-bit .SB .*, BuildID\[sha1\]=([0-9a-fA-F]+).*"
+        regexp_build_id = \
+            r"ELF \d+-bit .SB .*, BuildID\[sha1\]=([0-9a-fA-F]+).*"
         m = re.match(regexp_build_id, self._magic_obj.name)
         if m:
             return m.group(1)

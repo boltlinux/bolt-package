@@ -106,4 +106,3 @@ class SourcePackage(Resource):
     #end function
 
 #end class
-

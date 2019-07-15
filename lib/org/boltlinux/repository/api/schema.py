@@ -46,7 +46,7 @@ class RequestArgsSchema(Schema):
 
     @validates("libc")
     def validate_libc(self, libc):
-        if not libc in ["musl", "glibc"]:
+        if libc not in ["musl", "glibc"]:
             raise ValidationError("Unknown libc name.")
 
     @validates("offkey")
@@ -74,4 +74,3 @@ class RequestArgsSchema(Schema):
     #end function
 
 #end class
-

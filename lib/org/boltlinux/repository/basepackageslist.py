@@ -44,7 +44,7 @@ class BasePackagesListMixin:
             request = urllib.request.Request(self.url, method="HEAD")
             with urllib.request.urlopen(request, timeout=30) as response:
                 new_etag = self._etag_from_http_response(response)
-        except urllib.error.URLError as e:
+        except urllib.error.URLError:
             return False
 
         return old_etag == new_etag
@@ -102,9 +102,11 @@ class BasePackagesListMixin:
     def unpack(self):
         try:
             with open(self.filename_text, "wb+") as f:
-                with ArchiveFileReader(self.filename_gzipped, raw=True) as archive:
+                with ArchiveFileReader(self.filename_gzipped, raw=True) \
+                        as archive:
                     for entry in archive:
-                        for chunk in iter(lambda: archive.read_data(8192), b""):
+                        for chunk in \
+                                iter(lambda: archive.read_data(8192), b""):
                             f.write(chunk)
                     #end for
                 #end with
@@ -161,4 +163,3 @@ class BasePackagesListMixin:
     #end function
 
 #end class
-

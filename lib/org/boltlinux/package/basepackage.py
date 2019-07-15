@@ -106,7 +106,7 @@ class BasePackage:
             return self.index[key]
 
         def __setitem__(self, key, value):
-            if not key in self.index:
+            if key not in self.index:
                 self.index[key] = value
                 self.list.append([value])
         #end function

@@ -25,7 +25,7 @@
 
 import os
 
-from org.boltlinux.package.appconfig  import AppConfig
+from org.boltlinux.package.appconfig import AppConfig
 from org.boltlinux.repository.basepackageslist import BasePackagesListMixin
 
 class BoltPackagesList(BasePackagesListMixin):
@@ -81,4 +81,3 @@ class BoltPackagesList(BasePackagesListMixin):
     #end function
 
 #end class
-

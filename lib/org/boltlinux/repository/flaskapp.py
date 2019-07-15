@@ -37,13 +37,15 @@ from org.boltlinux.package.appconfig import AppConfig
 config = AppConfig.instance().load_user_config()
 
 app_config = config\
-        .get("apps", {})\
-        .get("repository", {})\
-        .get("appconfig", {})
+    .get("apps", {})\
+    .get("repository", {})\
+    .get("appconfig", {})
 
-app_config.setdefault("SQLALCHEMY_DATABASE_URI",
-        "sqlite:///" + AppConfig.get_config_folder() + os.sep +
-            "repository.db")
+app_config.setdefault(
+    "SQLALCHEMY_DATABASE_URI",
+    "sqlite:///" + AppConfig.get_config_folder() + os.sep +
+    "repository.db"
+)
 
 app_init(app_config)
 
@@ -63,16 +65,18 @@ with app.app_context():
 # API initialization
 #
 ###############################################################################
-import org.boltlinux.repository.api as api_v1
 
-api.add_resource(api_v1.SourcePackage,
+import org.boltlinux.repository.api as api_v1  # noqa:
+
+api.add_resource(
+    api_v1.SourcePackage,
     "/v1/repo/<string:repo>/source",
     "/v1/repo/<string:repo>/source/<string:name>/version/<string:version>",
 )
 
-api.add_resource(api_v1.BinaryPackage,
+api.add_resource(
+    api_v1.BinaryPackage,
     "/v1/repo/<string:repo>/arch/<string:arch>/libc/<string:libc>/package",
     "/v1/repo/<string:repo>/package/<string:name>",
     "/v1/repo/<string:repo>/package/<string:name>/version/<string:version>",
 )
-

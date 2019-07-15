@@ -79,4 +79,3 @@ class RepoUpdater:
         self._stop_flag.set()
 
 #end class
-

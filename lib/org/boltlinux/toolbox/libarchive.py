@@ -27,12 +27,14 @@ import os
 import re
 import ctypes
 import stat
-import pwd, grp
+import pwd
+import grp
+
 from ctypes.util import find_library
 
 lib = ctypes.cdll.LoadLibrary(find_library("archive"))
 
-################################## CONSTANTS ###################################
+################################## CONSTANTS ##################################
 
 FORMAT_AR = 1
 FORMAT_AR_BSD = 2
@@ -59,7 +61,7 @@ COMPRESSION_NONE = 19
 STATUS_OK = 0
 STATUS_EOF = 1
 
-################################### CTYPES #####################################
+################################### CTYPES ####################################
 
 _format_functions = {
     FORMAT_AR: "archive_write_set_format_ar_svr4",
@@ -81,7 +83,8 @@ for func_name in _format_functions.values():
     try:
         func = getattr(lib, func_name)
         func.argtypes = [ctypes.c_void_p]
-    except AttributeError: pass
+    except AttributeError:
+        pass
 #end for
 
 _compression_functions = {
@@ -98,7 +101,8 @@ for func_name in _compression_functions.values():
     try:
         func = getattr(lib, func_name)
         func.argtypes = [ctypes.c_void_p]
-    except AttributeError: pass
+    except AttributeError:
+        pass
 #end for
 
 lib.archive_entry_atime.argtypes = [ctypes.c_void_p]
@@ -151,9 +155,11 @@ lib.archive_entry_rdevmajor.argtypes = [ctypes.c_void_p]
 lib.archive_entry_rdevmajor.restype = ctypes.c_uint
 lib.archive_entry_rdevminor.argtypes = [ctypes.c_void_p]
 lib.archive_entry_rdevminor.restype = ctypes.c_uint
-lib.archive_entry_set_atime.argtypes = [ctypes.c_void_p, ctypes.c_int, ctypes.c_ulong]
+lib.archive_entry_set_atime.argtypes = \
+    [ctypes.c_void_p, ctypes.c_int, ctypes.c_ulong]
 lib.archive_entry_set_atime.restype = None
-lib.archive_entry_set_ctime.argtypes = [ctypes.c_void_p, ctypes.c_int, ctypes.c_ulong]
+lib.archive_entry_set_ctime.argtypes = \
+    [ctypes.c_void_p, ctypes.c_int, ctypes.c_ulong]
 lib.archive_entry_set_ctime.restype = None
 lib.archive_entry_set_dev.argtypes = [ctypes.c_void_p, ctypes.c_long]
 lib.archive_entry_set_dev.restype = None
@@ -169,7 +175,8 @@ lib.archive_entry_set_ino.argtypes = [ctypes.c_void_p, ctypes.c_ulong]
 lib.archive_entry_set_ino.restype = None
 lib.archive_entry_set_mode.argtypes = [ctypes.c_void_p, ctypes.c_int]
 lib.archive_entry_set_mode.restype = None
-lib.archive_entry_set_mtime.argtypes = [ctypes.c_void_p, ctypes.c_int, ctypes.c_long]
+lib.archive_entry_set_mtime.argtypes = \
+    [ctypes.c_void_p, ctypes.c_int, ctypes.c_long]
 lib.archive_entry_set_mtime.restype = None
 lib.archive_entry_set_nlink.argtypes = [ctypes.c_void_p, ctypes.c_uint]
 lib.archive_entry_set_nlink.restype = None
@@ -186,7 +193,7 @@ lib.archive_entry_size.restype = ctypes.c_ulong
 lib.archive_entry_symlink.argtypes = [ctypes.c_void_p]
 lib.archive_entry_symlink.restype = ctypes.c_char_p
 lib.archive_entry_uid.argtypes = [ctypes.c_void_p]
-lib.archive_entry_uid.restype = ctypes.c_ulong 
+lib.archive_entry_uid.restype = ctypes.c_ulong
 lib.archive_entry_uname.argtypes = [ctypes.c_void_p]
 lib.archive_entry_uname.restype = ctypes.c_char_p
 
@@ -201,22 +208,26 @@ lib.archive_write_new.argtypes = []
 lib.archive_write_new.restype = ctypes.c_void_p
 lib.archive_write_open_filename.argtypes = [ctypes.c_void_p, ctypes.c_char_p]
 lib.archive_write_open_filename.restype = ctypes.c_int
-lib.archive_write_data.argtypes = [ctypes.c_void_p, ctypes.c_void_p, ctypes.c_size_t]
+lib.archive_write_data.argtypes = \
+    [ctypes.c_void_p, ctypes.c_void_p, ctypes.c_size_t]
 lib.archive_write_data.restype = ctypes.c_ssize_t
 
 lib.archive_read_free.argtypes = [ctypes.c_void_p]
 lib.archive_write_free.restype = ctypes.c_int
-lib.archive_read_data.argtypes = [ctypes.c_void_p, ctypes.c_void_p, ctypes.c_size_t]
+lib.archive_read_data.argtypes = \
+    [ctypes.c_void_p, ctypes.c_void_p, ctypes.c_size_t]
 lib.archive_read_data.restype = ctypes.c_ssize_t
 lib.archive_read_new.argtypes = []
 lib.archive_read_new.restype = ctypes.c_void_p
 lib.archive_read_next_header2.argtypes = [ctypes.c_void_p, ctypes.c_void_p]
 lib.archive_read_next_header2.restype = ctypes.c_int
-lib.archive_read_open_filename.argtypes = [ctypes.c_void_p, ctypes.c_char_p, ctypes.c_ulong]
+lib.archive_read_open_filename.argtypes = \
+    [ctypes.c_void_p, ctypes.c_char_p, ctypes.c_ulong]
 lib.archive_read_open_filename.restype = ctypes.c_int
 lib.archive_read_support_filter_all.argtypes = [ctypes.c_void_p]
 lib.archive_read_support_filter_all.restype = ctypes.c_int
-lib.archive_read_support_filter_program.argtypes = [ctypes.c_void_p, ctypes.c_char_p]
+lib.archive_read_support_filter_program.argtypes = \
+    [ctypes.c_void_p, ctypes.c_char_p]
 lib.archive_read_support_filter_program.restype = ctypes.c_int
 lib.archive_read_support_format_all.argtypes = [ctypes.c_void_p]
 lib.archive_read_support_format_all.restype = ctypes.c_int
@@ -225,10 +236,11 @@ lib.archive_read_support_format_raw.restype = ctypes.c_int
 lib.archive_read_support_format_empty.argtypes = [ctypes.c_void_p]
 lib.archive_read_support_format_empty.restype = ctypes.c_int
 
-lib.archive_write_set_option.argtypes = [ctypes.c_void_p, ctypes.c_char_p, ctypes.c_char_p, ctypes.c_char_p]
+lib.archive_write_set_option.argtypes = \
+    [ctypes.c_void_p, ctypes.c_char_p, ctypes.c_char_p, ctypes.c_char_p]
 lib.archive_write_set_option.restype = ctypes.c_int
 
-############################### IMPLEMENTATION #################################
+############################### IMPLEMENTATION ################################
 
 def error_string(c_archive_p):
     return lib.archive_error_string(c_archive_p).decode("utf-8")
@@ -364,7 +376,8 @@ class ArchiveEntry:
 
     @hardlink.setter
     def hardlink(self, hardlink):
-        lib.archive_entry_copy_hardlink(self._c_entry_p, hardlink.encode("utf-8"))
+        lib.archive_entry_copy_hardlink(self._c_entry_p,
+                hardlink.encode("utf-8"))
 
     @property
     def inode(self):
@@ -388,7 +401,7 @@ class ArchiveEntry:
 
     @mtime.setter
     def mtime(self, mtime):
-        lib.archive_entry_set_mtime(self._c_entry_p, mtime, 0);
+        lib.archive_entry_set_mtime(self._c_entry_p, mtime, 0)
 
     @property
     def nlink(self):
@@ -490,10 +503,12 @@ class ArchiveEntry:
 
         try:
             self.uname = pwd.getpwuid(stats.st_uid).pw_name
-        except KeyError: pass
+        except KeyError:
+            pass
         try:
             self.gname = grp.getgrgid(stats.st_gid).gr_name
-        except KeyError: pass
+        except KeyError:
+            pass
 
         self.size     = stats.st_size
 
@@ -517,7 +532,7 @@ class ArchiveFileWriter:
         try:
             func = getattr(lib, _compression_functions[compression])
             func(self._c_archive_p)
-        except (KeyError, AttributeError) as e:
+        except (KeyError, AttributeError):
             self.close()
             raise ArchiveError("invalid or unsupported compression scheme.")
         #end try
@@ -525,7 +540,7 @@ class ArchiveFileWriter:
         try:
             func = getattr(lib, _format_functions[archive_format])
             func(self._c_archive_p)
-        except (KeyError, AttributeError) as e:
+        except (KeyError, AttributeError):
             self.close()
             raise ArchiveError("invalid or unsupported archive format.")
         #end try
@@ -639,7 +654,7 @@ class ArchiveFileReader:
 
         try:
             self.__init_helper(filename, cmd=cmd, raw=raw)
-        except Exception as e:
+        except Exception:
             msg = error_string(self._c_archive_p)
             self.close()
             raise ArchiveError(msg)
@@ -740,7 +755,7 @@ class ArchiveFileReader:
             pathname = entry.pathname.strip()
             pathname = re.sub(r"^(?:\.+/+)", "", pathname)
             pathname = os.sep.join(
-                [base_dir,] + pathname.split(os.sep)[strip_components:]
+                [base_dir, ] + pathname.split(os.sep)[strip_components:]
             )
 
             if not entry.is_directory:

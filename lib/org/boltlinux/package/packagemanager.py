@@ -24,7 +24,7 @@
 #
 
 import os
-from org.boltlinux.package.xpkg import Dpkg, Opkg
+from org.boltlinux.package.xpkg import Dpkg, Opkg  # noqa:
 
 class PackageManager:
 
@@ -33,7 +33,10 @@ class PackageManager:
     @classmethod
     def instance(klass):
         if not PackageManager.pm_instance:
-            PackageManager.pm_instance = PackageManager.system_package_manager()()
+            PackageManager.pm_instance = \
+                PackageManager.system_package_manager()()
+        #end if
+
         return PackageManager.pm_instance
     #end function
 

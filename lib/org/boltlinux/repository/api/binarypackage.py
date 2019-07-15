@@ -132,10 +132,10 @@ class BinaryPackage(Resource):
         ######################################################################
 
         obj["versions"] = [
-            r for (r,) in db.session\
-                .query(BinaryPackageModel.version)\
-                .filter_by(repo_name=repo)\
-                .filter_by(name=name)\
+            r for (r,) in db.session
+                .query(BinaryPackageModel.version)
+                .filter_by(repo_name=repo)
+                .filter_by(name=name)
                 .distinct()
         ]
 
@@ -161,10 +161,10 @@ class BinaryPackage(Resource):
             raise http_exc.BadRequest(errors)
 
         offkey = req_args.get("offkey", "")
-        items  = req_args.get("items",  20)
+        items  = req_args.get("items", 20)
         search = req_args.get("search", None)
-        libc   = req_args.get("libc",   libc)
-        arch   = req_args.get("arch",   arch)
+        libc   = req_args.get("libc", libc)
+        arch   = req_args.get("arch", arch)
 
         s1 = db.aliased(BinaryPackageModel)
         s2 = db.aliased(BinaryPackageModel)
@@ -192,4 +192,3 @@ class BinaryPackage(Resource):
     #end function
 
 #end class
-

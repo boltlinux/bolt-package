@@ -30,8 +30,12 @@ class BinaryPackage(db.Model):
 
     id_ = db.Column(db.Integer, primary_key=True, index=True)
 
-    source_package_id = db.Column(db.Integer, db.ForeignKey("source_package.id_"),
-            nullable=False, index=True)
+    source_package_id = db.Column(
+        db.Integer,
+        db.ForeignKey("source_package.id_"),
+        nullable=False,
+        index=True
+    )
 
     repo_name  = db.Column(db.String(50), nullable=False)
     libc       = db.Column(db.String(10), nullable=False)
@@ -51,4 +55,3 @@ class BinaryPackage(db.Model):
         db.UniqueConstraint("repo_name", "libc", "arch", "name", "version")
     )
 #end class
-

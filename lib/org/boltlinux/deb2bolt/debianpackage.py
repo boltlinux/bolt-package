@@ -81,7 +81,8 @@ class DebianPackage(PackageUtilsMixin):
 
         try:
             if self.version:
-                self.metadata = self._cache.binary[self.name][self.version.full]
+                self.metadata = \
+                    self._cache.binary[self.name][self.version.full]
             else:
                 self.version, self.metadata = \
                     max(self._cache.binary[self.name].items())
@@ -203,7 +204,7 @@ class DebianPackage(PackageUtilsMixin):
 
         with ArchiveFileReader(filename) as archive:
             for entry in archive:
-                if entry.pathname.startswith("data.tar"):                        
+                if entry.pathname.startswith("data.tar"):
                     data_tarball = os.path.join(tmpdir, entry.pathname)
 
                     with open(data_tarball, "wb+") as f:

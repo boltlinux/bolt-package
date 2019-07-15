@@ -396,8 +396,10 @@ class DebianSource(PackageUtilsMixin):
             )
 
             pkg.metadata["Description"] = metadata.get("Description", "")
-            pkg.metadata["Section"]= metadata.get("Section",
-                    source_meta["Section"])
+            pkg.metadata["Section"] = metadata.get(
+                "Section",
+                source_meta["Section"]
+            )
 
             self.packages.append(pkg)
         #end for

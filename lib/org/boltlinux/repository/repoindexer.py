@@ -144,7 +144,8 @@ class RepoIndexer:
                 #end with
             #end with
 
-            os.chmod(tempfile.name,
+            os.chmod(
+                tempfile.name,
                 stat.S_IRUSR |
                 stat.S_IWUSR |
                 stat.S_IRGRP |
@@ -206,7 +207,7 @@ class RepoIndexer:
 
                 try:
                     control_data = self.extract_control_data(abs_path)
-                except BoltSyntaxError as e:
+                except BoltSyntaxError:
                     continue
 
                 yield control_data
@@ -234,8 +235,11 @@ class RepoIndexer:
                         #end while
                     #end with
 
-                    pool_path = re.sub(r"^" + re.escape(self._repo_dir) + r"/*",
-                            "", filename)
+                    pool_path = re.sub(
+                        r"^" + re.escape(self._repo_dir) + r"/*",
+                        "",
+                        filename
+                    )
 
                     meta_data = PackageMetaData(
                         self._extract_control_data(data_file))
@@ -248,7 +252,7 @@ class RepoIndexer:
         #end with
 
         meta_data["SHA256"] = self._compute_sha256_sum(filename)
-        meta_data[ "Size" ] = os.path.getsize(filename)
+        meta_data["Size"]   = os.path.getsize(filename)
 
         return meta_data
     #end function
@@ -291,4 +295,3 @@ class RepoIndexer:
     #end function
 
 #end class
-
