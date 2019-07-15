@@ -34,7 +34,7 @@ import urllib.request
 
 from org.boltlinux.error import BoltError
 from org.boltlinux.toolbox.libarchive import ArchiveFileReader
-from org.boltlinux.deb2bolt.debianpackagemetadata import \
+from org.boltlinux.package.debianpackagemetadata import \
         DebianPackageMetaData, DebianPackageVersion
 
 LOGGER = logging.getLogger(__name__)

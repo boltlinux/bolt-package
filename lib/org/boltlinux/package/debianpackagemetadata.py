@@ -245,7 +245,7 @@ class DebianPackageMetaData(PackageUtilsMixin):
         #end for
 
         for key in fields.keys():
-            fields[key] = "\n".join(fields[key])
+            fields[key] = "\n    ".join(fields[key])
 
         # The binary version may differ slightly from the source version, e.g.
         # the build system may have appended a build counter. For all practical

@@ -38,7 +38,7 @@ from org.boltlinux.deb2bolt.debianpackage import DebianPackage
 from org.boltlinux.deb2bolt.changelog import Changelog
 from org.boltlinux.error import BoltError
 
-from org.boltlinux.deb2bolt.debianpackagemetadata import (
+from org.boltlinux.package.debianpackagemetadata import (
     DebianPackageVersion, DebianPackageMetaData
 )
 

@@ -238,7 +238,6 @@ class BinaryPackage(BasePackage):
     @property
     def basedir(self):
         return self._basedir
-    #end function
 
     @basedir.setter
     def basedir(self, basedir):
@@ -252,12 +251,10 @@ class BinaryPackage(BasePackage):
     @property
     def output_dir(self):
         return self._output_dir
-    #end function
 
     @output_dir.setter
     def output_dir(self, output_dir):
         self._output_dir = os.path.realpath(output_dir)
-    #end function
 
     def prepare(self):
         try:

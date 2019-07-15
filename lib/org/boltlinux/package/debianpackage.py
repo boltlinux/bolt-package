@@ -35,7 +35,7 @@ from org.boltlinux.toolbox.libarchive import ArchiveEntry, ArchiveFileWriter
 
 from org.boltlinux.package.filestats import FileStats
 from org.boltlinux.package.binarypackage import BinaryPackage
-from org.boltlinux.package.metadata import PackageMetaData
+from org.boltlinux.package.debianpackagemetadata import DebianPackageMetaData
 
 class DebianPackage(BinaryPackage):
 
@@ -164,7 +164,7 @@ class DebianPackage(BinaryPackage):
         with ArchiveFileWriter(ctrl_abspath, libarchive.FORMAT_TAR_USTAR,
                 libarchive.COMPRESSION_GZIP) as archive:
 
-            control_contents = [("control", meta_data.as_string(), 0o644)]
+            control_contents = [("control", str(meta_data), 0o644)]
 
             for script_name, script_content in self.maintainer_scripts.items():
                 control_contents.append([script_name, script_content, 0o754])
@@ -265,7 +265,7 @@ class DebianPackage(BinaryPackage):
             "replaces":  "Replaces"
         }
 
-        meta = PackageMetaData()
+        meta = DebianPackageMetaData()
 
         meta["Package"]      = self.name + "-dbg" if debug_pkg else self.name
         meta["Version"]      = self.version
