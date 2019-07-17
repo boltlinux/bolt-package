@@ -31,7 +31,7 @@ from tempfile import TemporaryDirectory
 
 from org.boltlinux.toolbox.downloader import Downloader
 from org.boltlinux.toolbox.libarchive import ArchiveFileReader
-from org.boltlinux.deb2bolt.debianpackagemetadata import DebianPackageVersion
+from org.boltlinux.package.debianpackagemetadata import DebianPackageVersion
 from org.boltlinux.deb2bolt.packageutils import PackageUtilsMixin
 from org.boltlinux.error import BoltError
 
