@@ -16,8 +16,8 @@ setup(
     author_email='tobias.koch@gmail.com',
     license='MIT',
     packages=[
-        'org.boltlinux',
         'org.boltlinux.deb2bolt',
+        'org.boltlinux.error',
         'org.boltlinux.package',
         'org.boltlinux.repository',
         'org.boltlinux.toolbox'
