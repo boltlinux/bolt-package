@@ -58,17 +58,17 @@ class Platform:
     @staticmethod
     def num_cpus():
         cpu_info_file = "/proc/cpuinfo"
-        num_cpus = 0
+        num_cpus = 1
 
         if os.path.exists(cpu_info_file):
+            num_cpus = 0
+
             with open(cpu_info_file, "r", encoding="utf-8") as fp:
                 for line in fp:
                     if re.match(r"processor\s*:\s*\d+", line):
                         num_cpus += 1
                 #end for
             #end with
-        else:
-            num_cpus = 1
         #end if
 
         return num_cpus
@@ -76,9 +76,16 @@ class Platform:
 
     @staticmethod
     def find_executable(executable_name):
-        search_path = os.environ.get("PATH", "").split(os.pathsep) + \
-                ["/tools/bin", "/tools/sbin", "/usr/local/bin",
-                 "/usr/local/sbin", "/bin", "/sbin", "/usr/bin", "/usr/sbin"]
+        search_path = os.environ.get("PATH", "").split(os.pathsep) + [
+            "/tools/bin",
+            "/tools/sbin",
+            "/usr/local/bin",
+            "/usr/local/sbin",
+            "/bin",
+            "/sbin",
+            "/usr/bin",
+            "/usr/sbin"
+        ]
 
         for path in search_path:
             location = os.path.join(path, executable_name)
