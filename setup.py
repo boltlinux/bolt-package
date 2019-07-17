@@ -17,9 +17,10 @@ setup(
     license='MIT',
     packages=[
         'org.boltlinux',
-        'org.boltlinux.package',
         'org.boltlinux.deb2bolt',
-        'org.boltlinux.repository'
+        'org.boltlinux.package',
+        'org.boltlinux.repository',
+        'org.boltlinux.toolbox'
     ],
     package_dir={'': 'lib'},
     data_files=[
