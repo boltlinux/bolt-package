@@ -386,6 +386,17 @@ class DebianSource(PackageUtilsMixin):
         for i in range(1, len(blocks)):
             metadata = DebianPackageMetaData(string=blocks[i])
 
+            architecture = metadata.get("Architecture", "any")
+            if architecture not in ["all", "any"]:
+                arch_list = architecture.split()
+                if self.arch not in arch_list:
+                    continue
+            #end if
+
+            package = metadata["Package"]
+            if package.endswith("-dbg"):
+                continue
+
             pkg = DebianPackage(
                 self._cache,
                 metadata["Package"],
