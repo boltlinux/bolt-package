@@ -35,7 +35,6 @@ from org.boltlinux.package.packagedesc import PackageDescription
 from org.boltlinux.package.basepackage import BasePackage
 from org.boltlinux.package.platform import Platform
 
-from org.boltlinux.toolbox.progressbar import ProgressBar
 from org.boltlinux.toolbox.libarchive import ArchiveFileReader
 
 class SourcePackage(BasePackage):
@@ -137,63 +136,34 @@ class SourcePackage(BasePackage):
                 raise PackagingError(msg)
             #end if
 
-            total_size = 0
-            with ArchiveFileReader(archive_file) as archive:
-                for entry in archive:
-                    if entry.is_file:
-                        total_size += entry.size
-                #end for
-            #end with
-
             if self.verbose:
                 sys.stdout.write("Unpacking '%s'.\n" % archive_file)
 
-            with ArchiveFileReader(archive_file) as archive:
-                progress_bar = ProgressBar(total_size)
-                progress_bar(0)
+            m = re.match(
+                r"^(.*?\.debdiff)\.(?:gz|xz|bz2)$",
+                os.path.basename(archive_file)
+            )
 
-                bytes_read = 0
-
-                for entry in archive:
-                    pathname = re.sub(r"^(?:\.+)?(?:/+)?[^/]*", "",
-                            entry.pathname.strip())
-                    if not pathname:
+            if m:
+                with ArchiveFileReader(archive_file, raw=True) as archive:
+                    try:
+                        next(iter(archive))
+                    except StopIteration:
                         continue
 
-                    full_path = os.path.normpath(source_dir_and_subdir +
-                            os.sep + pathname)
-                    os.makedirs(os.path.dirname(full_path), exist_ok=True)
+                    outfile = os.path.join(source_dir_and_subdir, m.group(1))
 
-                    if entry.is_directory:
-                        entry.mode |= 0o700
-                        os.makedirs(full_path, exist_ok=True)
-                        os.chmod(full_path, entry.mode)
-                    elif entry.is_file:
-                        entry.mode |= 0o600
-                        with open(full_path, "wb+") as f:
-                            for chunk in \
-                                    iter(lambda: archive.read_data(4096), b""):
-                                f.write(chunk)
-                                bytes_read += len(chunk)
-                            #end for
-                        #end with
-
-                        # This won't do anything if stdout is not a TTY.
-                        progress_bar(bytes_read)
-
-                        os.chmod(full_path, entry.mode)
-                        # Assume it is sufficient to do this for files.
-                        os.utime(full_path, (entry.atime, entry.mtime))
-                    elif entry.is_symbolic_link:
-                        if os.path.exists(full_path):
-                            os.unlink(full_path)
-                        os.symlink(entry.symlink, full_path)
-                    else:
-                        msg = "file '%s' has unsupported file type."
-                        raise PackagingError(msg)
-                    #end if
-                #end for
-            #end with
+                    with open(outfile, "wb+") as f:
+                        for chunk in iter(lambda: archive.read_data(4096),
+                                b""):
+                            f.write(chunk)
+                    #end with
+            else:
+                with ArchiveFileReader(archive_file) as archive:
+                    archive.unpack_to_disk(
+                        base_dir=source_dir_and_subdir,
+                        strip_components=1
+                    )
         #end for
     #end function
 
