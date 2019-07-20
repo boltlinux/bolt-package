@@ -55,12 +55,16 @@ def print_usage():
         "                                                                               \n"
         "OPTIONS:                                                                       \n"
         "                                                                               \n"
-        "  -h|--help          Print this help message.                                  \n"
-        "  --arch             Analyze packages for given arch (default: \"amd64\").     \n"
-        "  --suite            The Debian release to work against (e.g. \"stretch\").    \n"
-        "  --disable-updates  Ignore the release-updates pocket.                        \n"
-        "  --no-update-cache  Do not update the package cache.                          \n"
-        "  --set-maintainer   Write maintainer info to changelog (initial import).      \n"
+        "  -h|--help              Print this help message.                              \n"
+        "                                                                               \n"
+        "  --arch <arch>          Analyze packages for given arch (default: \"amd64\"). \n"
+        "  --suite <suite>        The Debian release to work against (e.g. \"stretch\").\n"
+        "  --run-rules <target>   Invoke debian/rules target after unpacking the        \n"
+        "                         sources. This option can be supplied multiple times.  \n"
+        "                                                                               \n"
+        "  --disable-updates      Ignore the release-updates pocket.                    \n"
+        "  --no-update-cache      Do not update the package cache.                      \n"
+        "  --set-maintainer       Write maintainer info to changelog (initial import).  \n"
         % BOLT_VERSION
     )
 #end function
@@ -72,7 +76,8 @@ def parse_cmd_line():
         "arch": "amd64",
         "do_update_cache": True,
         "set_maintainer": False,
-        "updates_enabled": True
+        "updates_enabled": True,
+        "run_rules": []
     }
 
     try:
@@ -83,7 +88,8 @@ def parse_cmd_line():
                 "disable-updates",
                 "no-update-cache",
                 "arch=",
-                "suite="
+                "suite=",
+                "run-rules="
             ]
         )
     except getopt.GetoptError as e:
@@ -109,6 +115,9 @@ def parse_cmd_line():
                 break
             if case("--suite"):
                 config["suite"] = v.strip()
+                break
+            if case("--run-rules"):
+                config["run_rules"].append(v.strip())
                 break
         #end switch
     #end for
@@ -175,7 +184,8 @@ if __name__ == "__main__":
             arch=options["arch"]
         )
 
-        deb2bolt.convert(args[0], maintainer_info=maintainer_info)
+        deb2bolt.convert(args[0], maintainer_info=maintainer_info,
+                run_rules=options["run_rules"])
     except InvocationError as e:
         sys.stderr.write("deb2bolt: %s\n" % str(e))
         sys.exit(BOLT_ERR_INVOCATION)

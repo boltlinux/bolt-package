@@ -276,6 +276,36 @@ class DebianSource(PackageUtilsMixin):
         return self
     #end function
 
+    def run_rules(self, run_rules=None):
+        """
+        For each target in run_rules, invokes `fakeroot debian/rules <target>`.
+        """
+        if not run_rules:
+            return
+
+        orig_tarball, \
+        orig_components, \
+        deb_tarball, \
+        deb_patches, \
+        debdiff_gz = self._guess_file_components()
+
+        pkg_name, pkg_version, _ = \
+            self._orig_tarball_split_name(orig_tarball)
+
+        deb_source_dir = os.path.join(
+            self.work_dir,
+            "{}-{}".format(pkg_name, pkg_version)
+        )
+
+        for target in run_rules:
+            LOGGER.info("Invoking debian/rules target {}".format(target))
+
+            cmd = ["fakeroot", "make", "-C", deb_source_dir, "-f",
+                    "debian/rules", target]
+            subprocess.run(cmd)
+        #end for
+    #end function
+
     def copy_sources_and_patches(self, target_dir):
         """
         Copies the original sources, debdiff and any patches from

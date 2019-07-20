@@ -39,7 +39,8 @@ class Deb2BoltPackageConverter:
         self._cache = pkg_cache
     #end function
 
-    def convert(self, pkg_name, target_dir=".", maintainer_info=None):
+    def convert(self, pkg_name, target_dir=".", maintainer_info=None,
+            run_rules=None):
         target_dir = os.path.abspath(target_dir)
 
         with tempfile.TemporaryDirectory() as tmpdir:
@@ -53,7 +54,8 @@ class Deb2BoltPackageConverter:
 
             deb_source\
                 .download()\
-                .unpack()
+                .unpack()\
+                .run_rules(run_rules)
 
             deb_source.copy_sources_and_patches(target_dir)
             deb_source.parse_control_file()
