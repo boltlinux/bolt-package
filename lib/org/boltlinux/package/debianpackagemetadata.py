@@ -98,6 +98,12 @@ class DebianPackageMetaData(PackageUtilsMixin):
     def __setitem__(self, key, value):
         self._fields[key] = value
 
+    def __len__(self):
+        return len(self._fields)
+
+    def __bool__(self):
+        return len(self._fields) != 0
+
     def __str__(self):
         result = ""
 

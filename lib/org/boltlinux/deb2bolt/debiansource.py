@@ -379,12 +379,19 @@ class DebianSource(PackageUtilsMixin):
 
         content = content.strip()
         content = re.sub(r"^\s*\n$", r"\n", content, flags=re.M)
-        blocks  = re.split(r"\n\n", content)
+        blocks  = re.split(r"\n\n+", content)
 
-        source_meta = DebianPackageMetaData(string=blocks[0])
+        while True:
+            source_meta = DebianPackageMetaData(string=blocks.pop(0))
+            if source_meta:
+                break
+        #end while
 
-        for i in range(1, len(blocks)):
+        for i in range(0, len(blocks)):
             metadata = DebianPackageMetaData(string=blocks[i])
+
+            if not metadata:
+                continue
 
             architecture = metadata.get("Architecture", "any")
             if architecture not in ["all", "any"]:
