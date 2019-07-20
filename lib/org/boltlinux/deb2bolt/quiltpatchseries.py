@@ -56,6 +56,9 @@ class QuiltPatchSeries:
     def __len__(self):
         return len(self.patches)
 
+    def __bool__(self):
+        return len(self.patches) != 0
+
     def __iter__(self):
         for p in self.patches:
             yield p

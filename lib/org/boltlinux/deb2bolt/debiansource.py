@@ -370,7 +370,11 @@ class DebianSource(PackageUtilsMixin):
             tarfile = "debian-patches-{}.tar.gz"\
                 .format(self.version.revision)
 
-            self.patches = QuiltPatchSeries(series_file)
+            patches = QuiltPatchSeries(series_file)
+            if not patches:
+                continue
+
+            self.patches = patches
             self.files[tarfile] = \
                 self.patches.create_tarball(os.path.join(outdir, tarfile))
 
