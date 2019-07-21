@@ -63,8 +63,9 @@ def print_usage():
         "                         sources. This option can be supplied multiple times.  \n"
         "                                                                               \n"
         "  --disable-updates      Ignore the release-updates pocket.                    \n"
-        "  --no-update-cache      Do not update the package cache.                      \n"
         "  --set-maintainer       Write maintainer info to changelog (initial import).  \n"
+        "  --no-update-cache      Do not update the package cache.                      \n"
+        "  --no-load-contents     Do not load and analyze binary package contents.      \n"
         % BOLT_VERSION
     )
 #end function
@@ -75,6 +76,7 @@ def parse_cmd_line():
         "suite": "stable",
         "arch": "amd64",
         "do_update_cache": True,
+        "do_load_contents": True,
         "set_maintainer": False,
         "updates_enabled": True,
         "run_rules": []
@@ -87,6 +89,7 @@ def parse_cmd_line():
                 "set-maintainer",
                 "disable-updates",
                 "no-update-cache",
+                "no-load-contents",
                 "arch=",
                 "suite=",
                 "run-rules="
@@ -109,6 +112,9 @@ def parse_cmd_line():
                 break
             if case("--no-update-cache"):
                 config["do_update_cache"] = False
+                break
+            if case("--no-load-contents"):
+                config["do_load_contents"] = False
                 break
             if case("--arch"):
                 config["arch"] = v.strip()
@@ -184,8 +190,12 @@ if __name__ == "__main__":
             arch=options["arch"]
         )
 
-        deb2bolt.convert(args[0], maintainer_info=maintainer_info,
-                run_rules=options["run_rules"])
+        deb2bolt.convert(
+            args[0],
+            maintainer_info=maintainer_info,
+            run_rules=options["run_rules"],
+            do_load_contents=options["do_load_contents"]
+        )
     except InvocationError as e:
         sys.stderr.write("deb2bolt: %s\n" % str(e))
         sys.exit(BOLT_ERR_INVOCATION)

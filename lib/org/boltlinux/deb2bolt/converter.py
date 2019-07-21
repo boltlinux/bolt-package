@@ -40,7 +40,7 @@ class Deb2BoltPackageConverter:
     #end function
 
     def convert(self, pkg_name, target_dir=".", maintainer_info=None,
-            run_rules=None):
+            run_rules=None, do_load_contents=True):
         target_dir = os.path.abspath(target_dir)
 
         with tempfile.TemporaryDirectory() as tmpdir:
@@ -59,7 +59,9 @@ class Deb2BoltPackageConverter:
 
             deb_source.copy_sources_and_patches(target_dir)
             deb_source.parse_control_file()
-            deb_source.build_content_spec()
+
+            if do_load_contents:
+                deb_source.build_content_spec()
 
             deb_source.to_bolt(
                 target_dir,
