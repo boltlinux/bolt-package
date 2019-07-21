@@ -349,37 +349,46 @@ class DebianSource(PackageUtilsMixin):
             shutil.copy2(archive_source_path, archive_target_path)
         #end for
 
-        # Copy debdiff
-
-        if debdiff_gz:
-            archive_source_path = os.path.join(self.work_dir, debdiff_gz)
-            archive_target_path = \
-                os.path.join(outdir, self._debdiff_dist_name(debdiff_gz))
-            shutil.copy2(archive_source_path, archive_target_path)
-        #end if
-
         # Collect patches
+
+        patches = QuiltPatchSeries()        
 
         for patch_subdir in ["patches-applied", "patches"]:
             series_file = os.path.join(unpacked_source_dir,
                 "debian", patch_subdir, "series")
-
             if not os.path.isfile(series_file):
+                continue
+
+            patches.read_patches(series_file)
+            if not patches:
                 continue
 
             tarfile = "debian-patches-{}.tar.gz"\
                 .format(self.version.revision)
-
-            patches = QuiltPatchSeries(series_file)
-            if not patches:
-                continue
-
-            self.patches = patches
-            self.files[tarfile] = \
-                self.patches.create_tarball(os.path.join(outdir, tarfile))
+            self.files[tarfile] = patches.create_tarball(
+                os.path.dirname(series_file),
+                os.path.join(outdir, tarfile)
+            )
 
             break
         #end for
+
+        # Copy debdiff
+
+        if debdiff_gz:
+            debdiff_dist_name = self._debdiff_dist_name(debdiff_gz)
+
+            archive_source_path = os.path.join(self.work_dir, debdiff_gz)
+            archive_target_path = os.path.join(outdir, debdiff_dist_name)
+
+            shutil.copy2(archive_source_path, archive_target_path)
+
+            # ACHTUNG: this is where debdiff sneaks into the patchset.
+            patches.insert(0, debdiff_dist_name.rsplit(".", 1)[0])
+        #end if
+
+        if patches:
+            self.patches = patches
 
         return self
     #end function
@@ -503,7 +512,7 @@ class DebianSource(PackageUtilsMixin):
         with open(outfile, "w+", encoding="utf-8") as f:
             f.write(PKG_RULES_XML_TEMPLATE)
 
-        # source package
+        # Source package
 
         outfile = os.path.join(target_dir, "package.xml")
         with open(outfile, "w+", encoding="utf-8") as f:

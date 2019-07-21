@@ -34,10 +34,27 @@ from org.boltlinux.error import BoltError
 
 class QuiltPatchSeries:
 
-    def __init__(self, series_file):
+    def __init__(self):
         self.patches = []
-        self.series_file = series_file
 
+    def __len__(self):
+        return len(self.patches)
+
+    def __bool__(self):
+        return len(self.patches) != 0
+
+    def __iter__(self):
+        for p in self.patches:
+            yield p
+    #end function
+
+    def append(self, item):
+        self.patches.append(item)
+
+    def insert(self, pos, item):
+        self.patches.insert(pos, item)
+
+    def read_patches(self, series_file):
         if not os.path.isfile(series_file):
             raise BoltError("No such file: {}".format(series_file))
 
@@ -52,21 +69,6 @@ class QuiltPatchSeries:
             #end for
         #end with
     #end function
-
-    def __len__(self):
-        return len(self.patches)
-
-    def __bool__(self):
-        return len(self.patches) != 0
-
-    def __iter__(self):
-        for p in self.patches:
-            yield p
-    #end function
-
-    @property
-    def patch_dir(self):
-        return os.path.abspath(os.path.dirname(self.series_file))
 
     def as_xml(self, indent=0):
         if not self.patches:
@@ -83,10 +85,9 @@ class QuiltPatchSeries:
         return re.sub(r"^", " " * 4 * indent, buf, flags=re.M)
     #end function
 
-    def create_tarball(self, tarfile):
+    def create_tarball(self, patch_dir, tarfile):
         """Creates a gzip-compressed tarball and writes the contents to the
         filename specified in tarfile."""
-        patch_dir = self.patch_dir
 
         with ArchiveFileWriter(tarfile, libarchive.FORMAT_TAR_USTAR,
                 libarchive.COMPRESSION_GZIP) as archive:
