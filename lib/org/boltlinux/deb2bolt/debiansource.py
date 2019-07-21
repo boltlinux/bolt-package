@@ -444,7 +444,10 @@ class DebianSource(PackageUtilsMixin):
             #end if
 
             package = metadata["Package"]
+
             if package.endswith("-dbg"):
+                continue
+            if package.endswith("-di"):
                 continue
 
             pkg = DebianPackage(
