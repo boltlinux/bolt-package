@@ -185,7 +185,7 @@ class Changelog:
         with open(filename, "r", encoding="utf-8") as f:
             for line in f:
                 m = re.match(
-                    r"^\s*[-.a-z0-9]+\s+\(([^)]+)\)(?:\s+\w+)+;"
+                    r"^\s*[-.a-z0-9]+\s+\(([^)]+)\)(?:\s+(?:\w|-)+)+;"
                     r"\s*urgency=\w+", line
                 )
                 if m:
