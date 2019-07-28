@@ -26,9 +26,12 @@
 import os
 import sys
 import hashlib
+import logging
 import urllib.request
 
 from org.boltlinux.toolbox.progressbar import ProgressBar
+
+LOGGER = logging.getLogger(__name__)
 
 class SourceCache:
 
@@ -95,8 +98,7 @@ class SourceCache:
                 with urllib.request.urlopen(source_url) as response:
                     progress_bar = None
 
-                    if self.verbose:
-                        sys.stdout.write("Retrieving '%s'.\n" % source_url)
+                    LOGGER.info("Retrieving '{}'.".format(source_url))
 
                     if response.length:
                         progress_bar = ProgressBar(response.length)
@@ -122,15 +124,16 @@ class SourceCache:
                     #end with
                 #end with
             except urllib.error.URLError as e:
-                sys.stderr.write("Failed to retrieve '%s': %s\n" %
-                        (source_url, e.reason))
+                LOGGER.error(
+                    "Failed to retrieve '{}': {}".format(source_url, e.reason)
+                )
                 continue
             #end try
 
             if sha256sum and sha256sum != h.hexdigest():
-                if self.verbose:
-                    sys.stderr.write("File '%s' has an invalid checksum!\n" %
-                            target_url)
+                LOGGER.error(
+                    "File '{}' has an invalid checksum!".format(target_url)
+                )
                 continue
             #end if
 

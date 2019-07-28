@@ -27,6 +27,7 @@
 import os
 import sys
 import getopt
+import logging
 
 # make relocatable
 INSTALL_DIR = os.path.normpath(os.path.dirname(
@@ -182,6 +183,9 @@ def parse_cmd_line():
     return config, args
 #end function
 
+def configure_logging():
+    logging.basicConfig(level=logging.INFO, format="{message}", style="{")
+
 if __name__ == "__main__":
     try:
         # PARSE CMD LINE
@@ -197,11 +201,14 @@ if __name__ == "__main__":
             try:
                 os.chdir(options["work_dir"])
             except OSError as e:
-                raise XPackError("failed to set working directory: " + str(e))
+                raise BoltError("failed to set working directory: " + str(e))
         #end if
 
         # LOAD APP CONFIG
         app_config = AppConfig.instance().load_user_config()
+
+        # SETUP LOGGING
+        configure_logging()
 
         # RUN ACTION
         PackageControl(args[0], app_config, options)(options["action"])
