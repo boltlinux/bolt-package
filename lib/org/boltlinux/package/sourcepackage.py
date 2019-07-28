@@ -26,6 +26,7 @@
 import os
 import sys
 import re
+import logging
 import subprocess
 
 from lxml import etree
@@ -36,6 +37,8 @@ from org.boltlinux.package.basepackage import BasePackage
 from org.boltlinux.package.platform import Platform
 
 from org.boltlinux.toolbox.libarchive import ArchiveFileReader
+
+LOGGER = logging.getLogger(__name__)
 
 class SourcePackage(BasePackage):
 
@@ -136,8 +139,7 @@ class SourcePackage(BasePackage):
                 raise PackagingError(msg)
             #end if
 
-            if self.verbose:
-                sys.stdout.write("Unpacking '%s'.\n" % archive_file)
+            LOGGER.info("Unpacking '{}'.".format(archive_file))
 
             m = re.match(
                 r"^(.*?\.debdiff)\.(?:gz|xz|bz2)$",
@@ -178,6 +180,8 @@ class SourcePackage(BasePackage):
                 patch_file = os.path.normpath(self.basedir +
                         os.sep + patch_file)
             #end if
+
+            LOGGER.info("Applying '{}'.".format(os.path.basename(patch_file)))
 
             e_source_dir = source_dir if not subdir else source_dir + \
                     os.sep + subdir
