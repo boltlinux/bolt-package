@@ -98,7 +98,7 @@ class SourceCache:
                 with urllib.request.urlopen(source_url) as response:
                     progress_bar = None
 
-                    LOGGER.info("Retrieving '{}'.".format(source_url))
+                    LOGGER.info("retrieving {}".format(source_url))
 
                     if response.length:
                         progress_bar = ProgressBar(response.length)
@@ -125,14 +125,14 @@ class SourceCache:
                 #end with
             except urllib.error.URLError as e:
                 LOGGER.error(
-                    "Failed to retrieve '{}': {}".format(source_url, e.reason)
+                    "failed to retrieve {}: {}".format(source_url, e.reason)
                 )
                 continue
             #end try
 
             if sha256sum and sha256sum != h.hexdigest():
                 LOGGER.error(
-                    "File '{}' has an invalid checksum!".format(target_url)
+                    "file {} has invalid checksum!".format(target_url)
                 )
                 continue
             #end if

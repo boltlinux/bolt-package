@@ -36,6 +36,7 @@ sys.path.insert(1, INSTALL_DIR + os.sep + 'lib')
 
 from org.boltlinux.error import BoltError, InvocationError
 from org.boltlinux.toolbox.switch import switch
+from org.boltlinux.toolbox.logformatter import LogFormatter
 from org.boltlinux.package.appconfig import AppConfig
 from org.boltlinux.deb2bolt.debianpackagecache import DebianPackageCache
 from org.boltlinux.deb2bolt.converter import Deb2BoltPackageConverter
@@ -43,6 +44,8 @@ from org.boltlinux.package.version import VERSION as BOLT_VERSION
 
 BOLT_ERR_INVOCATION = 1
 BOLT_ERR_RUNTIME    = 2
+
+LOGGER = logging.getLogger()
 
 def print_usage():
     print(
@@ -96,7 +99,7 @@ def parse_cmd_line():
             ]
         )
     except getopt.GetoptError as e:
-        raise InvocationError("Error parsing command line: %s" % str(e))
+        raise InvocationError("error parsing command line: {}".format(str(e)))
 
     for o, v in opts:
         for case in switch(o):
@@ -132,11 +135,11 @@ def parse_cmd_line():
 #end function
 
 def configure_logging():
-    logging.basicConfig(
-        level=logging.INFO,
-        format="[{levelname:^8s}] {message}",
-        style="{"
-    )
+    fmt = LogFormatter("deb2bolt")
+    handler = logging.StreamHandler()
+    handler.setFormatter(fmt)
+    LOGGER.addHandler(handler)
+    LOGGER.setLevel(logging.INFO)
 #end function
 
 if __name__ == "__main__":
@@ -161,7 +164,7 @@ if __name__ == "__main__":
             maintainer_info = app_config.get("maintainer-info", {})
             if not maintainer_info:
                 raise InvocationError(
-                    "No maintainer-info found, please fix your config file."
+                    "no maintainer-info found, please fix your config file."
                 )
             #end if
         #end if
@@ -197,13 +200,13 @@ if __name__ == "__main__":
             do_load_contents=options["do_load_contents"]
         )
     except InvocationError as e:
-        sys.stderr.write("deb2bolt: %s\n" % str(e))
+        LOGGER.error(e)
         sys.exit(BOLT_ERR_INVOCATION)
     except BoltError as e:
-        sys.stderr.write("deb2bolt: %s\n" % str(e))
+        LOGGER.error(e)
         sys.exit(BOLT_ERR_RUNTIME)
     except KeyboardInterrupt:
-        sys.stderr.write("Caught keyboard interrupt. Exiting.\n")
+        LOGGER.warn("caught keyboard interrupt, exiting.")
         sys.exit(0)
     #end try
 #end __main__

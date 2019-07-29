@@ -100,7 +100,7 @@ class DebianPackage(PackageUtilsMixin):
         url      = "/".join([self.metadata.base_url, filename])
 
         with open(outfile, "wb+") as f:
-            LOGGER.info("Fetching {}".format(url))
+            LOGGER.info("fetching {}".format(url))
             for chunk in Downloader().get(url):
                 f.write(chunk)
         #end with
@@ -191,7 +191,7 @@ class DebianPackage(PackageUtilsMixin):
     def _binary_deb_list_contents(self, filename):
         contents = []
 
-        LOGGER.info("Analyzing contents of {}".format(filename))
+        LOGGER.info("analyzing contents of {}".format(filename))
 
         with TemporaryDirectory() as tmpdir:
             contents = self._binary_deb_list_contents_impl(filename, tmpdir)

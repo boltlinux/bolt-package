@@ -29,8 +29,6 @@ import tempfile
 
 from org.boltlinux.deb2bolt.debiansource import DebianSource
 
-LOGGER = logging.getLogger(__name__)
-
 class Deb2BoltPackageConverter:
 
     def __init__(self, pkg_cache, suite="stable", arch="amd64"):

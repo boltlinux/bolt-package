@@ -191,7 +191,7 @@ class DebianSource(PackageUtilsMixin):
             ])
 
             with open(outfile, "wb+") as f:
-                LOGGER.info("Fetching {}".format(url))
+                LOGGER.info("fetching {}".format(url))
                 for chunk in downloader.get(url):
                     f.write(chunk)
             #end with
@@ -225,7 +225,7 @@ class DebianSource(PackageUtilsMixin):
         )
         os.makedirs(outdir, exist_ok=True)
 
-        LOGGER.info("Unpacking Debian package sources to {}".format(outdir))
+        LOGGER.info("unpacking Debian package sources to {}".format(outdir))
 
         with ArchiveFileReader(archive_source_path) as archive:
             archive.unpack_to_disk(outdir, strip_components=1)
@@ -298,7 +298,7 @@ class DebianSource(PackageUtilsMixin):
         )
 
         for target in run_rules:
-            LOGGER.info("Invoking debian/rules target {}".format(target))
+            LOGGER.info("invoking debian/rules target {}".format(target))
 
             cmd = ["fakeroot", "make", "-C", deb_source_dir, "-f",
                     "debian/rules", target]
@@ -331,7 +331,7 @@ class DebianSource(PackageUtilsMixin):
         )
         os.makedirs(outdir, exist_ok=True)
 
-        LOGGER.info("Copying sources and patches to {}".format(outdir))
+        LOGGER.info("copying sources and patches to {}".format(outdir))
 
         # Copy orig tarball
 
@@ -415,7 +415,7 @@ class DebianSource(PackageUtilsMixin):
         debian_control_file = \
             os.path.join(unpacked_source_dir, "debian", "control")
 
-        LOGGER.info("Parsing metadata from {}".format(debian_control_file))
+        LOGGER.info("parsing metadata from {}".format(debian_control_file))
 
         with open(debian_control_file, "r", encoding="utf-8") as f:
             content = f.read()

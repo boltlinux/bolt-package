@@ -139,7 +139,7 @@ class SourcePackage(BasePackage):
                 raise PackagingError(msg)
             #end if
 
-            LOGGER.info("Unpacking '{}'.".format(archive_file))
+            LOGGER.info("unpacking {}".format(os.path.basename(archive_file)))
 
             m = re.match(
                 r"^(.*?\.debdiff)\.(?:gz|xz|bz2)$",
@@ -176,12 +176,14 @@ class SourcePackage(BasePackage):
         sys.stderr.flush()
 
         for patch_file, subdir, strip_components in self.patches:
+            patch_name = os.path.basename(patch_file)
+
             if not os.path.isabs(patch_file):
                 patch_file = os.path.normpath(self.basedir +
                         os.sep + patch_file)
             #end if
 
-            LOGGER.info("Applying '{}'.".format(os.path.basename(patch_file)))
+            LOGGER.info("applying {}".format(patch_name))
 
             e_source_dir = source_dir if not subdir else source_dir + \
                     os.sep + subdir
@@ -190,7 +192,9 @@ class SourcePackage(BasePackage):
             try:
                 subprocess.run(cmd, stderr=subprocess.STDOUT, check=True)
             except subprocess.CalledProcessError:
-                raise PackagingError("couldn't apply patch.")
+                raise PackagingError(
+                    "couldn't apply patch \"{}\"".format(patch_name)
+                )
         #end for
     #end function
 
