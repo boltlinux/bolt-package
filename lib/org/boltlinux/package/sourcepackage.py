@@ -139,7 +139,7 @@ class SourcePackage(BasePackage):
                 raise PackagingError(msg)
             #end if
 
-            LOGGER.info("unpacking {}".format(os.path.basename(archive_file)))
+            LOGGER.info("unpacking {}".format(archive_file))
 
             m = re.match(
                 r"^(.*?\.debdiff)\.(?:gz|xz|bz2)$",
