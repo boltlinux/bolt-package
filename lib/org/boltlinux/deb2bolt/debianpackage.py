@@ -31,6 +31,7 @@ from tempfile import TemporaryDirectory
 
 from org.boltlinux.toolbox.downloader import Downloader
 from org.boltlinux.toolbox.libarchive import ArchiveFileReader
+from org.boltlinux.toolbox.progressbar import ProgressBar
 from org.boltlinux.package.debianpackagemetadata import DebianPackageVersion
 from org.boltlinux.deb2bolt.packageutils import PackageUtilsMixin
 from org.boltlinux.error import BoltError
@@ -95,13 +96,16 @@ class DebianPackage(PackageUtilsMixin):
     #end function
 
     def build_content_spec(self):
+        downloader = Downloader(progress_bar_class=ProgressBar)
+
         filename = self.metadata["Filename"]
         outfile  = os.path.join(self.work_dir, os.path.basename(filename))
         url      = "/".join([self.metadata.base_url, filename])
 
+        LOGGER.info("fetching {}".format(url))
+
         with open(outfile, "wb+") as f:
-            LOGGER.info("fetching {}".format(url))
-            for chunk in Downloader().get(url):
+            for chunk in downloader.get(url):
                 f.write(chunk)
         #end with
 

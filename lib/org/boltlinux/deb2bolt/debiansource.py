@@ -32,6 +32,7 @@ import subprocess
 
 from org.boltlinux.toolbox.downloader import Downloader
 from org.boltlinux.toolbox.libarchive import ArchiveFileReader
+from org.boltlinux.toolbox.progressbar import ProgressBar
 from org.boltlinux.deb2bolt.quiltpatchseries import QuiltPatchSeries
 from org.boltlinux.deb2bolt.packageutils import PackageUtilsMixin
 from org.boltlinux.deb2bolt.debianpackage import DebianPackage
@@ -163,7 +164,7 @@ class DebianSource(PackageUtilsMixin):
         """
         Downloads all components of this source package to self.work_dir.
         """
-        downloader = Downloader()
+        downloader = Downloader(progress_bar_class=ProgressBar)
         pool_dir   = self.metadata.get("Directory")
 
         orig_tarball, \
@@ -190,8 +191,9 @@ class DebianSource(PackageUtilsMixin):
                 filename
             ])
 
+            LOGGER.info("fetching {}".format(url))
+
             with open(outfile, "wb+") as f:
-                LOGGER.info("fetching {}".format(url))
                 for chunk in downloader.get(url):
                     f.write(chunk)
             #end with
