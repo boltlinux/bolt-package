@@ -35,7 +35,7 @@ class Downloader:
     def __init__(self, progress_bar_class=None):
         self._progress_bar_class = progress_bar_class
 
-    def get(self, url):
+    def get(self, url, digest=None):
         progress_bar = None
         bytes_read   = 0
 
@@ -49,6 +49,8 @@ class Downloader:
                 for chunk in iter(lambda: response.read(8192), b""):
                     bytes_read += len(chunk)
 
+                    if digest is not None:
+                        digest.update(chunk)
                     yield chunk
 
                     if progress_bar:
