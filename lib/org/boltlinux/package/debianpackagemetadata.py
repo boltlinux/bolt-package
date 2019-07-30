@@ -89,22 +89,32 @@ class DebianPackageMetaData(PackageUtilsMixin):
     ]
 
     def __init__(self, string="", base_url=""):
-        self._fields  = self._parse_meta_data(string)
+        self._string = string
+        self._fields = {}
+        self._parse_meta_data_minimal()
+        self._fully_parsed = False
         self.base_url = base_url
+    #end function
 
     def __getitem__(self, key):
+        key in self._fields or self._parse_meta_data_full()
         return self._fields[key]
+    #end function
 
     def __setitem__(self, key, value):
+        self._parse_meta_data_full()
         self._fields[key] = value
 
     def __len__(self):
+        self._parse_meta_data_full()
         return len(self._fields)
 
     def __bool__(self):
+        self._parse_meta_data_full()
         return len(self._fields) != 0
 
     def __str__(self):
+        self._parse_meta_data_full()
         result = ""
 
         for k in DebianPackageMetaData.RELEVANT_KEYS:
@@ -119,6 +129,7 @@ class DebianPackageMetaData(PackageUtilsMixin):
 
     @property
     def name(self):
+        self._parse_meta_data_full()
         for field_name in ["Package", "Source"]:
             if field_name in self._fields:
                 return self._fields[field_name]
@@ -126,12 +137,15 @@ class DebianPackageMetaData(PackageUtilsMixin):
 
     @property
     def url(self):
+        self._parse_meta_data_full()
         return self.base_url + "/" + self._fields["Filename"]
 
     def get(self, key, default=None):
+        self._parse_meta_data_full()
         return self._fields.get(key, default)
 
     def to_bolt(self):
+        self._parse_meta_data_full()
         fields = {}
 
         for k in DebianPackageMetaData.RELEVANT_KEYS:
@@ -226,13 +240,32 @@ class DebianPackageMetaData(PackageUtilsMixin):
 
     # PRIVATE
 
-    def _parse_meta_data(self, string):
+    def _parse_meta_data_minimal(self):
+        for line in self._string.splitlines():
+            try:
+                key, val = line.split(":", 1)
+            except ValueError:
+                continue
+
+            if key in ["Package", "Version"]:
+                self._fields[key] = val.strip()
+            elif key == "Source":
+                m = re.match(r".*?\((?P<version>.*?)\)\s*$", val)
+                if m:
+                    self._fields["Version"] = m.group("version")
+        #end for
+    #end function
+
+    def _parse_meta_data_full(self):
+        if self._fully_parsed:
+            return
+
         fields = {}
 
         key = None
         val = None
 
-        for line in string.strip().splitlines():
+        for line in self._string.strip().splitlines():
             if line.startswith("#"):
                 continue
 
@@ -257,15 +290,13 @@ class DebianPackageMetaData(PackageUtilsMixin):
         # the build system may have appended a build counter. For all practical
         # purposes, we always want to work with the source version.
         if "Source" in fields:
-            m = re.match(
-                r".*?\((?P<version>.*?)\)\s*$",
-                fields.get("Source")
-            )
+            m = re.match(r".*?\((?P<version>.*?)\)\s*$", fields.get("Source"))
             if m:
                 fields["Version"] = m.group("version")
         #end if
 
-        return fields
+        self._fields.update(fields)
+        self._fully_parsed = True
     #end function
 
 #end class
