@@ -120,7 +120,7 @@ class DebianPackageCache:
         if what & self.BINARY:
             pkg_types.extend(["binary-{}".format(self.arch), "binary-all"])
 
-        LOGGER.info("updating package cache...")
+        LOGGER.info("updating package cache (this may take a while).")
 
         for component, base_url in self.sources_list:
             for pocket in self.pockets:
@@ -178,7 +178,7 @@ class DebianPackageCache:
             pkg_types.extend(["binary-{}".format(self.arch), "binary-all"])
             self.binary.clear()
 
-        LOGGER.info("loading package cache...")
+        LOGGER.info("(re)loading package cache, please hold on.")
 
         for component, base_url in self.sources_list:
             for pocket in self.pockets:

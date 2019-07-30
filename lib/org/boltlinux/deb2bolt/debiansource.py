@@ -147,7 +147,7 @@ class DebianSource(PackageUtilsMixin):
                     max(self._cache.source[self.name].items())
         except KeyError:
             raise BoltError(
-                "Package '{}' version '{}' not found in cache."
+                "package '{}' version '{}' not found in cache."
                     .format(self.name, self.version or "latest")
             )
         #end try
