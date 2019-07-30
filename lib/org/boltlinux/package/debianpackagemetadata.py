@@ -248,7 +248,8 @@ class DebianPackageMetaData(PackageUtilsMixin):
                 continue
 
             if key in ["Package", "Version"]:
-                self._fields[key] = val.strip()
+                if not key in self._fields:
+                    self._fields[key] = val.strip()
             elif key == "Source":
                 m = re.match(r".*?\((?P<version>.*?)\)\s*$", val)
                 if m:
