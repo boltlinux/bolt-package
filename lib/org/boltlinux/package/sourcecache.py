@@ -30,6 +30,7 @@ import logging
 import urllib.request
 
 from org.boltlinux.toolbox.progressbar import ProgressBar
+from org.boltlinux.toolbox.downloader import Downloader
 
 LOGGER = logging.getLogger(__name__)
 
@@ -80,6 +81,8 @@ class SourceCache:
     #end function
 
     def fetch_from_repo(self, pkg_name, version, filename, sha256sum=None):
+        downloader = Downloader(progress_bar_class=ProgressBar)
+
         if pkg_name.startswith("lib"):
             first_letter = pkg_name[3]
         else:
@@ -94,35 +97,13 @@ class SourceCache:
             target_url = self.cache_dir + os.sep + rel_path
             h = hashlib.sha256()
 
+            LOGGER.info("retrieving {}".format(source_url))
             try:
-                with urllib.request.urlopen(source_url) as response:
-                    progress_bar = None
+                os.makedirs(os.path.dirname(target_url), exist_ok=True)
 
-                    LOGGER.info("retrieving {}".format(source_url))
-
-                    if response.length:
-                        progress_bar = ProgressBar(response.length)
-                        progress_bar(0)
-                    #end if
-
-                    os.makedirs(os.path.dirname(target_url), exist_ok=True)
-
-                    with open(target_url, "wb+") as f:
-                        bytes_read = 0
-
-                        for chunk in iter(
-                                lambda: response.read(1024 * 1024), b""):
-                            f.write(chunk)
-
-                            if progress_bar:
-                                bytes_read += len(chunk)
-                                progress_bar(bytes_read)
-                            #end if
-
-                            h.update(chunk)
-                        #end while
-                    #end with
-                #end with
+                with open(target_url, "wb+") as f:
+                    for chunk in downloader.get(source_url, digest=h):
+                        f.write(chunk)
             except urllib.error.URLError as e:
                 LOGGER.error(
                     "failed to retrieve {}: {}".format(source_url, e.reason)
@@ -131,9 +112,8 @@ class SourceCache:
             #end try
 
             if sha256sum and sha256sum != h.hexdigest():
-                LOGGER.error(
-                    "file {} has invalid checksum!".format(target_url)
-                )
+                LOGGER.error("file {} has invalid checksum!"
+                        .format(target_url))
                 continue
             #end if
 
