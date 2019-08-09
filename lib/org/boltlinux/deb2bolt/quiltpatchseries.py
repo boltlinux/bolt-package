@@ -89,7 +89,7 @@ class QuiltPatchSeries:
         """Creates a gzip-compressed tarball and writes the contents to the
         filename specified in tarfile."""
 
-        with ArchiveFileWriter(tarfile, libarchive.FORMAT_TAR_USTAR,
+        with ArchiveFileWriter(tarfile, libarchive.FORMAT_TAR_PAX_RESTRICTED,
                 libarchive.COMPRESSION_GZIP) as archive:
             for p in self.patches:
                 # Remove extra parameter, e.g. -p1
