@@ -55,9 +55,7 @@ def print_usage():
         "OPTIONS:                                                                       \n"
         "                                                                               \n"
         "  -h --help             Print this help message.                               \n"
-        "                                                                               \n"
         "  --force-full          Force a full update ignoring existing Packages files.  \n"
-        "                                                                               \n"
         % BOLT_VERSION
     )
 #end function

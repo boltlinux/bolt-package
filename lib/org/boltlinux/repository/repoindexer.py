@@ -29,14 +29,14 @@ import stat
 import hashlib
 import functools
 
-import org.boltlinux.package.libarchive as libarchive
+import org.boltlinux.toolbox.libarchive as libarchive
 
 from tempfile import TemporaryDirectory, NamedTemporaryFile
-from org.boltlinux.package.libarchive import ArchiveFileReader, \
+from org.boltlinux.toolbox.libarchive import ArchiveFileReader, \
         ArchiveFileWriter, ArchiveEntry
 from org.boltlinux.error import NotFound, BoltSyntaxError
 from org.boltlinux.package.xpkg import BaseXpkg
-from org.boltlinux.package.metadata import PackageMetaData
+from org.boltlinux.package.debianpackagemetadata import DebianPackageMetaData
 
 class RepoIndexer:
 
@@ -85,7 +85,7 @@ class RepoIndexer:
         index = {}
 
         for entry in re.split(r"\n\n+", buf, flags=re.MULTILINE):
-            meta_data = PackageMetaData(entry)
+            meta_data = DebianPackageMetaData(entry)
 
             try:
                 name    = meta_data["Package"]
@@ -241,7 +241,7 @@ class RepoIndexer:
                         filename
                     )
 
-                    meta_data = PackageMetaData(
+                    meta_data = DebianPackageMetaData(
                         self._extract_control_data(data_file))
 
                     meta_data["Filename"] = pool_path
