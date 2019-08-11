@@ -438,19 +438,36 @@ class DebianSource(PackageUtilsMixin):
             if not metadata:
                 continue
 
-            architecture = metadata\
+            tmp_arch_list = metadata\
                 .get("Architecture", "any")\
-                .rsplit("-", 1)[-1]
+                .split()
 
-            if architecture not in ["all", "any"]:
-                arch_list = architecture.split()
-                if self.arch not in arch_list:
+            arch_list = []
+
+            for arch in tmp_arch_list:
+                if arch.endswith("-any"):
                     continue
-            #end if
+                elif arch.startswith("any-"):
+                    _, cpu = arch.rsplit("-", 1)[-1]
+                    arch_list.append(cpu)
+                else:
+                    arch_list.append(arch)
+            #end for
+
+            skip = True
+
+            for arch in ["all", "any", self.arch]:
+                if arch in arch_list:
+                    skip = False
+                    break
+            #end for
+
+            if skip:
+                continue
 
             package_name = metadata["Package"]
-
             skip = False
+
             for suffix in ["-dbg", "-di", "-udeb"]:
                 if package_name.endswith(suffix):
                     skip = True
