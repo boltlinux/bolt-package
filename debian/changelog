@@ -1,3 +1,9 @@
+bolt-package (1.1.0) unstable; urgency=medium
+
+  * Bump version number.
+
+ -- Tobias Koch <tobias.koch@gmail.com>  Sun, 11 Aug 2019 17:52:59 +0200
+
 bolt-package (1.0.0) unstable; urgency=medium
 
   * Initial Release.

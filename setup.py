@@ -10,7 +10,7 @@ here = path.abspath(path.dirname(__file__))
 
 setup(
     name='bolt-package',
-    version='1.0.0',
+    version='1.1.0',
     url='https://github.com/tobijk/bolt-package',
     author='Tobias Koch',
     author_email='tobias.koch@gmail.com',
