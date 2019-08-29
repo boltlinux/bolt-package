@@ -446,7 +446,10 @@ class DebianSource(PackageUtilsMixin):
 
             for arch in tmp_arch_list:
                 if arch.endswith("-any"):
-                    continue
+                    if arch == "linux-any":
+                        arch_list.append("any")
+                    else:
+                        continue
                 elif arch.startswith("any-"):
                     _, cpu = arch.rsplit("-", 1)[-1]
                     arch_list.append(cpu)
