@@ -125,7 +125,7 @@ class RepoIndexer:
         if not meta_data_list:
             return
 
-        output = "\n".join([entry.as_string() for entry in meta_data_list])
+        output = "\n".join([str(entry) for entry in meta_data_list])
         output = output.encode("utf-8")
 
         with NamedTemporaryFile(dir=self._repo_dir, delete=False) as tempfile:
