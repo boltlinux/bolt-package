@@ -63,8 +63,6 @@ class RepoIndexer:
 
         self.prune_package_index(index)
         self.store_package_index(index)
-
-        self.make_hash_links()
     #end function
 
     def load_package_index(self):
@@ -157,31 +155,6 @@ class RepoIndexer:
             if os.path.exists(tempfile.name):
                 os.unlink(tempfile.name)
         #end try
-    #end function
-
-    def make_hash_links(self):
-        packages_file = os.path.join(self._repo_dir, "Packages.gz")
-
-        if not os.path.exists(packages_file):
-            return
-
-        sha256sum = self._compute_sha256_sum(packages_file)
-        sha256dir = os.path.join(self._repo_dir, "by-hash", "SHA256")
-        linkname  = os.path.join(sha256dir, sha256sum)
-
-        if os.path.exists(linkname):
-            return
-
-        if not os.path.isdir(sha256dir):
-            os.makedirs(sha256dir)
-        else:
-            for entry in os.scandir(path=sha256dir):
-                if entry.is_symlink():
-                    os.unlink(os.path.join(sha256dir, entry.name))
-            #end for
-        #end if
-
-        os.symlink("../../Packages.gz", linkname)
     #end function
 
     def scan(self, index=None):
