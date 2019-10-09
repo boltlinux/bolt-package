@@ -209,7 +209,7 @@ class BinaryPackage(BasePackage):
             if node.tag in ["preinst", "postinst", "prerm", "postrm"]:
                 self.maintainer_scripts[node.tag] = textwrap.dedent(
 
-                    """
+                        """\
                     #!/bin/sh -e
 
                     export BOLT_INSTALL_PREFIX="%s"
