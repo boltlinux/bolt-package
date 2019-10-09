@@ -24,7 +24,6 @@
 #
 
 import os
-import logging
 import tempfile
 
 from org.boltlinux.deb2bolt.debiansource import DebianSource

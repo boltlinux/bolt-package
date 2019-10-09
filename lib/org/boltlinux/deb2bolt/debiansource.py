@@ -353,7 +353,7 @@ class DebianSource(PackageUtilsMixin):
 
         # Collect patches
 
-        patches = QuiltPatchSeries()        
+        patches = QuiltPatchSeries()
 
         for patch_subdir in ["patches-applied", "patches"]:
             series_file = os.path.join(unpacked_source_dir,

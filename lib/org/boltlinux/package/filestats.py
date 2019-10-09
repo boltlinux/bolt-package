@@ -176,8 +176,10 @@ class FileStats:
 
     @property
     def is_dynamically_linked(self):
-        regexp_bin = r"ELF \d+-bit .SB .*?executable.*, dynamically linked.*"
-        regexp_lib = r"ELF \d+-bit .SB .*?shared object.*, dynamically linked.*"
+        regexp_bin = \
+            r"ELF \d+-bit .SB .*?executable.*, dynamically linked.*"
+        regexp_lib = \
+            r"ELF \d+-bit .SB .*?shared object.*, dynamically linked.*"
 
         magic = self._magic_obj.name
         if re.match(regexp_bin, magic) or re.match(regexp_lib, magic):

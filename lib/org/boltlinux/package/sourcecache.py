@@ -24,7 +24,6 @@
 #
 
 import os
-import sys
 import hashlib
 import logging
 import urllib.request

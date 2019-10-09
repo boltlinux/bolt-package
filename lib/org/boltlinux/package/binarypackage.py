@@ -28,6 +28,7 @@ import re
 import glob
 import stat
 import subprocess
+import textwrap
 
 from pathlib import Path
 from collections import OrderedDict
@@ -152,8 +153,9 @@ class BinaryPackage(BasePackage):
                         tmp_version = pkg_manager\
                                 .installed_version_of_package(dep_name)
                         if not tmp_version:
-                            raise UnmetDependency("cannot resolve dependency '%s'."
-                                    % dep_name)
+                            raise UnmetDependency(
+                                "cannot resolve dependency '%s'." % dep_name
+                            )
                         pkg_node.attrib["version"] = dep_version[:-1] \
                             + " " + tmp_version
                     #end if
@@ -181,7 +183,9 @@ class BinaryPackage(BasePackage):
         prefix_regex = re.compile("^" + re.escape("${prefix}"))
 
         for node in bin_node.findall('contents/*'):
-            src = prefix_regex.sub(self.install_prefix, node.get("src").strip())
+            src = prefix_regex.sub(
+                self.install_prefix, node.get("src").strip()
+            )
 
             if len(src) > 1:
                 src = src.rstrip(os.sep)
@@ -203,10 +207,17 @@ class BinaryPackage(BasePackage):
         self.maintainer_scripts = {}
         for node in bin_node.findall("maintainer-scripts/*"):
             if node.tag in ["preinst", "postinst", "prerm", "postrm"]:
-                self.maintainer_scripts[node.tag] = "#!/bin/sh -e\n\n" + \
-                        ("export BOLT_INSTALL_PREFIX=\"%s\"\n" % self.install_prefix) + \
-                        ("export BOLT_HOST_TYPE=\"%s\"\n\n" % self.host_type) + \
-                        etree.tostring(node, method="text", encoding="unicode")
+                self.maintainer_scripts[node.tag] = textwrap.dedent(
+
+                    """
+                    #!/bin/sh -e
+
+                    export BOLT_INSTALL_PREFIX="%s"
+                    export BOLT_HOST_TYPE="%s"
+
+                    """ % (self.install_prefix, self.host_type)
+
+                ) + etree.tostring(node, method="text", encoding="unicode")
             #end if
         #end for
 
