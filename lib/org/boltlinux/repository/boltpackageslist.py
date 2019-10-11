@@ -37,7 +37,7 @@ class BoltPackagesList(BasePackagesListMixin):
         self._libc      = libc
         self._arch      = arch
         self._mirror    = mirror if mirror is not None else \
-            "http://packages.boltlinux.org/repo/"
+            "http://archive.boltlinux.org/repo/"
 
         self._cache_dir = cache_dir or os.path.realpath(
             os.path.join(
