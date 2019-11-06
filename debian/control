@@ -25,6 +25,7 @@ Depends:
  chrpath,
  libarchive-dev,
  autotools-dev,
+ patch,
  ${misc:Depends}
 Description: Bolt OS packaging and repository tools (Python 3 only)
 
