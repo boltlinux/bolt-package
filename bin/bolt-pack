@@ -86,7 +86,6 @@ def print_usage():
         "MISCELLANEOUS OPTIONS:                                                         \n"
         "                                                                               \n"
         "  -h --help            Print this help message.                                \n"
-        "  --list-deps          List all build dependencies.                            \n"
         "  --work-dir=<dir>     Change to the given directory before running actions.   \n"
         % BOLT_VERSION
     )
@@ -112,7 +111,6 @@ def parse_cmd_line():
     try:
         opts, args = getopt.getopt(sys.argv[1:], "ho:upbir", [
             "help",
-            "list-deps",
             "ignore-deps",
             "no-debug-pkgs",
             "outdir=",
@@ -134,9 +132,6 @@ def parse_cmd_line():
             if case("--help", "-h"):
                 print_usage()
                 sys.exit(0)
-                break
-            if case("--list-deps"):
-                config["action"] = "list_deps"
                 break
             if case("--ignore-deps"):
                 config["ignore_deps"] = True

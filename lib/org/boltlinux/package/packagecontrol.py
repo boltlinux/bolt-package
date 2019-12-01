@@ -198,9 +198,6 @@ class PackageControl:
         getattr(self, action)()
     #end function
 
-    def list_deps(self):
-        print(self.src_pkg.build_dependencies())
-
     def unpack(self):
         cache_dir = self.app_config.get("cache-dir",
             os.path.realpath(AppConfig.get_config_folder() +
