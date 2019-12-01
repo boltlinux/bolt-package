@@ -32,7 +32,9 @@ from flask_restful import Resource, fields, marshal_with, marshal
 
 from org.boltlinux.repository.flaskinit import db
 from org.boltlinux.repository.models import SourcePackage as SourcePackageModel
-from org.boltlinux.repository.api.schema import RequestArgsSchema
+from org.boltlinux.repository.api.schema import (
+     RequestArgsSchema, ValidationError
+)
 
 class SourcePackage(Resource):
 
@@ -75,9 +77,10 @@ class SourcePackage(Resource):
 
     @marshal_with(RESOURCE_FIELDS)
     def _get_many(self, repo=None):
-        req_args, errors = RequestArgsSchema().load(request.args)
-        if errors:
-            raise http_exc.BadRequest(errors)
+        try:
+            req_args = RequestArgsSchema().load(request.args)
+        except ValidationError as e:
+            raise http_exc.BadRequest(e.messages)
 
         offkey = req_args.get("offkey", "")
         items  = req_args.get("items",  10)
