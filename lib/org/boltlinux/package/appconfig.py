@@ -25,62 +25,72 @@
 
 import os
 import pwd
+import copy
 import json
 import base64
 import socket
+import getpass
 
 class AppConfig:
 
     DEFAULT_CONFIG = """\
 {
-  "release": {
-    "id": "zeus",
-    "upstream": "stretch",
-    "supported-architectures": {
-      "musl": [
-        "aarch64",
-        "armv4t",
-        "armv6",
-        "armv7a",
-        "i686",
-        "mipsel",
-        "mips64el",
-        "powerpc",
-        "powerpc64le",
-        "x86_64"
-      ]
-    }
-  },
+    "general": {
+        "default-release": "devel"
+    },
 
-  "repositories": [
-    {
-      "name": "core",
-      "repo-url": "http://archive.boltlinux.org/repo",
-      "rules": "https://github.com/boltlinux/bolt-pkg-rules.git@release/zeus"
-    }
-  ],
+    "maintainer-info": {
+        "email": "max.mustermann@example.com",
+        "name": "Max Mustermann"
+    },
 
-  "upstream": {
-    "mirror": "http://ftp.debian.org/debian/",
-    "components": [
-      "main",
-      "contrib",
-      "non-free"
+    "releases": [
+        {
+            "id": "devel",
+            "version_id": "00.00",
+            "upstream": {
+                "id": "stable",
+                "components": [
+                    "main",
+                    "contrib",
+                    "non-free"
+                ],
+                "mirror": "http://ftp.debian.org/debian/",
+                "refresh-interval": 3600
+            },
+            "supported-architectures": {
+                "musl": [
+                    "aarch64",
+                    "armv4t",
+                    "armv6",
+                    "armv7a",
+                    "i686",
+                    "mips64el",
+                    "mipsel",
+                    "powerpc",
+                    "powerpc64le"
+                ]
+            },
+            "repositories": [
+                {
+                    "rules": "https://github.com/boltlinux/bolt-pkg-rules.git@master",
+                    "repo-url": "http://packages.boltlinux.org/repo",
+                    "name": "core"
+                }
+            ]
+        }
     ],
-    "refresh-interval": 3600
-  },
 
-  "apps": {
-    "repository": {
-      "appconfig": {
-        "DEBUG": false,
-        "APPLICATION_ROOT": null,
-        "JSON_AS_ASCII": false
-      }
+    "apps": {
+        "repository": {
+            "appconfig": {
+                "APPLICATION_ROOT": null,
+                "DEBUG": false,
+                "JSON_AS_ASCII": false
+            }
+        }
     }
-  }
-}
-"""
+}"""
 
     INSTANCE = None
 
@@ -94,6 +104,15 @@ class AppConfig:
     @classmethod
     def get_config_folder(klass):
         return os.path.join(os.path.expanduser("~"), ".bolt")
+
+    def __init__(self):
+        self.config = self.load_user_config()
+
+    def __getitem__(self, key):
+        return self.config[key]
+
+    def get(self, key, default=None):
+        return self.config.get(key, default)
 
     def load_user_config(self):
         config = None
@@ -143,6 +162,36 @@ class AppConfig:
             fp.write(json.dumps(default_config, indent=4))
 
         return default_config
+    #end function
+
+    def get_default_release(self):
+        return self.config\
+            .get("general", {})\
+            .get("default-release", "devel")
+    #end function
+
+    def get_release_config(self, release_name):
+        for release in self.config.get("releases", []):
+            if release.get("id", "") == release_name:
+                return release
+        #end for
+
+        return None
+    #end function
+
+    def get_cache_dir(self):
+        cache_dir = self.config\
+            .get("general", {})\
+            .get("system", {})\
+            .get("cache-dir")
+
+        if not cache_dir:
+            cache_dir = os.path.realpath(
+                os.path.join(self.get_config_folder(), "cache")
+            )
+        #end if
+
+        return cache_dir
     #end function
 
 #end class
