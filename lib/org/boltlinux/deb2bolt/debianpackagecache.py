@@ -152,8 +152,9 @@ class DebianPackageCache:
                         self._download_tagged_http_resource(source, target,
                                 etag=new_etag)
                     except BoltError as e:
-                        self.log.error("Failed to retrieve {}: {}"
-                                .format(source, str(e)))
+                        raise BoltError(
+                            "Failed to retrieve {}: {}".format(source, str(e))
+                        )
 
                     # Remove old blob.
                     if old_etag:
