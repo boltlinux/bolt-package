@@ -76,7 +76,7 @@ def print_usage():
 def parse_cmd_line():
     # define default configuration
     config = {
-        "suite": "stable",
+        "suite": None,
         "arch": "amd64",
         "do_update_cache": True,
         "do_load_contents": True,
@@ -156,7 +156,7 @@ if __name__ == "__main__":
         configure_logging()
 
         # LOAD APP CONFIG
-        app_config = AppConfig.instance().load_user_config()
+        app_config = AppConfig.instance()
 
         if not options["set_maintainer"]:
             maintainer_info = None
@@ -169,12 +169,21 @@ if __name__ == "__main__":
             #end if
         #end if
 
+        # DETERMINE DEFAULT RELEASE
+        suite = options.get("suite")
+
+        if not suite:
+            suite = app_config\
+                .get_release_config(app_config.get_default_release())\
+                .get("upstream", {})\
+                .get("id", "stable")
+        #end if
+
         # PREPARE PACKAGE CACHE
-        cache_dir = os.path.join(AppConfig.get_config_folder(),
-                "cache", "debian")
+        cache_dir = os.path.join(app_config.get_cache_dir(), "debian")
 
         pkg_cache = DebianPackageCache(
-            options["suite"].lower(),
+            suite.lower(),
             arch=options["arch"],
             cache_dir=cache_dir,
             updates_enabled=options["updates_enabled"],
