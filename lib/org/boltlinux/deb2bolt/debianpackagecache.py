@@ -174,17 +174,17 @@ class DebianPackageCache:
                         )
                     #end try
 
-                    # Verify signature trail through sha256sum.
-                    if digest.hexdigest() != sha256sum:
-                        raise BoltError(
-                            "wrong hash for '{}'.".format(source)
-                        )
-                    #end if
-
                     # Remove old blob.
                     if old_tag:
                         os.unlink(
                             os.path.join(os.path.dirname(target), old_tag)
+                        )
+                    #end if
+
+                    # Verify signature trail through sha256sum.
+                    if digest.hexdigest() != sha256sum:
+                        raise BoltError(
+                            "wrong hash for '{}'.".format(source)
                         )
                     #end if
                 #end for
