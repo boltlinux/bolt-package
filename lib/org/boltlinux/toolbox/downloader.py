@@ -23,6 +23,9 @@
 # THE SOFTWARE.
 #
 
+import hashlib
+import random
+import string
 import urllib.request
 
 from org.boltlinux.error import BoltError

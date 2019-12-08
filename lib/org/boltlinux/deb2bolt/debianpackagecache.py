@@ -26,16 +26,18 @@
 import hashlib
 import logging
 import os
-import random
 import re
-import string
 import urllib.error
 import urllib.request
 
-from org.boltlinux.error import BoltError
 from org.boltlinux.toolbox.libarchive import ArchiveFileReader
+from org.boltlinux.toolbox.downloader import Downloader
+from org.boltlinux.deb2bolt.inrelease import InReleaseFile
+
 from org.boltlinux.package.debianpackagemetadata import \
         DebianPackageMetaData, DebianPackageVersion
+
+from org.boltlinux.error import BoltError
 
 LOGGER = logging.getLogger(__name__)
 
@@ -122,7 +124,11 @@ class DebianPackageCache:
 
         LOGGER.info("updating package cache (this may take a while).")
 
+        downloader = Downloader()
+
         for component, base_url in self.sources_list:
+            inrelease = self._load_inrelease_file(component, base_url)
+
             for pocket in self.pockets:
                 for type_ in pkg_types:
                     cache_dir = os.path.join(self._cache_dir, self.release,
@@ -132,34 +138,55 @@ class DebianPackageCache:
                         os.makedirs(cache_dir)
 
                     if type_ == "source":
-                        source = "{}/{}/source/Sources.gz"\
-                            .format(base_url, pocket)
+                        filename = "{}/source/Sources.gz".format(pocket)
                         target = os.path.join(cache_dir, "Sources.gz")
                     else:
-                        source = "{}/{}/{}/Packages.gz"\
-                            .format(base_url, pocket, type_)
+                        filename = "{}/{}/Packages.gz".format(pocket, type_)
                         target = os.path.join(cache_dir, "Packages.gz")
+                    #end if
+
+                    sha256sum = inrelease.hash_for_filename(filename)
+                    source = "{}/{}".format(
+                        base_url, inrelease.by_hash_path(filename)
+                    )
+
+                    new_tag = sha256sum[:16]
+
+                    # Check if resource has changed.
+                    if not os.path.islink(target):
+                        old_tag = ""
+                    else:
+                        old_tag = os.path.basename(os.readlink(target))
+
+                    if old_tag == new_tag:
+                        continue
+
+                    digest = hashlib.sha256()
 
                     # Download file into symlinked blob.
                     try:
-                        # Check if resource has changed.
-                        old_etag = self._etag_for_file(target)
-                        new_etag = self._etag_for_http_url(source)
-
-                        if old_etag == new_etag:
-                            continue
-
-                        self._download_tagged_http_resource(source, target,
-                                etag=new_etag)
+                        self._download_tagged_http_resource(
+                            source, target, tag=new_tag, digest=digest
+                        )
                     except BoltError as e:
                         raise BoltError(
-                            "Failed to retrieve {}: {}".format(source, str(e))
+                            "failed to retrieve {}: {}".format(source, str(e))
                         )
+                    #end try
+
+                    # Verify signature trail through sha256sum.
+                    if digest.hexdigest() != sha256sum:
+                        raise BoltError(
+                            "wrong hash for '{}'.".format(source)
+                        )
+                    #end if
 
                     # Remove old blob.
-                    if old_etag:
-                        os.unlink(os.path.join(os.path.dirname(target),
-                            old_etag))
+                    if old_tag:
+                        os.unlink(
+                            os.path.join(os.path.dirname(target), old_tag)
+                        )
+                    #end if
                 #end for
             #end for
         #end for
@@ -238,69 +265,72 @@ class DebianPackageCache:
         return (self.source, self.binary)
     #end function
 
-    def _download_tagged_http_resource(self, source_url, target_file,
-            etag="", connection_timeout=30):
-        if not etag:
-            etag = self._etag_for_http_url(source_url)
+    def _download_tagged_http_resource(self, source_url, target_file, tag="",
+            digest=None, connection_timeout=30):
+        downloader = Downloader()
+        if not tag:
+            tag = downloader.tag(source_url)
 
-        blob_name = os.path.join(os.path.dirname(target_file), etag)
+        blob_file = os.path.join(os.path.dirname(target_file), tag)
         try:
-            request = urllib.request.Request(source_url, method="GET")
-            with urllib.request.urlopen(request, timeout=connection_timeout)\
-                    as response:
-                with open(blob_name + "$", 'wb+') as f:
-                    for chunk in iter(lambda: response.read(8192), b""):
-                        f.write(chunk)
-                #end with
-            #end with
-        except (OSError, urllib.error.URLError) as e:
-            if os.path.exists(blob_name + "$"):
-                os.unlink(blob_name + "$")
-            raise BoltError(
-                "failed to download http resource: {}".format(str(e))
-            )
+            with open(blob_file + "$", "wb+") as f:
+                for chunk in downloader.get(source_url, digest=digest):
+                    f.write(chunk)
+        except Exception:
+            if os.path.exists(blob_file + "$"):
+                os.unlink(blob_file + "$")
+            raise
         #end try
 
         # Atomically rename blob.
-        os.rename(blob_name + "$", blob_name)
-
+        os.rename(blob_file + "$", blob_file)
         # Create temporary symlink to new blob.
-        os.symlink(os.path.basename(blob_name), target_file + "$")
-
+        os.symlink(os.path.basename(blob_file), target_file + "$")
         # Atomically rename symlink (hopefully).
         os.rename(target_file + "$", target_file)
     #end function
 
-    def _etag_for_http_url(self, url, connection_timeout=30):
-        alphabet = \
-            string.ascii_uppercase + \
-            string.ascii_lowercase + \
-            string.digits
+    def _load_inrelease_file(self, component, base_url):
+        keyring = "/usr/share/keyrings/debian-archive-keyring.gpg"
 
-        try:
-            request = urllib.request.Request(url, method="HEAD")
-            with urllib.request.urlopen(request, timeout=connection_timeout)\
-                    as response:
-                identifier1 = response.getheader("ETag", "")
-                identifier2 = response.getheader(
-                    "Last-Modified",
-                    "".join([random.choice(alphabet) for i in range(16)])
-                )
-        except urllib.error.URLError as e:
-            raise BoltError("failed to generate etag: {}"
-                    .format(str(e)))
+        cache_dir = os.path.join(self._cache_dir, self.release, component)
+        if not os.path.isdir(cache_dir):
+            os.makedirs(cache_dir)
 
-        sha256 = hashlib.sha256()
-        sha256.update(identifier1.encode("utf-8"))
-        sha256.update(identifier2.encode("utf-8"))
+        downloader = Downloader()
 
-        return sha256.hexdigest()[:16]
-    #end function
+        source = "{}/{}".format(base_url, "InRelease")
+        target = os.path.join(cache_dir, "InRelease")
 
-    def _etag_for_file(self, filename):
-        if not os.path.islink(filename):
-            return ""
-        return os.path.basename(os.readlink(filename))
+        if not os.path.islink(target):
+            old_tag = ""
+        else:
+            old_tag = os.path.basename(os.readlink(target))
+
+        new_tag = downloader.tag(source)
+        if old_tag != new_tag:
+            self._download_tagged_http_resource(source, target, tag=new_tag)
+            if old_tag:
+                os.unlink(os.path.join(cache_dir, old_tag))
+        #end if
+
+        inrelease = InReleaseFile.load(os.path.join(cache_dir, new_tag))
+
+        if not os.path.exists(keyring):
+            raise BoltError(
+                "keyring file '{}' not found, cannot check '{}' signature."
+                .format(keyring, target)
+            )
+        #end if
+
+        if not inrelease.valid_signature(keyring=keyring):
+            raise BoltError(
+                "unable to verify the authenticity of '{}'"
+                .format(target)
+            )
+        #end if
+
+        return inrelease
     #end function
 
 #end class
