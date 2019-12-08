@@ -63,7 +63,7 @@ class DebianPackageCache:
     BINARY = 2
 
     def __init__(self, release, arch="amd64", pockets=None, cache_dir=None,
-            security_enabled=True, updates_enabled=False):
+            security_enabled=True, updates_enabled=False, keyring=None):
         self.log = logging.getLogger("org.boltlinux.tools")
 
         self.release = release
@@ -78,6 +78,7 @@ class DebianPackageCache:
                 os.getcwd(), "pkg-cache"))
 
         self._cache_dir = cache_dir
+        self._keyring = keyring
 
         self.sources_list = [
             (
@@ -291,8 +292,6 @@ class DebianPackageCache:
     #end function
 
     def _load_inrelease_file(self, component, base_url):
-        keyring = "/usr/share/keyrings/debian-archive-keyring.gpg"
-
         cache_dir = os.path.join(self._cache_dir, self.release, component)
         if not os.path.isdir(cache_dir):
             os.makedirs(cache_dir)
@@ -316,18 +315,20 @@ class DebianPackageCache:
 
         inrelease = InReleaseFile.load(os.path.join(cache_dir, new_tag))
 
-        if not os.path.exists(keyring):
-            raise BoltError(
-                "keyring file '{}' not found, cannot check '{}' signature."
-                .format(keyring, target)
-            )
-        #end if
+        if self._keyring:
+            if not os.path.exists(self._keyring):
+                raise BoltError(
+                    "keyring file '{}' not found, cannot check '{}' signature."
+                    .format(self._keyring, target)
+                )
+            #end if
 
-        if not inrelease.valid_signature(keyring=keyring):
-            raise BoltError(
-                "unable to verify the authenticity of '{}'"
-                .format(target)
-            )
+            if not inrelease.valid_signature(keyring=self._keyring):
+                raise BoltError(
+                    "unable to verify the authenticity of '{}'"
+                    .format(target)
+                )
+            #end if
         #end if
 
         return inrelease

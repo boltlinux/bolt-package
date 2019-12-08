@@ -69,6 +69,7 @@ def print_usage():
         "  --set-maintainer       Write maintainer info to changelog (initial import).  \n"
         "  --no-update-cache      Do not update the package cache.                      \n"
         "  --no-load-contents     Do not load and analyze binary package contents.      \n"
+        "  --no-gpg-checks        Do not verify GPG signature on Release files.         \n"
         % BOLT_VERSION
     )
 #end function
@@ -78,6 +79,7 @@ def parse_cmd_line():
     config = {
         "suite": None,
         "arch": "amd64",
+        "do_gpg_checks": True,
         "do_update_cache": True,
         "do_load_contents": True,
         "set_maintainer": False,
@@ -91,6 +93,7 @@ def parse_cmd_line():
                 "help",
                 "set-maintainer",
                 "disable-updates",
+                "no-gpg-checks",
                 "no-update-cache",
                 "no-load-contents",
                 "arch=",
@@ -112,6 +115,9 @@ def parse_cmd_line():
                 break
             if case("--disable-updates"):
                 config["updates_enabled"] = False
+                break
+            if case("--no-gpg-checks"):
+                config["do_gpg_checks"] = False
                 break
             if case("--no-update-cache"):
                 config["do_update_cache"] = False
@@ -179,6 +185,20 @@ if __name__ == "__main__":
                 .get("id", "stable")
         #end if
 
+        # FIND GPG KEYRING TO USE
+        keyring = None
+
+        if options["do_gpg_checks"]:
+            keyring = "/usr/share/keyrings/debian-archive-keyring.gpg"
+
+            for release in app_config.get("releases", []):
+                upstream = release.get("upstream", {})
+                if upstream.get("id") == suite:
+                    keyring = upstream.get("keyring")
+                #end if
+            #end for
+        #end if
+
         # PREPARE PACKAGE CACHE
         cache_dir = os.path.join(app_config.get_cache_dir(), "debian")
 
@@ -187,7 +207,8 @@ if __name__ == "__main__":
             arch=options["arch"],
             cache_dir=cache_dir,
             updates_enabled=options["updates_enabled"],
-            security_enabled=True
+            security_enabled=True,
+            keyring=keyring
         )
 
         if options["do_update_cache"]:
