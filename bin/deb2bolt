@@ -60,9 +60,9 @@ def print_usage():
         "                                                                               \n"
         "  -h|--help              Print this help message.                              \n"
         "                                                                               \n"
-        "  --arch <arch>          Analyze packages for given arch (default: \"amd64\"). \n"
-        "  --suite <suite>        The Debian release to work against (e.g. \"stretch\").\n"
-        "  --run-rules <target>   Invoke debian/rules target after unpacking the        \n"
+        "  --arch=<arch>          Analyze packages for given arch (default: \"amd64\"). \n"
+        "  --release=<release>    The Debian release to work against (e.g. \"stretch\").\n"
+        "  --run-rules=<target>   Invoke debian/rules target after unpacking the        \n"
         "                         sources. This option can be supplied multiple times.  \n"
         "                                                                               \n"
         "  --disable-updates      Ignore the release-updates pocket.                    \n"
@@ -77,7 +77,7 @@ def print_usage():
 def parse_cmd_line():
     # define default configuration
     config = {
-        "suite": None,
+        "release": None,
         "arch": "amd64",
         "do_gpg_checks": True,
         "do_update_cache": True,
@@ -97,7 +97,7 @@ def parse_cmd_line():
                 "no-update-cache",
                 "no-load-contents",
                 "arch=",
-                "suite=",
+                "release=",
                 "run-rules="
             ]
         )
@@ -128,8 +128,8 @@ def parse_cmd_line():
             if case("--arch"):
                 config["arch"] = v.strip()
                 break
-            if case("--suite"):
-                config["suite"] = v.strip()
+            if case("--release"):
+                config["release"] = v.strip()
                 break
             if case("--run-rules"):
                 config["run_rules"].append(v.strip())
@@ -176,10 +176,10 @@ if __name__ == "__main__":
         #end if
 
         # DETERMINE DEFAULT RELEASE
-        suite = options.get("suite")
+        release = options.get("release")
 
-        if not suite:
-            suite = app_config\
+        if not release:
+            release = app_config\
                 .get_release_config(app_config.get_default_release())\
                 .get("upstream", {})\
                 .get("id", "stable")
@@ -191,9 +191,9 @@ if __name__ == "__main__":
         if options["do_gpg_checks"]:
             keyring = "/usr/share/keyrings/debian-archive-keyring.gpg"
 
-            for release in app_config.get("releases", []):
-                upstream = release.get("upstream", {})
-                if upstream.get("id") == suite:
+            for r in app_config.get("releases", []):
+                upstream = r.get("upstream", {})
+                if upstream.get("id") == release:
                     keyring = upstream.get("keyring")
                 #end if
             #end for
@@ -203,7 +203,7 @@ if __name__ == "__main__":
         cache_dir = os.path.join(app_config.get_cache_dir(), "debian")
 
         pkg_cache = DebianPackageCache(
-            suite.lower(),
+            release.lower(),
             arch=options["arch"],
             cache_dir=cache_dir,
             updates_enabled=options["updates_enabled"],
@@ -219,7 +219,7 @@ if __name__ == "__main__":
         # RUN ACTION
         deb2bolt = Deb2BoltPackageConverter(
             pkg_cache,
-            suite=options["suite"],
+            release=options["release"],
             arch=options["arch"]
         )
 

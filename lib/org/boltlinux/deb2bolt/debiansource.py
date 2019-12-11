@@ -116,14 +116,14 @@ SOURCE_PKG_XML_TEMPLATE = """\
 
 class DebianSource(PackageUtilsMixin):
 
-    def __init__(self, pkg_cache, pkg_name, version=None, suite="stable",
+    def __init__(self, pkg_cache, pkg_name, version=None, release="stable",
             arch="amd64", work_dir="."):
         """
         Relies on a pre-initialized DebianPackageCache instance being passed
         in as the first parameter.
 
         Initializes a DebianSource instance, where pkg_name is the name of a
-        source package in the Debian archive and suite specifies the Debian
+        source package in the Debian archive and release specifies the Debian
         release name (e.g. "stretch").
 
         If version is not specified, the latest available version will be
@@ -131,7 +131,7 @@ class DebianSource(PackageUtilsMixin):
         """
         self.name     = pkg_name
         self.version  = DebianPackageVersion(version) if version else None
-        self.suite    = suite
+        self.release  = release
         self.arch     = arch
         self.files    = {}
         self.patches  = None
@@ -485,7 +485,7 @@ class DebianSource(PackageUtilsMixin):
                 self._cache,
                 package_name,
                 version=self.version.full,
-                suite=self.suite,
+                release=self.release,
                 arch=self.arch,
                 work_dir=self.work_dir
             )

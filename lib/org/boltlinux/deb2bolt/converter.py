@@ -30,9 +30,9 @@ from org.boltlinux.deb2bolt.debiansource import DebianSource
 
 class Deb2BoltPackageConverter:
 
-    def __init__(self, pkg_cache, suite="stable", arch="amd64"):
-        self._suite = suite
-        self._arch  = arch
+    def __init__(self, pkg_cache, release="stable", arch="amd64"):
+        self._release = release
+        self._arch = arch
         self._cache = pkg_cache
     #end function
 
@@ -44,7 +44,7 @@ class Deb2BoltPackageConverter:
             deb_source = DebianSource(
                 self._cache,
                 pkg_name,
-                suite=self._suite,
+                release=self._release,
                 arch=self._arch,
                 work_dir=tmpdir
             )

@@ -60,7 +60,7 @@ BINARY_PKG_XML_TEMPLATE = """\
 
 class DebianPackage(PackageUtilsMixin):
 
-    def __init__(self, pkg_cache, pkg_name, version=None, suite="stable",
+    def __init__(self, pkg_cache, pkg_name, version=None, release="stable",
             arch="amd64", work_dir="."):
         """
         Relies on a pre-initialized DebianPackageCache instance being passed
@@ -74,7 +74,7 @@ class DebianPackage(PackageUtilsMixin):
         """
         self.name     = pkg_name
         self.version  = DebianPackageVersion(version) if version else None
-        self.suite    = suite
+        self.release  = release
         self.arch     = arch
         self.contents = []
         self.work_dir = os.path.abspath(work_dir)
