@@ -38,22 +38,27 @@ from org.boltlinux.package.appconfig import AppConfig
 
 class PackageControl:
 
-    def __init__(self, filename, app_config, parms={}):
+    def __init__(self, filename, release_config, cache_dir=None, **kwargs):
         self.parms = {
-            "outdir": None,
-            "ignore_deps": False,
-            "format": "deb",
-            "debug_pkgs": True,
             "build_for": "target",
-            "enable_packages": [],
+            "debug_pkgs": True,
             "disable_packages": [],
+            "enable_packages": [],
+            "format": "deb",
+            "ignore_deps": False,
+            "outdir": None,
         }
-        self.parms.update(parms)
+        self.parms.update(kwargs)
 
-        xml_doc   = Specfile(filename).xml_doc
-        self.info = {}
+        xml_doc     = Specfile(filename).xml_doc
+        self.info   = {}
+        self.config = release_config
 
-        self.app_config = app_config
+        if not cache_dir:
+            cache_dir = os.path.realpath(os.path.join(
+                os.getcwd(), "source-cache"))
+
+        self._cache_dir = cache_dir
 
         # copy maintainer, email, version, revision to package sections
         for attr_name in ["maintainer", "email", "epoch",
@@ -199,18 +204,14 @@ class PackageControl:
     #end function
 
     def unpack(self):
-        cache_dir = self.app_config.get("cache-dir",
-            os.path.realpath(AppConfig.get_config_folder() +
-                os.sep + "cache"))
-
-        release = self.app_config.get("release", {}).get("id", "stable")
+        release = self.config.get("id", "stable")
 
         directory = self.defines["BOLT_WORK_DIR"]
         if not os.path.exists(directory):
             os.makedirs(directory)
 
-        repo_conf    = self.app_config.get("repositories", [])
-        source_cache = SourceCache(cache_dir, repo_conf, release=release)
+        repo_conf    = self.config.get("repositories", [])
+        source_cache = SourceCache(self._cache_dir, repo_conf, release=release)
 
         self.src_pkg.unpack(directory, source_cache)
         self.src_pkg.patch(directory)

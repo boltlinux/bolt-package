@@ -56,6 +56,13 @@ def print_usage():
         "                                                                               \n"
         "  bolt-pack [OPTIONS] <specfile>                                               \n"
         "                                                                               \n"
+        "MISCELLANEOUS OPTIONS:                                                         \n"
+        "                                                                               \n"
+        "  -h --help            Print this help message.                                \n"
+        "  --work-dir=<dir>     Change to the given directory before running actions.   \n"
+        "  --release=<release>  The Bolt release to build for. The default is the       \n"
+        "                       configured default release.                             \n"
+        "                                                                               \n"
         "PACKAGE BUILD OPTIONS:                                                         \n"
         "                                                                               \n"
         "  --ignore-deps        Ignore missing build dependencies.                      \n"
@@ -82,11 +89,6 @@ def print_usage():
         "  --build-for=<what>   Specify if a package should be built for the target     \n"
         "                       or for the tools folder. `what` must be one of 'target' \n"
         "                       (default), 'tools' or 'cross-tools'.                    \n"
-        "                                                                               \n"
-        "MISCELLANEOUS OPTIONS:                                                         \n"
-        "                                                                               \n"
-        "  -h --help            Print this help message.                                \n"
-        "  --work-dir=<dir>     Change to the given directory before running actions.   \n"
         % BOLT_VERSION
     )
 #end function
@@ -95,46 +97,65 @@ def parse_cmd_line():
     # define default configuration
     config = {
         "action": "default",
-        "outdir": None,
-        "format": "deb",
-        "ignore_deps": False,
-        "debug_pkgs": True,
-        "build_type": None,
-        "host_type": None,
-        "target_type": None,
         "build_for": "target",
-        "enable_packages": [],
+        "build_type": None,
+        "debug_pkgs": True,
         "disable_packages": [],
-        "work_dir": None
+        "enable_packages": [],
+        "format": "deb",
+        "host_type": None,
+        "ignore_deps": False,
+        "outdir": None,
+        "release": None,
+        "target_type": None,
+        "work_dir": None,
     }
 
     try:
         opts, args = getopt.getopt(sys.argv[1:], "ho:upbir", [
+            "build",
+            "build-for=",
+            "disable-packages=",
+            "enable-packages=",
             "help",
             "ignore-deps",
+            "install",
             "no-debug-pkgs",
             "outdir=",
-            "unpack",
             "prepare",
-            "build",
-            "install",
+            "release=",
             "repackage",
-            "enable-packages=",
-            "disable-packages=",
-            "build-for=",
-            "work-dir="
+            "unpack",
+            "work-dir=",
         ])
     except getopt.GetoptError as e:
         raise InvocationError("Error parsing command line: %s" % str(e))
 
     for o, v in opts:
         for case in switch(o):
+            if case("--build", "-b"):
+                config["action"] = "build"
+                break
+            if case("--build-for"):
+                if not v in ["target", "tools", "cross-tools"]:
+                    raise InvocationError("cannot build for '%s'." % v)
+                config["build_for"] = v
+                break
+            if case("--disable-packages"):
+                config["disable_packages"] = [x.strip() for x in v.split(",")]
+                break
+            if case("--enable-packages"):
+                config["enable_packages"] = [x.strip() for x in v.split(",")]
+                break
             if case("--help", "-h"):
                 print_usage()
                 sys.exit(0)
                 break
             if case("--ignore-deps"):
                 config["ignore_deps"] = True
+                break
+            if case("--install", "-i"):
+                config["action"] = "install"
                 break
             if case("--no-debug-pkgs"):
                 config["debug_pkgs"] = False
@@ -144,31 +165,17 @@ def parse_cmd_line():
                     raise InvocationError("no such directory '%s'" % v)
                 config["outdir"] = v
                 break
-            if case("--unpack", "-u"):
-                config["action"] = "unpack"
-                break
             if case("--prepare", "-p"):
                 config["action"] = "prepare"
-                break
-            if case("--build", "-b"):
-                config["action"] = "build"
-                break
-            if case("--install", "-i"):
-                config["action"] = "install"
                 break
             if case("--repackage", "-r"):
                 config["action"] = "repackage"
                 break
-            if case("--enable-packages"):
-                config["enable_packages"] = [x.strip() for x in v.split(",")]
+            if case("--release"):
+                config["release"] = v
                 break
-            if case("--disable-packages"):
-                config["disable_packages"] = [x.strip() for x in v.split(",")]
-                break
-            if case("--build-for"):
-                if not v in ["target", "tools", "cross-tools"]:
-                    raise InvocationError("cannot build for '%s'." % v)
-                config["build_for"] = v
+            if case("--unpack", "-u"):
+                config["action"] = "unpack"
                 break
             if case("--work-dir"):
                 if not os.path.isdir(v):
@@ -207,14 +214,28 @@ if __name__ == "__main__":
                 raise BoltError("failed to set working directory: " + str(e))
         #end if
 
-        # LOAD APP CONFIG
-        app_config = AppConfig.instance().load_user_config()
-
         # SETUP LOGGING
         configure_logging()
 
+        # LOAD APP CONFIG
+        app_config = AppConfig.instance()
+
+        # GET RELEASE CONFIG
+        release = options.get("release") or app_config.get_default_release()
+        relconf = app_config.get_release_config(release)
+
+        if not relconf:
+            raise BoltError(
+                "release '{}' not found in configuration.".format(release)
+            )
+        #end if
+
+        # SET CACHE DIR
+        cache_dir = os.path.join(app_config.get_cache_dir(), "sources")
+
         # RUN ACTION
-        PackageControl(args[0], app_config, options)(options["action"])
+        PackageControl(args[0], relconf, cache_dir=cache_dir, **options)\
+            (options["action"])
     except InvocationError as e:
         LOGGER.error(e)
         sys.exit(BOLT_ERR_INVOCATION)
