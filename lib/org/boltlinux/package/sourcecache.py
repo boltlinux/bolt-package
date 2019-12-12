@@ -37,7 +37,7 @@ class SourceCache:
 
     def __init__(self, cache_dir, repo_config, release="stable", verbose=True):
         self.release     = release
-        self.cache_dir   = os.path.join(cache_dir, "sources")
+        self.cache_dir   = cache_dir
         self.repo_config = repo_config
         self.verbose     = verbose
     #end function
