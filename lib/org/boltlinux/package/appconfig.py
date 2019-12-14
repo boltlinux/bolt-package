@@ -74,7 +74,7 @@ class AppConfig:
             "repositories": [
                 {
                     "rules": "https://github.com/boltlinux/bolt-pkg-rules.git@master",
-                    "repo-url": "http://packages.boltlinux.org/repo",
+                    "repo-url": "http://archive.boltlinux.org/repo",
                     "name": "core"
                 }
             ]
