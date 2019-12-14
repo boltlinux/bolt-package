@@ -190,7 +190,7 @@ class PackageControl:
     #end function
 
     def __call__(self, action):
-        if action not in ["list_deps", "clean"]:
+        if action not in ["list_deps", "unpack", "clean"]:
             if not self.parms.get("ignore_deps"):
                 dep_spec = self.src_pkg.missing_build_dependencies()
                 if dep_spec.list:
@@ -201,6 +201,25 @@ class PackageControl:
         #end if
 
         getattr(self, action)()
+    #end function
+
+    def list_deps(self):
+        dep_list  = []
+        build_for = self.parms["build_for"]
+
+        for choices in self.src_pkg.build_dependencies():
+            dep = choices.pop(0)
+
+            if build_for == "tools":
+                dep_list.append("tools-{}".format(dep.name))
+            else:
+                dep_list.append(dep.name)
+                if build_for == "cross-tools":
+                    dep_list.append("tools-{}".format(dep.name))
+            #end if
+        #end for
+
+        print(" ".join(dep_list))
     #end function
 
     def unpack(self):

@@ -59,6 +59,7 @@ def print_usage():
         "MISCELLANEOUS OPTIONS:                                                         \n"
         "                                                                               \n"
         "  -h --help            Print this help message.                                \n"
+        "  --list-deps          List all build dependencies.                            \n"
         "  --work-dir=<dir>     Change to the given directory before running actions.   \n"
         "  --release=<release>  The Bolt release to build for. The default is the       \n"
         "                       configured default release.                             \n"
@@ -118,6 +119,7 @@ def parse_cmd_line():
             "disable-packages=",
             "enable-packages=",
             "help",
+            "list-deps",
             "ignore-deps",
             "install",
             "no-debug-pkgs",
@@ -150,6 +152,9 @@ def parse_cmd_line():
             if case("--help", "-h"):
                 print_usage()
                 sys.exit(0)
+                break
+            if case("--list-deps"):
+                config["action"] = "list_deps"
                 break
             if case("--ignore-deps"):
                 config["ignore_deps"] = True
@@ -198,6 +203,9 @@ def configure_logging():
 
 if __name__ == "__main__":
     try:
+        # SETUP LOGGING
+        configure_logging()
+
         # PARSE CMD LINE
         options, args = parse_cmd_line()
 
@@ -213,9 +221,6 @@ if __name__ == "__main__":
             except OSError as e:
                 raise BoltError("failed to set working directory: " + str(e))
         #end if
-
-        # SETUP LOGGING
-        configure_logging()
 
         # LOAD APP CONFIG
         app_config = AppConfig.instance()
