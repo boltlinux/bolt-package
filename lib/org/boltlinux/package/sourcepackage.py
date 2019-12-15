@@ -53,7 +53,7 @@ class SourcePackage(BasePackage):
         os.path.join(os.sep, "tools", "share", "bolt-pack", "helpers")
     ]
 
-    def __init__(self, xml_config, verbose=True):
+    def __init__(self, xml_config):
         if isinstance(xml_config, etree._Element):
             source_node = xml_config
         elif isinstance(xml_config, str):
@@ -64,7 +64,6 @@ class SourcePackage(BasePackage):
             raise ValueError(msg)
         #end if
 
-        self.verbose = verbose
         self.basedir = "."
         self.name = source_node.get("name")
         self.description = PackageDescription(
@@ -119,9 +118,6 @@ class SourcePackage(BasePackage):
                     etree.tostring(node, method="text", encoding="unicode")
         #end for
     #end function
-
-    def missing_build_dependencies(self):
-        return self.relations["requires"].unfulfilled_dependencies()
 
     def build_dependencies(self):
         return self.relations["requires"]

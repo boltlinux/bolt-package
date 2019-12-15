@@ -27,6 +27,7 @@ import os
 import shutil
 
 from org.boltlinux.error import UnmetDependency, InvocationError
+from org.boltlinux.package.basepackage import BasePackage
 from org.boltlinux.package.sourcepackage import SourcePackage
 from org.boltlinux.package.debianpackage import DebianPackage
 from org.boltlinux.package.shlibcache import ShlibCache
@@ -192,9 +193,9 @@ class PackageControl:
     def __call__(self, action):
         if action not in ["list_deps", "unpack", "clean"]:
             if not self.parms.get("ignore_deps"):
-                dep_spec = self.src_pkg.missing_build_dependencies()
-                if dep_spec.list:
-                    msg = "missing dependencies: %s" % str(dep_spec)
+                missing_deps = self._missing_build_dependencies()
+                if missing_deps.list:
+                    msg = "missing dependencies: {}".format(missing_deps)
                     raise UnmetDependency(msg)
                 #end if
             #end if
@@ -283,6 +284,61 @@ class PackageControl:
         self.build()
         self.install()
         self.package()
+    #end function
+
+    # PRIVATE
+
+    def _missing_build_dependencies(self):
+        adjusted_dependency_spec = BasePackage.DependencySpecification()
+        build_for = \
+            self.parms.get("build_for", "target")
+
+        for alternatives in self.src_pkg.relations["requires"].list:
+            tools_alternatives = []
+
+            if build_for == "tools":
+                for dep in alternatives:
+                    dep.name = "tools-{}".format(dep.name)
+            elif build_for == "cross-tools":
+                for dep in alternatives:
+                    tools_alternatives.append(
+                        BasePackage.Dependency(
+                            "tools-{}".format(dep.name)
+                        )
+                    )
+                #end for
+            #end if
+
+            for dep in alternatives:
+                adjusted_dependency_spec.index[dep.name] = dep
+            adjusted_dependency_spec.list.append(alternatives)
+
+            if tools_alternatives:
+                for dep in tools_alternatives:
+                    adjusted_dependency_spec.index[dep.name] = dep
+                adjusted_dependency_spec.list.append(tools_alternatives)
+            #end if
+        #end for
+
+        unfulfilled_dependency_spec = BasePackage.DependencySpecification()
+
+        for alternatives in adjusted_dependency_spec.list:
+            fulfilled = False
+
+            for dep in alternatives:
+                if dep.is_fulfilled:
+                    fulfilled = True
+                    break
+            #end for
+
+            if not fulfilled:
+                for dep in alternatives:
+                    unfulfilled_dependency_spec.index[dep.name] = dep
+                unfulfilled_dependency_spec.list.append(alternatives)
+            #end if
+        #end for
+
+        return unfulfilled_dependency_spec
     #end function
 
 #end class

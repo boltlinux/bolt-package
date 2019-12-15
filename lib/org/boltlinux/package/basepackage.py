@@ -111,29 +111,6 @@ class BasePackage:
                 self.list.append([value])
         #end function
 
-        def unfulfilled_dependencies(self):
-            unfulfilled_spec = BasePackage.DependencySpecification()
-
-            for alternatives in self.list:
-                fulfilled = False
-
-                for dependency in alternatives:
-                    if dependency.is_fulfilled:
-                        fulfilled = True
-                        break
-                    #end if
-                #end for
-
-                if not fulfilled:
-                    for dependency in alternatives:
-                        unfulfilled_spec.index[dependency.name] = dependency
-                    unfulfilled_spec.list.append(alternatives)
-                #end if
-            #end for
-
-            return unfulfilled_spec
-        #end function
-
         def __str__(self):
             if not self.list:
                 return ""
