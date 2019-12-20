@@ -146,10 +146,17 @@ class DebianPackageCache:
                         target = os.path.join(cache_dir, "Packages.gz")
                     #end if
 
-                    sha256sum = inrelease.hash_for_filename(filename)
-                    source = "{}/{}".format(
-                        base_url, inrelease.by_hash_path(filename)
-                    )
+                    try:
+                        sha256sum = inrelease.hash_for_filename(filename)
+                        source = "{}/{}".format(
+                            base_url, inrelease.by_hash_path(filename)
+                        )
+                    except KeyError:
+                        raise BoltError(
+                            "no such entry '{}' in Release file, mistyped "
+                            "command line parameter?".format(filename)
+                        )
+                    #end try
 
                     new_tag = sha256sum[:16]
 
