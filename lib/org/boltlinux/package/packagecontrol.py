@@ -136,7 +136,10 @@ class PackageControl:
             #end if
         #end for
 
-        self.src_pkg = SourcePackage(xml_doc.xpath("/control/source")[0])
+        self.src_pkg = SourcePackage(
+            xml_doc.xpath("/control/source")[0],
+            build_for=self.parms["build_for"]
+        )
         self.src_pkg.basedir = self.defines["BOLT_WORK_DIR"]
 
         if self.parms["enable_packages"]:
@@ -205,23 +208,7 @@ class PackageControl:
     #end function
 
     def list_deps(self):
-        dep_list  = []
-        build_for = self.parms["build_for"]
-
-        for choices in self.src_pkg.build_dependencies():
-            dep = choices.pop(0)
-
-            if build_for == "tools":
-                dep_list.append("tools-{}".format(dep.name))
-            else:
-                dep_list.append(dep.name)
-                if build_for == "cross-tools":
-                    dep_list.append("tools-{}".format(dep.name))
-            #end if
-        #end for
-
-        print(" ".join(dep_list))
-    #end function
+        print(self.src_pkg.build_dependencies())
 
     def unpack(self):
         release = self.config.get("id", "stable")
@@ -289,40 +276,9 @@ class PackageControl:
     # PRIVATE
 
     def _missing_build_dependencies(self):
-        adjusted_dependency_spec = BasePackage.DependencySpecification()
-        build_for = \
-            self.parms.get("build_for", "target")
-
-        for alternatives in self.src_pkg.relations["requires"].list:
-            tools_alternatives = []
-
-            if build_for == "tools":
-                for dep in alternatives:
-                    dep.name = "tools-{}".format(dep.name)
-            elif build_for == "cross-tools":
-                for dep in alternatives:
-                    tools_alternatives.append(
-                        BasePackage.Dependency(
-                            "tools-{}".format(dep.name)
-                        )
-                    )
-                #end for
-            #end if
-
-            for dep in alternatives:
-                adjusted_dependency_spec.index[dep.name] = dep
-            adjusted_dependency_spec.list.append(alternatives)
-
-            if tools_alternatives:
-                for dep in tools_alternatives:
-                    adjusted_dependency_spec.index[dep.name] = dep
-                adjusted_dependency_spec.list.append(tools_alternatives)
-            #end if
-        #end for
-
         unfulfilled_dependency_spec = BasePackage.DependencySpecification()
 
-        for alternatives in adjusted_dependency_spec.list:
+        for alternatives in self.src_pkg.relations["requires"].list:
             fulfilled = False
 
             for dep in alternatives:

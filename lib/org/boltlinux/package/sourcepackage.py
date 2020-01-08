@@ -23,6 +23,7 @@
 # THE SOFTWARE.
 #
 
+import copy
 import os
 import sys
 import re
@@ -53,7 +54,9 @@ class SourcePackage(BasePackage):
         os.path.join(os.sep, "tools", "share", "bolt-pack", "helpers")
     ]
 
-    def __init__(self, xml_config):
+    def __init__(self, xml_config, **kwargs):
+        actual_build_for = kwargs.get("build_for", None)
+
         if isinstance(xml_config, etree._Element):
             source_node = xml_config
         elif isinstance(xml_config, str):
@@ -69,14 +72,30 @@ class SourcePackage(BasePackage):
         self.description = PackageDescription(
                 source_node.xpath("description")[0])
 
-        try:
-            req_node = source_node.xpath("requires")[0]
-        except IndexError:
-            req_node = "<requires></requires>"
+        dep_node = source_node.find("requires")
+
+        if dep_node is None:
+            dep_node = "<requires></requires>"
+        elif actual_build_for is not None:
+            for pkg_node in list(dep_node.findall(".//package")):
+                pkg_prefix = pkg_node.get(actual_build_for +
+                        "-prefix", None)
+                if pkg_prefix is not None:
+                    pkg_node.attrib["name"] = \
+                        pkg_prefix + pkg_node.attrib["name"]
+                elif actual_build_for == "tools":
+                    pkg_node.attrib["name"] = \
+                        "tools-" + pkg_node.attrib["name"]
+                elif actual_build_for == "cross-tools":
+                    dep_node.append(copy.deepcopy(pkg_node))
+                    pkg_node.attrib["name"] = \
+                        "tools-" + pkg_node.attrib["name"]
+            #end for
+        #end if
 
         self.relations = {}
         self.relations["requires"] = BasePackage.DependencySpecification\
-                .from_xml(req_node)
+                .from_xml(dep_node)
 
         self.patches = []
         for patch_set in source_node.xpath("patches/patchset"):
