@@ -214,6 +214,11 @@ class BinaryPackage(BasePackage):
 
                     export BOLT_INSTALL_PREFIX="%s"
                     export BOLT_HOST_TYPE="%s"
+                    export PATH="/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin"
+
+                    if [ -d "/tools" ]; then
+                        export PATH="/tools/sbin:/tools/bin:$PATH"
+                    fi
 
                     """ % (self.install_prefix, self.host_type)
 
