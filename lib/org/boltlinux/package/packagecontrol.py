@@ -101,22 +101,20 @@ class PackageControl:
             "BOLT_BUILD_DIR": "sources",
             "BOLT_INSTALL_DIR": "install",
             "BOLT_WORK_DIR": os.getcwd(),
+            "BOLT_BUILD_TYPE": Platform.target_type(),
             "BOLT_TOOLS_TYPE": Platform.tools_type(),
             "BOLT_BUILD_FOR": self.parms["build_for"]
         }
 
         if self.parms["build_for"] == "tools":
-            self.defines["BOLT_BUILD_TYPE"] = Platform.tools_type(),
             self.defines["BOLT_HOST_TYPE"] = Platform.tools_type()
             self.defines["BOLT_TARGET_TYPE"] = Platform.tools_type()
             self.defines["BOLT_INSTALL_PREFIX"] = "/tools"
         elif self.parms["build_for"] == "cross-tools":
-            self.defines["BOLT_BUILD_TYPE"] = Platform.tools_type(),
             self.defines["BOLT_HOST_TYPE"] = Platform.tools_type()
             self.defines["BOLT_TARGET_TYPE"] = Platform.target_type()
             self.defines["BOLT_INSTALL_PREFIX"] = "/tools"
         else:
-            self.defines["BOLT_BUILD_TYPE"] = Platform.target_type(),
             self.defines["BOLT_HOST_TYPE"] = Platform.target_type()
             self.defines["BOLT_TARGET_TYPE"] = Platform.target_type()
             self.defines["BOLT_INSTALL_PREFIX"] = "/usr"
