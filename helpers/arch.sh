@@ -126,6 +126,9 @@ bh_gcc_config_for_machine()
         powerpc*)
             echo "--enable-secureplt --with-float=hard --with-cpu=default32 --without-long-double-128"
             ;;
+        s390x*)
+            echo "--enable-default-pie --with-arch=z196 --with-long-double-128"
+            ;;
         x86_64*)
             echo "--with-tune=generic"
             ;;
@@ -192,7 +195,7 @@ bh_autotools_dev_update()
 bh_os_bits()
 {
     case "$1" in
-        *64*)
+        *64*|s390x*)
             echo "64"
             ;;
         *)
