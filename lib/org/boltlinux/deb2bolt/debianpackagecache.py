@@ -88,6 +88,8 @@ class DebianPackageCache:
             )
         ]
 
+        print(security_enabled, updates_enabled)
+
         if security_enabled:
             self.sources_list.append(
                 (

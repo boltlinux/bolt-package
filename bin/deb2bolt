@@ -66,7 +66,10 @@ def print_usage():
         "                         sources. This option can be supplied multiple times.  \n"
         "                                                                               \n"
         "  --disable-updates      Ignore the release-updates pocket.                    \n"
+        "  --disable-security     Ignore security updates.                              \n"
+        "                                                                               \n"
         "  --set-maintainer       Write maintainer info to changelog (initial import).  \n"
+        "                                                                               \n"
         "  --no-update-cache      Do not update the package cache.                      \n"
         "  --no-load-contents     Do not load and analyze binary package contents.      \n"
         "  --no-gpg-checks        Do not verify GPG signature on Release files.         \n"
@@ -84,6 +87,7 @@ def parse_cmd_line():
         "do_load_contents": True,
         "set_maintainer": False,
         "updates_enabled": True,
+        "security_enabled": True,
         "run_rules": []
     }
 
@@ -93,6 +97,7 @@ def parse_cmd_line():
                 "help",
                 "set-maintainer",
                 "disable-updates",
+                "disable-security",
                 "no-gpg-checks",
                 "no-update-cache",
                 "no-load-contents",
@@ -115,6 +120,9 @@ def parse_cmd_line():
                 break
             if case("--disable-updates"):
                 config["updates_enabled"] = False
+                break
+            if case("--disable-security"):
+                config["security_enabled"] = False
                 break
             if case("--no-gpg-checks"):
                 config["do_gpg_checks"] = False
@@ -207,7 +215,7 @@ if __name__ == "__main__":
             arch=options["arch"],
             cache_dir=cache_dir,
             updates_enabled=options["updates_enabled"],
-            security_enabled=True,
+            security_enabled=options["security_enabled"],
             keyring=keyring
         )
 
