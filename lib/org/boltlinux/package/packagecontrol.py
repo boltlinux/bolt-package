@@ -252,6 +252,9 @@ class PackageControl:
         shlib_cache = ShlibCache(prefix=self.defines["BOLT_INSTALL_PREFIX"])
         for pkg in self.bin_pkgs:
             pkg.prepare()
+        for pkg in self.bin_pkgs:
+            pkg.strip_debug_symbols_and_delete_rpath()
+        for pkg in self.bin_pkgs:
             shlib_cache.overlay_package(pkg)
         for pkg in self.bin_pkgs:
             pkg.pack(shlib_cache, self.bin_pkgs)

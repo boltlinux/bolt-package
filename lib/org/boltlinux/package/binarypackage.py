@@ -277,7 +277,6 @@ class BinaryPackage(BasePackage):
             self.generate_file_list()
         except ValueError as e:
             raise PackagingError("error generating file list: " + str(e))
-        self.strip_debug_symbols_and_delete_rpath()
     #end function
 
     def pack(self, shlib_cache, bin_pkgs):
