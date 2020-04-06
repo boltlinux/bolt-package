@@ -53,8 +53,9 @@ def print_usage():
         "                                                                               \n"
         "OPTIONS:                                                                       \n"
         "                                                                               \n"
-        "  -h --help             Print this help message.                               \n"
-        "  --force-full          Force a full update ignoring existing Packages files.  \n"
+        "  -h --help              Print this help message.                              \n"
+        "  --force-full           Force a full update ignoring existing Packages files. \n"
+        "  --sign-with <keyfile>  Sign the Packages.gz file with the given usign key.   \n"
         % BOLT_VERSION
     )
 #end function
@@ -62,11 +63,13 @@ def print_usage():
 def parse_cmd_line():
     # define default configuration
     config = {
-       "force_full": False
+       "force_full": False,
+       "sign_with": None
     }
 
     try:
-        opts, args = getopt.getopt(sys.argv[1:], "h", ["help", "force-full"])
+        opts, args = getopt.getopt(sys.argv[1:], "h", ["help", "force-full",
+            "sign-with="])
     except getopt.GetoptError as e:
         raise InvocationError("Error parsing command line: %s" % str(e))
 
@@ -78,6 +81,9 @@ def parse_cmd_line():
                 break
             if case("--force-full"):
                 config["force_full"] = True
+                break
+            if case("--sign-with"):
+                config["sign_with"] = v.strip()
                 break
         #end switch
     #end for
@@ -97,7 +103,7 @@ if __name__ == "__main__":
     repo_dir = args[0]
 
     try:
-        indexer = RepoIndexer(repo_dir, force_full=options["force_full"])
+        indexer = RepoIndexer(repo_dir, **options)
         indexer.update_package_index()
     except BoltError as e:
         sys.stderr.write("bolt-repo-index: %s\n" % str(e))

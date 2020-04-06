@@ -26,6 +26,7 @@ Depends:
  libarchive-dev,
  autotools-dev,
  patch,
+ usign
  ${misc:Depends}
 Description: Bolt OS packaging and repository tools (Python 3 only)
 

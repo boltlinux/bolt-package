@@ -26,27 +26,31 @@
 import os
 import re
 import stat
+import shlex
+import subprocess
 import hashlib
 import functools
+import locale
 
 import org.boltlinux.toolbox.libarchive as libarchive
 
 from tempfile import TemporaryDirectory, NamedTemporaryFile
 from org.boltlinux.toolbox.libarchive import ArchiveFileReader, \
         ArchiveFileWriter, ArchiveEntry
-from org.boltlinux.error import NotFound, BoltSyntaxError
+from org.boltlinux.error import NotFound, BoltSyntaxError, BoltError
 from org.boltlinux.package.xpkg import BaseXpkg
 from org.boltlinux.package.debianpackagemetadata import DebianPackageMetaData
 
 class RepoIndexer:
 
-    def __init__(self, repo_dir, force_full=False):
+    def __init__(self, repo_dir, force_full=False, sign_with=None):
         if not os.path.isdir(repo_dir):
             raise NotFound("path '%s' does not exists or is not a directory."
                     % repo_dir)
 
         self._force_full = force_full
         self._repo_dir   = repo_dir
+        self._sign_with  = sign_with
     #end function
 
     def update_package_index(self):
@@ -109,8 +113,6 @@ class RepoIndexer:
     #end function
 
     def store_package_index(self, index):
-        packages_file = os.path.join(self._repo_dir, "Packages.gz")
-
         meta_data_list = []
 
         for name in sorted(index.keys()):
@@ -126,13 +128,19 @@ class RepoIndexer:
         output = "\n".join([str(entry) for entry in meta_data_list])
         output = output.encode("utf-8")
 
-        with NamedTemporaryFile(dir=self._repo_dir, delete=False) as tempfile:
-            pass
+        packages_gz  = os.path.join(self._repo_dir, "Packages.gz")
+        tempfile_gz  = None
+        packages_sig = os.path.join(self._repo_dir, "Packages.sig")
+        tempfile_sig = None
 
         try:
+            with NamedTemporaryFile(dir=self._repo_dir, delete=False) \
+                    as tempfile_gz:
+                pass
+
             options = [("gzip", "timestamp", None)]
 
-            with ArchiveFileWriter(tempfile.name, libarchive.FORMAT_RAW,
+            with ArchiveFileWriter(tempfile_gz.name, libarchive.FORMAT_RAW,
                     libarchive.COMPRESSION_GZIP, options=options) as archive:
 
                 with ArchiveEntry() as archive_entry:
@@ -143,17 +151,36 @@ class RepoIndexer:
             #end with
 
             os.chmod(
-                tempfile.name,
+                tempfile_gz.name,
                 stat.S_IRUSR |
                 stat.S_IWUSR |
                 stat.S_IRGRP |
                 stat.S_IROTH
             )
 
-            os.rename(tempfile.name, packages_file)
+            if self._sign_with:
+                signature = self._create_usign_signature(output)
+                with NamedTemporaryFile(dir=self._repo_dir, delete=False) \
+                        as tempfile_sig:
+                    tempfile_sig.write(signature)
+
+                os.chmod(
+                    tempfile_sig.name,
+                    stat.S_IRUSR |
+                    stat.S_IWUSR |
+                    stat.S_IRGRP |
+                    stat.S_IROTH
+                )
+            #end if
+
+            os.rename(tempfile_gz.name, packages_gz)
+            if self._sign_with:
+                os.rename(tempfile_sig.name, packages_sig)
         finally:
-            if os.path.exists(tempfile.name):
-                os.unlink(tempfile.name)
+            if tempfile_gz and os.path.exists(tempfile_gz.name):
+                os.unlink(tempfile_gz.name)
+            if tempfile_sig and os.path.exists(tempfile_sig.name):
+                os.unlink(tempfile_sig.name)
         #end try
     #end function
 
@@ -224,7 +251,7 @@ class RepoIndexer:
             #end with
         #end with
 
-        meta_data["SHA256"] = self._compute_sha256_sum(filename)
+        meta_data["SHA256"] = self._file_sha256_sum(filename)
         meta_data["Size"]   = os.path.getsize(filename)
 
         return meta_data
@@ -250,21 +277,44 @@ class RepoIndexer:
         #end with
     #end function
 
-    def _compute_sha256_sum(self, filename):
-        sha256 = hashlib.sha256()
-
+    def _file_sha256_sum(self, filename):
+        h = hashlib.sha256()
         with open(filename, "rb") as f:
-            while True:
-                buf = f.read(4096)
+            for chunk in iter(lambda: f.read(4096), b""):
+                h.update(chunk)
+        return h.hexdigest()
+    #end function
 
-                if not buf:
-                    break
+    def _create_usign_signature(self, data):
+        signature = None
 
-                sha256.update(buf)
-            #end while
+        with NamedTemporaryFile(dir=self._repo_dir) as tempfile:
+            tempfile.write(data)
+            tempfile.flush()
+
+            sign_cmd = shlex.split(
+                "usign -S -m '{}' -s '{}' -x -".format(
+                    tempfile.name, self._sign_with
+                )
+            )
+            try:
+                proc = subprocess.run(
+                    sign_cmd,
+                    stdout=subprocess.PIPE,
+                    stderr=subprocess.PIPE,
+                    check=True
+                )
+                signature = proc.stdout
+            except subprocess.CalledProcessError as e:
+                raise BoltError(
+                    "failed to sign Packages file: {}"
+                    .format(e.stderr.decode(locale.getpreferredencoding())
+                        .strip())
+                )
+            #end try
         #end with
 
-        return sha256.hexdigest()
+        return signature
     #end function
 
 #end class
