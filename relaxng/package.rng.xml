@@ -75,6 +75,9 @@
             <!-- DESCRIPTION -->
             <ref name="description"/>
 
+            <!-- COPYRIGHT -->
+            <ref name="copyright"/>
+
             <interleave>
                 <!-- REQUIRES -->
                 <optional>
@@ -167,6 +170,28 @@
                     </element>
                 </zeroOrMore>
             </interleave>
+        </element>
+    </define>
+
+    <!-- COPYRIGHT -->
+    <define name="copyright">
+        <element name="copyright">
+            <oneOrMore>
+                <element name="files">
+                    <attribute name="license"/>
+                    <oneOrMore>
+                        <element name="file">
+                            <attribute name="src"/>
+                        </element>
+                    </oneOrMore>
+                </element>
+            </oneOrMore>
+            <oneOrMore>
+                <element name="license">
+                    <attribute name="handle"/>
+                    <text/>
+                </element>
+            </oneOrMore>
         </element>
     </define>
 

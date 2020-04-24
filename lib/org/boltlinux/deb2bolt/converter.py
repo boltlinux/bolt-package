@@ -55,7 +55,7 @@ class Deb2BoltPackageConverter:
                 .run_rules(run_rules)
 
             deb_source.copy_sources_and_patches(target_dir)
-            deb_source.parse_control_file()
+            deb_source.parse_control_and_copyright_files()
 
             if do_load_contents:
                 deb_source.build_content_spec()

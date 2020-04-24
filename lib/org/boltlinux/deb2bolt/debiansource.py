@@ -37,6 +37,7 @@ from org.boltlinux.deb2bolt.quiltpatchseries import QuiltPatchSeries
 from org.boltlinux.deb2bolt.packageutils import PackageUtilsMixin
 from org.boltlinux.deb2bolt.debianpackage import DebianPackage
 from org.boltlinux.deb2bolt.changelog import Changelog
+from org.boltlinux.deb2bolt.copyright import CopyrightInfo
 from org.boltlinux.error import BoltError
 
 from org.boltlinux.package.debianpackagemetadata import (
@@ -96,6 +97,8 @@ SOURCE_PKG_XML_TEMPLATE = """\
             </p>
         </description>
 
+        <xi:include href="copyright.xml"/>
+
         <sources>
 {sources}
         </sources>
@@ -129,15 +132,17 @@ class DebianSource(PackageUtilsMixin):
         If version is not specified, the latest available version will be
         selected.
         """
-        self.name     = pkg_name
-        self.version  = DebianPackageVersion(version) if version else None
-        self.release  = release
-        self.arch     = arch
-        self.files    = {}
-        self.patches  = None
-        self.packages = []
-        self.work_dir = os.path.abspath(work_dir)
-        self._cache   = pkg_cache
+        self.name      = pkg_name
+        self.version   = DebianPackageVersion(version) if version else None
+        self.release   = release
+        self.arch      = arch
+        self.files     = {}
+        self.patches   = None
+        self.packages  = []
+        self.work_dir  = os.path.abspath(work_dir)
+        self.copyright = None
+
+        self._cache = pkg_cache
 
         try:
             if self.version:
@@ -395,10 +400,10 @@ class DebianSource(PackageUtilsMixin):
         return self
     #end function
 
-    def parse_control_file(self):
+    def parse_control_and_copyright_files(self):
         """
-        Parses the control file and creates a list of DebianBinaryPackages
-        instances stored in self.packages.
+        Figures out their location and parses both the control file and the
+        copyright file.
         """
         orig_tarball, \
         orig_components, \
@@ -414,9 +419,23 @@ class DebianSource(PackageUtilsMixin):
             "{}-{}".format(pkg_name, pkg_version)
         )
 
+        debian_copyright_file = \
+            os.path.join(unpacked_source_dir, "debian", "copyright")
+
+        self.copyright = CopyrightInfo()
+        self.copyright.read(debian_copyright_file)
+
         debian_control_file = \
             os.path.join(unpacked_source_dir, "debian", "control")
 
+        self.parse_control_file(debian_control_file)
+    #end function
+
+    def parse_control_file(self, debian_control_file):
+        """
+        Parses the control file and creates a list of DebianBinaryPackages
+        instances stored in self.packages.
+        """
         LOGGER.info("parsing metadata from {}".format(debian_control_file))
 
         with open(debian_control_file, "r", encoding="utf-8") as f:
@@ -545,6 +564,12 @@ class DebianSource(PackageUtilsMixin):
         outfile = os.path.join(target_dir, "rules.xml")
         with open(outfile, "w+", encoding="utf-8") as f:
             f.write(PKG_RULES_XML_TEMPLATE)
+
+        # Copyright
+
+        outfile = os.path.join(target_dir, "copyright.xml")
+        with open(outfile, "w+", encoding="utf-8") as f:
+            f.write(self.copyright.to_xml())
 
         # Source package
 
