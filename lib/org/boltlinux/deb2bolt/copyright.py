@@ -77,6 +77,9 @@ class CopyrightInfo:
                         current = []
                     #end if
                 #end for
+
+                if current:
+                    blocks.append(current)
             #end with
 
             blocks.pop(0)
