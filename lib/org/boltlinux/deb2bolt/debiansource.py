@@ -97,7 +97,7 @@ SOURCE_PKG_XML_TEMPLATE = """\
             </p>
         </description>
 
-        <xi:include href="copyright.xml"/>
+        {copyright}
 
         <sources>
 {sources}
@@ -422,8 +422,8 @@ class DebianSource(PackageUtilsMixin):
         debian_copyright_file = \
             os.path.join(unpacked_source_dir, "debian", "copyright")
 
-        self.copyright = CopyrightInfo()
-        self.copyright.read(debian_copyright_file)
+        if os.path.exists(debian_copyright_file):
+            self.copyright = CopyrightInfo(filename=debian_copyright_file)
 
         debian_control_file = \
             os.path.join(unpacked_source_dir, "debian", "control")
@@ -442,7 +442,7 @@ class DebianSource(PackageUtilsMixin):
             content = f.read()
 
         content = content.strip()
-        content = re.sub(r"^\s*\n$", r"\n", content, flags=re.M)
+        content = re.sub(r"^\s*\n", r"\n", content, flags=re.M)
         blocks  = re.split(r"\n\n+", content)
 
         while True:
@@ -567,9 +567,11 @@ class DebianSource(PackageUtilsMixin):
 
         # Copyright
 
-        outfile = os.path.join(target_dir, "copyright.xml")
-        with open(outfile, "w+", encoding="utf-8") as f:
-            f.write(self.copyright.to_xml())
+        if self.copyright:
+            outfile = os.path.join(target_dir, "copyright.xml")
+            with open(outfile, "w+", encoding="utf-8") as f:
+                f.write(self.copyright.to_xml())
+        #end if
 
         # Source package
 
@@ -640,12 +642,16 @@ class DebianSource(PackageUtilsMixin):
             "upstream_version":  self.version,
             "summary":           pkg_0_meta.get("Summary", ""),
             "description":       description,
+            "copyright":         "",
             "arch_indep":        "true" if self._is_arch_indep() else "false",
             "patches":           patches,
             "sources":           sources,
             "build_deps":        build_deps,
             "binary_packages":   binary_pkgs,
         }
+
+        if self.copyright:
+            context["copyright"] = '<xi:include href="copyright.xml"/>'
 
         return SOURCE_PKG_XML_TEMPLATE.format(**context)
     #end function

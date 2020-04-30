@@ -76,7 +76,9 @@
             <ref name="description"/>
 
             <!-- COPYRIGHT -->
-            <ref name="copyright"/>
+            <optional>
+                <ref name="copyright"/>
+            </optional>
 
             <interleave>
                 <!-- REQUIRES -->
@@ -184,14 +186,25 @@
                             <attribute name="src"/>
                         </element>
                     </oneOrMore>
+                    <optional>
+                        <element name="copyright-notice">
+                            <text/>
+                        </element>
+                    </optional>
+                    <optional>
+                        <element name="license">
+                            <text/>
+                        </element>
+                    </optional>
                 </element>
             </oneOrMore>
-            <oneOrMore>
+
+            <zeroOrMore>
                 <element name="license">
                     <attribute name="handle"/>
                     <text/>
                 </element>
-            </oneOrMore>
+            </zeroOrMore>
         </element>
     </define>
 

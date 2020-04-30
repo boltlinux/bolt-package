@@ -24,29 +24,83 @@
 #
 
 import re
+import logging
 import textwrap
 
 from xml.sax.saxutils import escape as xml_escape
 from org.boltlinux.error import BoltError
 
+LOGGER = logging.getLogger(__name__)
+
 class CopyrightInfo:
 
-    def __init__(self):
+    class FormattingError(RuntimeError):
+        pass
+
+    def __init__(self, filename=None):
         self._metadata = []
         self._licenses = {}
+
+        if filename:
+            self.read(filename)
+    #end function
 
     def read(self, filename):
         self._metadata.clear()
         self._licenses.clear()
 
+        has_copyright_format = True
         with open(filename, "r", encoding="utf-8") as f:
-            content = f.read()
+            header = next(f)
 
-        content = content.strip()
-        content = re.sub(r"^\s*\n$", r"\n", content, flags=re.M)
-        blocks  = re.split(r"\n\n+", content)
+        try:
+            key, value = [item.strip() for item in header.split(":", 1)]
+            if key.lower() != "format" or "copyright-format" not in value:
+                has_copyright_format = False
+        except ValueError:
+            has_copyright_format = False
 
-        self._metadata, self._licenses = self._parse_and_filter_blocks(blocks)
+        if has_copyright_format:
+            with open(filename, "r", encoding="utf-8") as f:
+                enumerated_lines = enumerate(f, start=1)
+
+                blocks  = []
+                current = []
+
+                for lineno, line in enumerated_lines:
+                    if line.strip():
+                        current.append(
+                            (lineno, line)
+                        )
+                    elif current:
+                        blocks.append(current)
+                        current = []
+                    #end if
+                #end for
+            #end with
+
+            blocks.pop(0)
+
+            try:
+                self._metadata, self._licenses = \
+                    self._parse_and_filter_blocks(blocks)
+            except CopyrightInfo.FormattingError as e:
+                LOGGER.warning(str(e))
+                has_copyright_format = False
+        #end if
+
+        if not has_copyright_format:
+            with open(filename, "r", encoding="utf-8") as f:
+                content = f.read()
+
+            self._metadata = [
+                {
+                    "files": ["*"],
+                    "license": "custom",
+                    "_license_text": content
+                }
+            ]
+        #end if
     #end function
 
     def to_xml(self):
@@ -54,13 +108,32 @@ class CopyrightInfo:
 
         for meta in self._metadata:
             result += '    <files license="{}">\n'.format(
-                xml_escape(meta["License"])
+                xml_escape(meta["license"])
             )
 
-            for file_ in meta["Files"]:
+            for file_ in meta["files"]:
                 result += '        <file src="{}"/>\n'.format(
                     xml_escape(file_)
                 )
+            #end for
+
+            if "copyright" in meta:
+                copyright = re.sub(
+                    r"^\s*", "", meta["copyright"], flags=re.M
+                ).strip() + "\n"
+
+                result += '        <copyright-notice><![CDATA[\n'
+                result += copyright
+                result += '        ]]></copyright-notice>\n'
+            #end if
+
+            if "_license_text" in meta:
+                license = meta["_license_text"].strip() + "\n"
+
+                result += '        <license><![CDATA[\n'
+                result += license
+                result += '        ]]></license>\n'
+            #end if
 
             result += '    </files>\n'
         #end for
@@ -87,25 +160,19 @@ class CopyrightInfo:
             if not meta:
                 continue
 
-            files = meta.get("Files")
+            files = meta.get("files")
 
-            if not files:
+            if files:
+                metadata.append(meta)
+            else:
                 if files is not None:
                     continue
 
-                license = meta.get("License")
-
+                license = meta.get("license")
                 if license is None:
                     continue
 
-                licenses[license] = meta["LicenseText"]
-            else:
-                if "LicenseText" in meta:
-                    licenses[meta["License"]] = meta["LicenseText"]
-                    del meta["LicenseText"]
-                #end if
-
-                metadata.append(meta)
+                licenses[license] = meta["_license_text"]
             #end if
         #end for
 
@@ -116,7 +183,7 @@ class CopyrightInfo:
         key  = ""
         meta = {}
 
-        for lineno, line in enumerate(block.splitlines(True)):
+        for lineno, line in block:
             if line.startswith("#"):
                 continue
             if not line.strip():
@@ -124,14 +191,15 @@ class CopyrightInfo:
 
             m = re.match(r"^(?P<key>\S+):(?P<val>.*\n?)$", line)
             if m:
-                key = m.group("key")
+                key = m.group("key").lower()
                 val = m.group("val")
                 if val:
                     meta[key] = val
             else:
                 if not key:
-                    raise BoltError(
-                        "formatting error on line '{}'".format(lineno)
+                    raise CopyrightInfo.FormattingError(
+                        "formatting error in \"debian/copyright\" on line '{}'"
+                        .format(lineno)
                     )
                 #end if
                 meta[key] += line
@@ -143,23 +211,24 @@ class CopyrightInfo:
 
     def _postprocess_fields(self, meta):
         for key in list(meta.keys()):
-            if key in ["License"]:
+            if key in ["license"]:
                 val = meta[key].strip()
 
-                if "\n" in meta[key]:
+                if "\n" in val:
                     summary, text = val.split("\n", 1)
                     meta[key] = summary.strip()
-                    meta["LicenseText"] = self._postprocess_license_text(text)
+                    meta["_license_text"] = self._postprocess_license_text(text)
                 else:
-                    meta[key] = val.strip()
-                #end if
-            elif key in ["Files"]:
+                    meta[key] = val
+            elif key in ["files"]:
                 meta[key] = list(
                     filter(
                         lambda x: not x.startswith("debian/"),
                         meta[key].strip().split()
                     )
                 )
+            elif key in ["copyright"]:
+                pass
             else:
                 meta[key] = re.sub(r"\s+", " ", meta[key].strip(), flags=re.M)
             #end if
