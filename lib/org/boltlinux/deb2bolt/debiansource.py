@@ -234,8 +234,31 @@ class DebianSource(PackageUtilsMixin):
 
         LOGGER.info("unpacking Debian package sources to {}".format(outdir))
 
+        # Check if contents are contained in a folder
+
+        strip_components=1
+
         with ArchiveFileReader(archive_source_path) as archive:
-            archive.unpack_to_disk(outdir, strip_components=1)
+            header = archive.next_entry()
+            if not header.is_directory:
+                strip_components=0
+            else:
+                prefix = header.pathname
+
+                if not prefix.startswith(pkg_name):
+                    for header in archive:
+                        if not header.pathname.startswith(prefix):
+                            strip_components=0
+                            break
+                    #end for
+                #end for
+            #end if
+        #end with
+
+        # Unpack upstream orig tarball
+
+        with ArchiveFileReader(archive_source_path) as archive:
+            archive.unpack_to_disk(outdir, strip_components=strip_components)
 
         # Unpack orig components
 
