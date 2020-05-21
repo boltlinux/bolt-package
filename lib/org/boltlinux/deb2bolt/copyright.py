@@ -55,7 +55,7 @@ class CopyrightInfo:
 
         try:
             key, value = [item.strip() for item in header.split(":", 1)]
-            if key.lower() != "format" or "copyright-format" not in value:
+            if key.lower() != "format":
                 has_copyright_format = False
         except ValueError:
             has_copyright_format = False
