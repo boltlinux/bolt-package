@@ -74,17 +74,22 @@ class PackageControl:
                 pkg_node.attrib[attr_name] = attr_val
         #end for
 
-        # copy name and architecture-independent to binary packages sections
         xpath = "/control/source/@name"
         source_name = xml_doc.xpath(xpath)[0]
+
+        xpath = "/control/source/@repo"
+        repo_name = xml_doc.xpath(xpath)[0]
+
         xpath = "/control/source/@architecture-independent"
         try:
             is_arch_indep = xml_doc.xpath(xpath)[0].lower()
         except IndexError:
             is_arch_indep = "false"
         #end try
+
         for pkg_node in xml_doc.xpath("/control/package"):
             pkg_node.attrib["source"] = source_name
+            pkg_node.attrib["repo"] = repo_name
 
             if self.parms["build_for"] in ["tools", "cross-tools"]:
                 pkg_node.attrib["architecture"] = "tools"

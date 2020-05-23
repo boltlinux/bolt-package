@@ -71,13 +71,12 @@ class AppConfig:
                     "powerpc64le"
                 ]
             },
-            "repositories": [
-                {
+            "repositories": {
+                "core": {
                     "rules": "https://github.com/boltlinux/bolt-pkg-rules.git@master",
-                    "repo-url": "http://archive.boltlinux.org/repo",
-                    "name": "core"
+                    "repo-url": "http://archive.boltlinux.org/dists"
                 }
-            ]
+            }
         }
     ],
 

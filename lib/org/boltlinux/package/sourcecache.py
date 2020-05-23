@@ -28,6 +28,7 @@ import hashlib
 import logging
 import urllib.request
 
+from org.boltlinux.error import BoltError, NetworkError
 from org.boltlinux.toolbox.progressbar import ProgressBar
 from org.boltlinux.toolbox.downloader import Downloader
 
@@ -36,29 +37,44 @@ LOGGER = logging.getLogger(__name__)
 class SourceCache:
 
     def __init__(self, cache_dir, repo_config, release="stable", verbose=True):
-        self.release     = release
         self.cache_dir   = cache_dir
         self.repo_config = repo_config
+        self.release     = release
         self.verbose     = verbose
     #end function
 
-    def find_and_retrieve(self, pkg_name, version, filename, sha256sum=None):
-        pkg = self.fetch_from_cache(pkg_name, version, filename, sha256sum)
+    def find_and_retrieve(self, repo_name, pkg_name, version, filename,
+            sha256sum=None):
+        pkg = self.fetch_from_cache(
+            repo_name, pkg_name, version, filename, sha256sum
+        )
 
         if pkg:
             return pkg
 
-        return self.fetch_from_repo(pkg_name, version, filename, sha256sum)
+        return self.fetch_from_repo(
+            repo_name, pkg_name, version, filename, sha256sum
+        )
     #end function
 
-    def fetch_from_cache(self, pkg_name, version, filename, sha256sum=None):
+    def fetch_from_cache(self, repo_name, pkg_name, version, filename,
+            sha256sum=None):
         if pkg_name.startswith("lib"):
             first_letter = pkg_name[3]
         else:
             first_letter = pkg_name[0]
         #end if
 
-        rel_path = os.sep.join([first_letter, pkg_name, version, filename])
+        rel_path = os.sep.join(
+            [
+                self.release,
+                repo_name,
+                first_letter,
+                pkg_name,
+                version,
+                filename
+            ]
+        )
         abs_path = os.path.join(self.cache_dir, rel_path)
 
         if not os.path.exists(abs_path):
@@ -79,7 +95,8 @@ class SourceCache:
         return None
     #end function
 
-    def fetch_from_repo(self, pkg_name, version, filename, sha256sum=None):
+    def fetch_from_repo(self, repo_name, pkg_name, version, filename,
+            sha256sum=None):
         downloader = Downloader(progress_bar_class=ProgressBar)
 
         if pkg_name.startswith("lib"):
@@ -89,37 +106,45 @@ class SourceCache:
 
         rel_path = os.sep.join([first_letter, pkg_name, version, filename])
 
-        for repo in self.repo_config:
-            source_url = "/".join([repo["repo-url"], self.release, "sources",
-                rel_path])
+        try:
+            repo = self.repo_config[repo_name]
+        except KeyError:
+            raise BoltError(
+                "repository '{}' not found in configuration."
+                .format(repo_name)
+            )
+        #end try
 
-            target_url = self.cache_dir + os.sep + rel_path
-            h = hashlib.sha256()
+        source_url = "/".join([
+            repo["repo-url"],
+            self.release,
+            repo_name,
+            "sources",
+            rel_path
+        ])
 
-            LOGGER.info("retrieving {}".format(source_url))
-            try:
-                os.makedirs(os.path.dirname(target_url), exist_ok=True)
+        target_url = os.sep.join([
+            self.cache_dir, self.release, repo_name, rel_path
+        ])
 
-                with open(target_url, "wb+") as f:
-                    for chunk in downloader.get(source_url, digest=h):
-                        f.write(chunk)
-            except urllib.error.URLError as e:
-                LOGGER.error(
-                    "failed to retrieve {}: {}".format(source_url, e.reason)
-                )
-                continue
-            #end try
+        h = hashlib.sha256()
 
-            if sha256sum and sha256sum != h.hexdigest():
-                LOGGER.error("file {} has invalid checksum!"
-                        .format(target_url))
-                continue
-            #end if
+        LOGGER.info("retrieving {}".format(source_url))
+        try:
+            os.makedirs(os.path.dirname(target_url), exist_ok=True)
 
-            return target_url
-        #end for
+            with open(target_url, "wb+") as f:
+                for chunk in downloader.get(source_url, digest=h):
+                    f.write(chunk)
+        except urllib.error.URLError as e:
+            raise NetworkError(
+                "failed to retrieve {}: {}".format(source_url, e.reason)
+            )
 
-        return None
+        if sha256sum and sha256sum != h.hexdigest():
+            raise BoltError("file {} has invalid checksum!".format(target_url))
+
+        return target_url
     #end function
 
 #end class

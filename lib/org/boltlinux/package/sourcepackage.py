@@ -69,6 +69,7 @@ class SourcePackage(BasePackage):
 
         self.basedir = "."
         self.name = source_node.get("name")
+        self.repo = source_node.get("repo")
         self.description = PackageDescription(
                 source_node.xpath("description")[0])
 
@@ -143,8 +144,10 @@ class SourcePackage(BasePackage):
 
     def unpack(self, source_dir=".", source_cache=None):
         for src_name, subdir, sha256sum in self.sources:
-            archive_file = source_cache.find_and_retrieve(self.name,
-                    self.version, src_name, sha256sum)
+            archive_file = source_cache.find_and_retrieve(
+                self.repo, self.name, self.version, src_name, sha256sum
+            )
+
             source_dir_and_subdir = \
                     os.path.normpath(source_dir + os.sep + subdir)
             os.makedirs(source_dir_and_subdir, exist_ok=True)

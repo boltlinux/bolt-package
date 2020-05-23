@@ -57,9 +57,9 @@
     <!-- SOURCE -->
     <define name="source">
         <element name="source">
-            <optional>
-                <attribute name="name"/>
-            </optional>
+            <attribute name="name"/>
+            <attribute name="repo"/>
+
             <optional>
                 <attribute name="build-for"/>
             </optional>
