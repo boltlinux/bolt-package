@@ -61,14 +61,14 @@ class AppConfig:
             "supported-architectures": {
                 "musl": [
                     "aarch64",
-                    "armv4t",
                     "armv6",
                     "armv7a",
                     "i686",
-                    "mips64el",
                     "mipsel",
-                    "powerpc",
-                    "powerpc64le"
+                    "mips64el",
+                    "powerpc64le",
+                    "s390x",
+                    "x86_64"
                 ]
             },
             "repositories": {
