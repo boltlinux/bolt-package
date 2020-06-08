@@ -65,17 +65,11 @@ class SourceCache:
             first_letter = pkg_name[0]
         #end if
 
-        rel_path = os.sep.join(
-            [
-                self.release,
-                repo_name,
-                first_letter,
-                pkg_name,
-                version,
-                filename
-            ]
+        rel_path = os.sep.join([first_letter, pkg_name, version, filename])
+        abs_path = os.path.join(
+            self.cache_dir, "bolt", "dists", self.release, "sources",
+                repo_name, rel_path
         )
-        abs_path = os.path.join(self.cache_dir, rel_path)
 
         if not os.path.exists(abs_path):
             return None
@@ -124,7 +118,13 @@ class SourceCache:
         ])
 
         target_url = os.sep.join([
-            self.cache_dir, self.release, repo_name, rel_path
+            self.cache_dir,
+            "bolt",
+            "dists",
+            self.release,
+            "sources",
+            repo_name,
+            rel_path
         ])
 
         h = hashlib.sha256()

@@ -235,10 +235,8 @@ if __name__ == "__main__":
             )
         #end if
 
-        # SET CACHE DIR
-        cache_dir = os.path.join(app_config.get_cache_dir(), "sources")
-
         # RUN ACTION
+        cache_dir = app_config.get_cache_dir()
         PackageControl(args[0], relconf, cache_dir=cache_dir, **options)\
             (options["action"])
     except InvocationError as e:
