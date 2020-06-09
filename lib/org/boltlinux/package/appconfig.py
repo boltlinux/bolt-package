@@ -117,7 +117,8 @@ class AppConfig:
         config = None
 
         user_config_file = os.path.join(
-                AppConfig.get_config_folder(), "config.json")
+            AppConfig.get_config_folder(), "config.json"
+        )
 
         if os.path.exists(user_config_file):
             with open(user_config_file, "r", encoding="utf-8") as fp:
