@@ -12,6 +12,7 @@ Standards-Version: 3.9.8
 Package: bolt-package-utils
 Architecture: all
 Depends: python3-bolt-package (= ${binary:Version})
+Description: Bolt OS packaging and repository tools
 
 Package: python3-bolt-package
 Architecture: all
