@@ -89,7 +89,8 @@ SOURCE_PKG_XML_TEMPLATE = """\
         <def name="BOLT_BUILD_DIR" value="build"/>
     </defines>
 
-    <source name="{source_name}" architecture-independent="{arch_indep}">
+    <source name="{source_name}" repo="contrib"
+            architecture-independent="{arch_indep}">
         <description>
             <summary>{summary}</summary>
             <p>
