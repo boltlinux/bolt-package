@@ -132,8 +132,8 @@ class DebianPackageCache:
 
             for pocket in self.pockets:
                 for type_ in pkg_types:
-                    cache_dir = os.path.join(self._cache_dir, self.release,
-                            component, pocket, type_)
+                    cache_dir = os.path.join(self._cache_dir, "dists",
+                        self.release, component, pocket, type_)
 
                     if not os.path.isdir(cache_dir):
                         os.makedirs(cache_dir)
@@ -227,8 +227,8 @@ class DebianPackageCache:
                         cache = self.binary
                     #end if
 
-                    meta_file = os.path.join(self._cache_dir, self.release,
-                        component, pocket, type_, meta_gz)
+                    meta_file = os.path.join(self._cache_dir, "dists",
+                        self.release, component, pocket, type_, meta_gz)
 
                     if not os.path.exists(meta_file):
                         continue
@@ -299,7 +299,9 @@ class DebianPackageCache:
     #end function
 
     def _load_inrelease_file(self, component, base_url):
-        cache_dir = os.path.join(self._cache_dir, self.release, component)
+        cache_dir = os.path.join(
+            self._cache_dir, "dists", self.release, component
+        )
         if not os.path.isdir(cache_dir):
             os.makedirs(cache_dir)
 
