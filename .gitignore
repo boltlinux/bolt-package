@@ -3,3 +3,11 @@
 /ui
 /.tox/
 *.egg-info/
+/.pybuild/
+/debian/.debhelper/
+/debian/files
+/debian/python3-bolt-package.debhelper.log
+/debian/python3-bolt-package.postinst.debhelper
+/debian/python3-bolt-package.prerm.debhelper
+/debian/python3-bolt-package.substvars
+/debian/python3-bolt-package/
