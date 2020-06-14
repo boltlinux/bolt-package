@@ -202,9 +202,15 @@ if __name__ == "__main__":
             for r in app_config.get("releases", []):
                 upstream = r.get("upstream", {})
                 if upstream.get("id") == release:
-                    keyring = upstream.get("keyring")
+                    keyring = upstream.get("keyring", keyring)
                 #end if
             #end for
+
+            if not os.path.exists(keyring):
+                raise BoltError(
+                    "GPG keyring file '{}' not found.".format(keyring)
+                )
+            #end if
         #end if
 
         # PREPARE PACKAGE CACHE
