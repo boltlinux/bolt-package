@@ -28,5 +28,6 @@ Depends:
  patch,
  usign
  ${misc:Depends}
+Provides: bolt-package
 Description: Bolt OS packaging and repository tools (Python 3 only)
 
