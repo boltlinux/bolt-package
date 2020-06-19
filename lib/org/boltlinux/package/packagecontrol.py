@@ -145,7 +145,7 @@ class PackageControl:
             xml_doc.xpath("/control/source")[0],
             build_for=self.parms["build_for"]
         )
-        self.src_pkg.basedir = self.defines["BOLT_WORK_DIR"]
+        self.src_pkg.basedir = os.path.realpath(os.path.dirname(filename))
 
         if self.parms["enable_packages"]:
             for p in self.parms["enable_packages"]:

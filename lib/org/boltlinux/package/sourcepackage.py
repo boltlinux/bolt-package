@@ -27,6 +27,7 @@ import copy
 import os
 import sys
 import re
+import hashlib
 import logging
 import subprocess
 
@@ -68,6 +69,7 @@ class SourcePackage(BasePackage):
         #end if
 
         self.basedir = "."
+
         self.name = source_node.get("name")
         self.repo = source_node.get("repo")
         self.description = PackageDescription(
@@ -144,18 +146,18 @@ class SourcePackage(BasePackage):
 
     def unpack(self, source_dir=".", source_cache=None):
         for src_name, subdir, sha256sum in self.sources:
-            archive_file = source_cache.find_and_retrieve(
-                self.repo, self.name, self.version, src_name, sha256sum
+            archive_file = self._locate_archive_file(
+                src_name, sha256sum, source_cache=source_cache
             )
-
-            source_dir_and_subdir = \
-                    os.path.normpath(source_dir + os.sep + subdir)
-            os.makedirs(source_dir_and_subdir, exist_ok=True)
 
             if not (archive_file and os.path.isfile(archive_file)):
                 msg = "source archive for '%s' not found." % src_name
                 raise PackagingError(msg)
             #end if
+
+            source_dir_and_subdir = \
+                    os.path.normpath(source_dir + os.sep + subdir)
+            os.makedirs(source_dir_and_subdir, exist_ok=True)
 
             LOGGER.info("unpacking {}".format(archive_file))
 
@@ -197,8 +199,9 @@ class SourcePackage(BasePackage):
             patch_name = os.path.basename(patch_file)
 
             if not os.path.isabs(patch_file):
-                patch_file = os.path.normpath(self.basedir +
-                        os.sep + patch_file)
+                patch_file = os.path.normpath(
+                    source_dir + os.sep + patch_file
+                )
             #end if
 
             LOGGER.info("applying {}".format(patch_name))
@@ -242,6 +245,47 @@ class SourcePackage(BasePackage):
     #end function
 
     # PRIVATE
+
+    def _locate_archive_file(self, src_name, sha256sum, source_cache):
+        archive_file = None
+
+        candidate = os.path.join(
+            self.basedir, self.name, self.version, src_name
+        )
+
+        if os.path.exists(candidate):
+            LOGGER.info(
+                "found local candidate '{}', computing checksum."
+                .format(candidate)
+            )
+            h = hashlib.sha256()
+
+            with open(candidate, "rb") as f:
+                for chunk in iter(lambda: f.read(4096), b""):
+                    h.update(chunk)
+            #end with
+
+            if sha256sum == h.hexdigest():
+                LOGGER.info(
+                    "using local candidate '{}'.".format(candidate)
+                )
+                archive_file = candidate
+            else:
+                LOGGER.error(
+                    "checksum of '{}' didn't match, ignoring."
+                    .format(candidate)
+                )
+            #end if
+        #end if
+
+        if not archive_file:
+            archive_file = source_cache.find_and_retrieve(
+                self.repo, self.name, self.version, src_name, sha256sum
+            )
+        #end if
+
+        return archive_file
+    #end function
 
     def _load_helpers(self):
         result = []
