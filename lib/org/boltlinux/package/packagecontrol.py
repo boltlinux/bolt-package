@@ -45,6 +45,7 @@ class PackageControl:
             "debug_pkgs": True,
             "disable_packages": [],
             "enable_packages": [],
+            "force_local": False,
             "format": "deb",
             "ignore_deps": False,
             "outdir": None,
@@ -225,7 +226,9 @@ class PackageControl:
         repo_conf    = self.config.get("repositories", [])
         source_cache = SourceCache(self._cache_dir, repo_conf, release=release)
 
-        self.src_pkg.unpack(directory, source_cache)
+        self.src_pkg.unpack(
+            directory, source_cache, force_local=self.parms["force_local"]
+        )
         self.src_pkg.patch(directory)
     #end function
 

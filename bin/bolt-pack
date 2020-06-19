@@ -68,6 +68,7 @@ def print_usage():
         "                                                                               \n"
         "  --ignore-deps        Ignore missing build dependencies.                      \n"
         "  --no-debug-pkgs      Don't generate debug packages.                          \n"
+        "  --force-local        Use only local sources, don't look in package repo.     \n"
         "                                                                               \n"
         "  -o --outdir=<dir>    Place resulting binary packages in this directory.      \n"
         "                                                                               \n"
@@ -103,6 +104,7 @@ def parse_cmd_line():
         "debug_pkgs": True,
         "disable_packages": [],
         "enable_packages": [],
+        "force_local": False,
         "format": "deb",
         "host_type": None,
         "ignore_deps": False,
@@ -118,6 +120,7 @@ def parse_cmd_line():
             "build-for=",
             "disable-packages=",
             "enable-packages=",
+            "force-local",
             "help",
             "list-deps",
             "ignore-deps",
@@ -148,6 +151,9 @@ def parse_cmd_line():
                 break
             if case("--enable-packages"):
                 config["enable_packages"] = [x.strip() for x in v.split(",")]
+                break
+            if case("--force-local"):
+                config["force_local"] = True
                 break
             if case("--help", "-h"):
                 print_usage()

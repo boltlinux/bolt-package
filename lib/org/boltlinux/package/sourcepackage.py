@@ -144,10 +144,13 @@ class SourcePackage(BasePackage):
     def build_dependencies(self):
         return self.relations["requires"]
 
-    def unpack(self, source_dir=".", source_cache=None):
+    def unpack(self, source_dir=".", source_cache=None, force_local=False):
         for src_name, subdir, sha256sum in self.sources:
             archive_file = self._locate_archive_file(
-                src_name, sha256sum, source_cache=source_cache
+                src_name,
+                sha256sum,
+                source_cache=source_cache,
+                force_local=force_local
             )
 
             if not (archive_file and os.path.isfile(archive_file)):
@@ -246,7 +249,8 @@ class SourcePackage(BasePackage):
 
     # PRIVATE
 
-    def _locate_archive_file(self, src_name, sha256sum, source_cache):
+    def _locate_archive_file(self, src_name, sha256sum, source_cache,
+            force_local=False):
         archive_file = None
 
         candidate = os.path.join(
@@ -278,7 +282,7 @@ class SourcePackage(BasePackage):
             #end if
         #end if
 
-        if not archive_file:
+        if not archive_file and not force_local:
             archive_file = source_cache.find_and_retrieve(
                 self.repo, self.name, self.version, src_name, sha256sum
             )
