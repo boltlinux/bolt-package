@@ -231,6 +231,9 @@ class SourcePackage(BasePackage):
                     str(action))
         #end if
 
+        if not self.rules[action].strip():
+            return
+
         env    = self._update_env(env)
         script = self._load_helpers() + "\n" + self.rules[action]
         cmd    = ["/bin/sh", "-e", "-x", "-s"]
