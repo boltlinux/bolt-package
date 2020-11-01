@@ -54,7 +54,10 @@ class RepoIndexer:
     #end function
 
     def update_package_index(self):
-        index = {} if self._force_full else self.load_package_index()
+        if self._force_full:
+            index, digest = {}, ""
+        else:
+            index, digest = self.load_package_index()
 
         for meta_data in self.scan(index=index):
             name    = meta_data["Package"]
@@ -65,8 +68,10 @@ class RepoIndexer:
                 .setdefault(version, meta_data)
         #end for
 
-        self.prune_package_index(index)
-        self.store_package_index(index)
+        if not self._force_full:
+            self.prune_package_index(index)
+
+        self.store_package_index(index, current_digest=digest)
     #end function
 
     def load_package_index(self):
@@ -79,14 +84,15 @@ class RepoIndexer:
 
         with ArchiveFileReader(packages_file, raw=True) as archive:
             for entry in archive:
-                buf = archive\
-                    .read_data()\
-                    .decode("utf-8")
-        #end with
+                buf = archive.read_data()
 
+        h = hashlib.sha256()
+        h.update(buf)
+
+        text = buf.decode("utf-8")
         index = {}
 
-        for entry in re.split(r"\n\n+", buf, flags=re.MULTILINE):
+        for entry in re.split(r"\n\n+", text, flags=re.MULTILINE):
             meta_data = DebianPackageMetaData(entry)
 
             try:
@@ -98,7 +104,7 @@ class RepoIndexer:
             index.setdefault(name, {})[version] = meta_data
         #end for
 
-        return index
+        return index, h.hexdigest()
     #end function
 
     def prune_package_index(self, index):
@@ -112,7 +118,7 @@ class RepoIndexer:
         #end for
     #end function
 
-    def store_package_index(self, index):
+    def store_package_index(self, index, current_digest=None):
         meta_data_list = []
 
         for name in sorted(index.keys()):
@@ -127,6 +133,12 @@ class RepoIndexer:
 
         output = "\n".join([str(entry) for entry in meta_data_list])
         output = output.encode("utf-8")
+
+        if current_digest is not None:
+            h = hashlib.sha256()
+            h.update(output)
+            if h.hexdigest() == current_digest:
+                return
 
         packages_gz  = os.path.join(self._repo_dir, "Packages.gz")
         tempfile_gz  = None
