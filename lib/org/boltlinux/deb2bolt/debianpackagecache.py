@@ -27,8 +27,6 @@ import hashlib
 import logging
 import os
 import re
-import urllib.error
-import urllib.request
 
 from org.boltlinux.toolbox.libarchive import ArchiveFileReader
 from org.boltlinux.toolbox.downloader import Downloader
@@ -124,8 +122,6 @@ class DebianPackageCache:
             pkg_types.extend(["binary-{}".format(self.arch), "binary-all"])
 
         LOGGER.info("updating package cache (this may take a while).")
-
-        downloader = Downloader()
 
         for component, base_url in self.sources_list:
             inrelease = self._load_inrelease_file(component, base_url)

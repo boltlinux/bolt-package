@@ -35,7 +35,6 @@ from org.boltlinux.package.specfile import Specfile
 from org.boltlinux.package.changelog import Changelog
 from org.boltlinux.package.sourcecache import SourceCache
 from org.boltlinux.package.platform import Platform
-from org.boltlinux.package.appconfig import AppConfig
 
 class PackageControl:
 

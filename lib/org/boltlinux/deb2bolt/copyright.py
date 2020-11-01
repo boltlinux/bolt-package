@@ -28,7 +28,6 @@ import logging
 import textwrap
 
 from xml.sax.saxutils import escape as xml_escape
-from org.boltlinux.error import BoltError
 
 LOGGER = logging.getLogger(__name__)
 
@@ -220,7 +219,8 @@ class CopyrightInfo:
                 if "\n" in val:
                     summary, text = val.split("\n", 1)
                     meta[key] = summary.strip()
-                    meta["_license_text"] = self._postprocess_license_text(text)
+                    meta["_license_text"] = \
+                        self._postprocess_license_text(text)
                 else:
                     meta[key] = val
             elif key in ["files"]:

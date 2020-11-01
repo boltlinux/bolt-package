@@ -29,8 +29,7 @@ import subprocess
 
 from dateutil.parser import parse as parse_datetime
 
-from org.boltlinux.toolbox.downloader import Downloader
-from org.boltlinux.error import BoltValueError, VerificationError
+from org.boltlinux.error import BoltValueError
 
 class InReleaseFile:
 

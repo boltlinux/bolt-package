@@ -220,7 +220,7 @@ class BinaryPackage(BasePackage):
                         export PATH="/tools/sbin:/tools/bin:$PATH"
                     fi
 
-                    """ % (self.install_prefix, self.host_type)
+                    """ % (self.install_prefix, self.host_type)  # noqa
 
                 ) + etree.tostring(node, method="text", encoding="unicode")
             #end if

@@ -237,19 +237,19 @@ class DebianSource(PackageUtilsMixin):
 
         # Check if contents are contained in a folder
 
-        strip_components=1
+        strip_components = 1
 
         with ArchiveFileReader(archive_source_path) as archive:
             header = archive.next_entry()
             if not header.is_directory:
-                strip_components=0
+                strip_components = 0
             else:
                 prefix = header.pathname
 
                 if not prefix.startswith(pkg_name):
                     for header in archive:
                         if not header.pathname.startswith(prefix):
-                            strip_components=0
+                            strip_components = 0
                             break
                     #end for
                 #end for
