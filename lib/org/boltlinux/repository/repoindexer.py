@@ -78,7 +78,7 @@ class RepoIndexer:
         packages_file = os.path.join(self._repo_dir, "Packages.gz")
 
         if not os.path.exists(packages_file):
-            return {}
+            return {}, ""
 
         buf = ""
 
@@ -134,11 +134,13 @@ class RepoIndexer:
         output = "\n".join([str(entry) for entry in meta_data_list])
         output = output.encode("utf-8")
 
+        changed = True
+
         if current_digest is not None:
             h = hashlib.sha256()
             h.update(output)
             if h.hexdigest() == current_digest:
-                return
+                changed = False
 
         packages_gz  = os.path.join(self._repo_dir, "Packages.gz")
         tempfile_gz  = None
@@ -146,31 +148,34 @@ class RepoIndexer:
         tempfile_sig = None
 
         try:
-            with NamedTemporaryFile(dir=self._repo_dir, delete=False) \
-                    as tempfile_gz:
-                pass
+            if changed:
+                with NamedTemporaryFile(dir=self._repo_dir, delete=False) \
+                        as tempfile_gz:
+                    pass
 
-            options = [("gzip", "timestamp", None)]
+                options = [("gzip", "timestamp", None)]
 
-            with ArchiveFileWriter(tempfile_gz.name, libarchive.FORMAT_RAW,
-                    libarchive.COMPRESSION_GZIP, options=options) as archive:
+                with ArchiveFileWriter(tempfile_gz.name, libarchive.FORMAT_RAW,
+                        libarchive.COMPRESSION_GZIP, options=options) as archive:
 
-                with ArchiveEntry() as archive_entry:
-                    archive_entry.filetype = stat.S_IFREG
-                    archive.write_entry(archive_entry)
-                    archive.write_data(output)
+                    with ArchiveEntry() as archive_entry:
+                        archive_entry.filetype = stat.S_IFREG
+                        archive.write_entry(archive_entry)
+                        archive.write_data(output)
+                    #end with
                 #end with
-            #end with
 
-            os.chmod(
-                tempfile_gz.name,
-                stat.S_IRUSR |
-                stat.S_IWUSR |
-                stat.S_IRGRP |
-                stat.S_IROTH
-            )
+                os.chmod(
+                    tempfile_gz.name,
+                    stat.S_IRUSR |
+                    stat.S_IWUSR |
+                    stat.S_IRGRP |
+                    stat.S_IROTH
+                )
+            #end if
 
-            if self._sign_with:
+            if self._sign_with and \
+                    (changed or not os.path.exists(packages_sig)):
                 signature = self._create_usign_signature(output)
                 with NamedTemporaryFile(dir=self._repo_dir, delete=False) \
                         as tempfile_sig:
@@ -185,8 +190,9 @@ class RepoIndexer:
                 )
             #end if
 
-            os.rename(tempfile_gz.name, packages_gz)
-            if self._sign_with:
+            if tempfile_gz:
+                os.rename(tempfile_gz.name, packages_gz)
+            if tempfile_sig:
                 os.rename(tempfile_sig.name, packages_sig)
         finally:
             if tempfile_gz and os.path.exists(tempfile_gz.name):
