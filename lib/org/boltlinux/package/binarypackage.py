@@ -105,6 +105,8 @@ class BinaryPackage(BasePackage):
             bin_node.get("source")
         self.architecture = \
             bin_node.get("architecture")
+
+        # This is the XML node that limits what the package will be built for.
         self.build_for = \
             bin_node.get("build-for")
 
@@ -120,6 +122,7 @@ class BinaryPackage(BasePackage):
 
         self.relations = {}
 
+        # This is what the user *actually selected* with `--build-for`.
         actual_build_for = \
             parms.get("build_for", None)
 
