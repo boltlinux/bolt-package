@@ -65,6 +65,7 @@ class AppConfig:
                     "mipsel",
                     "mips64el",
                     "powerpc64le",
+                    "riscv64",
                     "s390x",
                     "x86_64"
                 ]

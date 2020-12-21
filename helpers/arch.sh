@@ -20,7 +20,8 @@ bh_kernel_arch_for_target()
                             -e 's/sa110/arm/'       -e 's/s390x/s390/'     \
                             -e 's/parisc64/parisc/' -e 's/ppc.*/powerpc/'  \
                             -e 's/mips.*/mips/'     -e 's/sh[234].*/sh/'   \
-                            -e 's/aarch64.*/arm64/' -e 's/powerpc64.*/powerpc/'
+                            -e 's/aarch64.*/arm64/' -e 's/powerpc64.*/powerpc/' \
+                            -e 's/riscv.*/riscv/'
     )
 }
 
@@ -77,6 +78,9 @@ bh_musl_arch_for_target()
         powerpc*)
             echo "powerpc"
             ;;
+        riscv64*)
+            echo "riscv64"
+            ;;
         sh[1-9bel-]*|sh|superh*)
             echo "sh"
             ;;
@@ -125,6 +129,9 @@ bh_gcc_config_for_machine()
             ;;
         powerpc*)
             echo "--enable-secureplt --with-float=hard --with-cpu=default32 --without-long-double-128"
+            ;;
+        riscv64*)
+            echo "--enable-default-pie --with-arch=rv64imafdc --with-abi=lp64d"
             ;;
         s390x*)
             echo "--enable-default-pie --with-arch=z196 --with-long-double-128"
