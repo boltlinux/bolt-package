@@ -1,3 +1,11 @@
+bolt-package (1.1.1) unstable; urgency=medium
+
+  * Add support for riscv64
+  * repoindexer: create missing signature file also when index didn't change
+  * repoindexer: don't write packages file if nothing changed
+
+ -- Tobias Koch <tobias.koch@gmail.com>  Tue, 22 Dec 2020 14:33:39 +0300
+
 bolt-package (1.1.0) unstable; urgency=medium
 
   * Bump version number.
