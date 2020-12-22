@@ -1,3 +1,9 @@
+bolt-package (1.1.2) unstable; urgency=medium
+
+  * Build system always appends a revision.
+
+ -- Tobias Koch <tobias.koch@gmail.com>  Tue, 22 Dec 2020 14:40:27 +0300
+
 bolt-package (1.1.1) unstable; urgency=medium
 
   * Add support for riscv64
