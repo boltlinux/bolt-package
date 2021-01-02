@@ -142,27 +142,34 @@ class Platform:
     def tools_type():
         result = Platform._target_attribute("TOOLS_TYPE")
         if not result:
-            return "x86_64-tools-linux-musl"
+            return "{}-tools-linux-musl".format(Platform.machine_name())
         return result
     #end function
 
     @staticmethod
     def kernel_name():
-        uname = Platform.find_executable("uname")
+        return Platform._uname("-s")
 
+    @staticmethod
+    def machine_name():
+        return Platform._uname("-m")
+
+    # HIDDEN
+
+    @staticmethod
+    def _uname(*args):
+        uname = Platform.find_executable("uname")
         if not uname:
             return ""
 
         return subprocess.run(
-            [uname, "-s"],
+            [uname, *args],
             stdout=subprocess.PIPE,
             stderr=subprocess.DEVNULL
         ).stdout \
          .decode(locale.getpreferredencoding(False)) \
          .strip()
     #end function
-
-    # HIDDEN
 
     @staticmethod
     def _dpkg_build_flags():
