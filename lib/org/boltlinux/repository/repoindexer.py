@@ -155,8 +155,11 @@ class RepoIndexer:
 
                 options = [("gzip", "timestamp", None)]
 
-                with ArchiveFileWriter(tempfile_gz.name, libarchive.FORMAT_RAW,
-                        libarchive.COMPRESSION_GZIP, options=options) as archive:
+                with ArchiveFileWriter(
+                        tempfile_gz.name,
+                        libarchive.FORMAT_RAW,
+                        libarchive.COMPRESSION_GZIP,
+                        options=options) as archive:
 
                     with ArchiveEntry() as archive_entry:
                         archive_entry.filetype = stat.S_IFREG
