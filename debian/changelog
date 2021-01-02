@@ -1,6 +1,7 @@
-bolt-package (1.1.2) unstable; urgency=medium
+bolt-package (1.1.3) unstable; urgency=medium
 
-  * Build system always appends a revision.
+  * Determine tools triplet dynamically to be ready for when we have tools
+    packages for aarch64.
 
  -- Tobias Koch <tobias.koch@gmail.com>  Tue, 22 Dec 2020 14:40:27 +0300
 
